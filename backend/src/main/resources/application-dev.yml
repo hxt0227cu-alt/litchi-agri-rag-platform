@@ -1,0 +1,24 @@
+spring:
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: litchi123456
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen2.5:7b
+          temperature: 0.7
+
+milvus:
+  host: localhost
+  port: 19530
+  collection-name: litchi_knowledge
+
+app:
+  diagnosis:
+    service-url: http://localhost:8090/predict
+    timeout-ms: 5000
