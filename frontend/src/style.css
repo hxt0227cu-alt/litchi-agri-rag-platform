@@ -1,13 +1,23 @@
 :root {
-  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: 'Avenir Next', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #1f2937;
-  background: #eef2ff;
+  color: #25352f;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --primary-deep: #1f4a3f;
+  --primary-main: #2f6a59;
+  --accent-main: #f28c28;
+  --accent-soft: #ffd26f;
+  --ink-strong: #22352f;
+  --ink-soft: #5f736c;
+  --line-soft: rgba(34, 53, 47, 0.08);
+  --panel-bg: rgba(255, 250, 242, 0.82);
+  --panel-solid: #fffaf2;
+  --panel-shadow: 0 22px 48px rgba(40, 58, 47, 0.08);
 }
 
 * {
@@ -19,14 +29,14 @@ body,
 #app {
   margin: 0;
   min-width: 320px;
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
   background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.14), transparent 28%),
-    #eef2ff;
+    radial-gradient(circle at top left, rgba(255, 210, 111, 0.24), transparent 22%),
+    radial-gradient(circle at top right, rgba(69, 128, 102, 0.16), transparent 24%),
+    linear-gradient(180deg, #f8f1df 0%, #f6efe3 42%, #eef2ea 100%);
 }
 
 a {
@@ -38,4 +48,104 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+.page-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.glass-card {
+  border-radius: 28px;
+  background: var(--panel-bg);
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.soft-card {
+  border-radius: 24px;
+  background: var(--panel-solid);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 16px 36px rgba(35, 54, 45, 0.06);
+}
+
+.section-title {
+  margin: 0;
+  color: var(--ink-strong);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.section-copy {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(34, 53, 47, 0.06);
+}
+
+.metric-label {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.metric-value {
+  margin-top: 10px;
+  color: var(--ink-strong);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.metric-note {
+  margin-top: 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.pill-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chip-button {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(47, 106, 89, 0.08);
+  color: var(--primary-deep);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.chip-button:hover {
+  transform: translateY(-1px);
+  background: rgba(47, 106, 89, 0.14);
+}
+
+@media (max-width: 1180px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
 }

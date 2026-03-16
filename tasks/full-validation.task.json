@@ -1,0 +1,29 @@
+{
+  "title": "Full local validation",
+  "goal": "Run the repository build, optionally start the main services, initialize the system, and execute the smoke test suite.",
+  "allowedPaths": [
+    "frontend",
+    "backend",
+    "diagnosis-service",
+    "docker-compose.yml",
+    "docker",
+    "docs",
+    "scripts",
+    "tasks"
+  ],
+  "implementCommand": "",
+  "baseUrl": "http://localhost:8080/api",
+  "requireRealDiagnosisModel": false,
+  "composeServices": [
+    "diagnosis-service",
+    "backend",
+    "frontend"
+  ],
+  "checks": {
+    "frontendBuild": true,
+    "backendBuild": true,
+    "composeUp": false,
+    "systemInit": false,
+    "smokeTest": false
+  }
+}

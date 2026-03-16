@@ -6,7 +6,9 @@ import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.CreateCollectionReq;
 import io.milvus.v2.service.collection.request.HasCollectionReq;
+import io.milvus.v2.service.collection.request.LoadCollectionReq;
 import io.milvus.v2.service.index.request.CreateIndexReq;
+import io.milvus.v2.service.vector.request.DeleteReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.SearchReq;
 import io.milvus.v2.service.vector.response.SearchResp;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,13 +36,26 @@ public class VectorSearchService {
     @Value("${milvus.collection-name:litchi_knowledge}")
     private String collectionName;
 
-    public void initCollection() {
+    private volatile boolean collectionLoaded;
+
+    public boolean isAvailable() {
+        try {
+            milvusClient.listCollections();
+            return true;
+        } catch (Exception e) {
+            log.debug("Milvus availability check failed", e);
+            return false;
+        }
+    }
+
+    public boolean initCollection() {
         try {
             HasCollectionReq hasCollectionReq = HasCollectionReq.builder()
                     .collectionName(collectionName)
                     .build();
 
-            if (!milvusClient.hasCollection(hasCollectionReq)) {
+            boolean exists = milvusClient.hasCollection(hasCollectionReq);
+            if (!exists) {
                 CreateCollectionReq createCollectionReq = CreateCollectionReq.builder()
                         .collectionName(collectionName)
                         .primaryFieldName(ID_FIELD)
@@ -68,19 +84,34 @@ public class VectorSearchService {
 
                 log.info("Collection {} created successfully", collectionName);
             }
+
+            if (!collectionLoaded) {
+                LoadCollectionReq loadCollectionReq = LoadCollectionReq.builder()
+                        .collectionName(collectionName)
+                        .build();
+                milvusClient.loadCollection(loadCollectionReq);
+                collectionLoaded = true;
+            }
+            return true;
         } catch (Exception e) {
+            collectionLoaded = false;
             log.error("Failed to init collection", e);
+            return false;
         }
     }
 
     public List<SearchResult> search(float[] vector, int topK) {
         List<SearchResult> results = new ArrayList<>();
         try {
+            if (!initCollection()) {
+                return results;
+            }
+
             SearchReq searchReq = SearchReq.builder()
                     .collectionName(collectionName)
                     .annsField(VECTOR_FIELD)
                     .outputFields(OUTPUT_FIELDS)
-                    .data(Collections.singletonList(vector))
+                    .data(Collections.singletonList(toFloatList(vector)))
                     .topK(topK)
                     .build();
 
@@ -111,12 +142,21 @@ public class VectorSearchService {
     }
 
     public void insertDocuments(List<Document> documents) {
+        if (documents == null || documents.isEmpty()) {
+            return;
+        }
+
         try {
+            if (!initCollection()) {
+                log.warn("Skipping vector insert because Milvus collection is unavailable");
+                return;
+            }
+
             List<JSONObject> data = new ArrayList<>();
             for (Document doc : documents) {
                 JSONObject entity = new JSONObject();
                 entity.put(ID_FIELD, doc.getId());
-                entity.put(VECTOR_FIELD, doc.getVector());
+                entity.put(VECTOR_FIELD, toFloatList(doc.getVector()));
                 entity.put("title", doc.getTitle());
                 entity.put("content", doc.getContent());
                 entity.put("source", doc.getSource());
@@ -131,6 +171,27 @@ public class VectorSearchService {
             milvusClient.insert(insertReq);
         } catch (Exception e) {
             log.error("Failed to insert documents", e);
+        }
+    }
+
+    public void deleteDocuments(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        try {
+            if (!initCollection()) {
+                log.warn("Skipping vector delete because Milvus collection is unavailable");
+                return;
+            }
+
+            DeleteReq deleteReq = DeleteReq.builder()
+                    .collectionName(collectionName)
+                    .ids(ids.stream().map(id -> (Object) id).collect(Collectors.toList()))
+                    .build();
+            milvusClient.delete(deleteReq);
+        } catch (Exception e) {
+            log.error("Failed to delete documents from vector store", e);
         }
     }
 
@@ -189,6 +250,18 @@ public class VectorSearchService {
         public void setPage(Integer page) {
             this.page = page;
         }
+    }
+
+    private List<Float> toFloatList(float[] vector) {
+        if (vector == null || vector.length == 0) {
+            return List.of();
+        }
+
+        List<Float> values = new ArrayList<>(vector.length);
+        for (float value : vector) {
+            values.add(value);
+        }
+        return values;
     }
 
     public static class Document {

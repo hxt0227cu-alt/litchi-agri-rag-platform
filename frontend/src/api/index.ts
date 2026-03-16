@@ -59,6 +59,65 @@ export interface DocumentRecord {
   statusMessage: string
 }
 
+export interface SystemInitResponse {
+  scope: string
+  graphInitialized: boolean
+  vectorInitialized: boolean
+  message: string
+}
+
+export interface SystemHealthResponse {
+  status: 'healthy' | 'degraded'
+  services: Record<string, string>
+  diagnosisDetails: {
+    engine: string
+    demoMode: boolean
+    modelLoaded: boolean
+  }
+  documents: {
+    total: number
+    indexed: number
+  }
+  timestamp: string
+}
+
+export interface DemoSampleDocument {
+  name: string
+  title: string
+  summary: string
+}
+
+export interface SystemOverviewResponse {
+  services: SystemHealthResponse
+  documents: {
+    total: number
+    indexed: number
+    samples: DemoSampleDocument[]
+  }
+  knowledgeGraph: {
+    nodeCount: number
+    edgeCount: number
+  }
+  diagnosis: {
+    engine: string
+    demoMode: boolean
+    modelLoaded: boolean
+  }
+  demoReady: boolean
+  suggestedQuestions: string[]
+  demoFlow: string[]
+}
+
+export interface DemoBootstrapResponse {
+  message: string
+  graphInitialized: boolean
+  vectorInitialized: boolean
+  importedDocuments: number
+  skippedDocuments: number
+  totalDocuments: number
+  suggestedQuestions: string[]
+}
+
 export interface KnowledgeGraphNode {
   id: string
   label: string
@@ -105,6 +164,16 @@ export const documentAPI = {
     }),
   list: () => api.get<DocumentRecord[]>('/document'),
   delete: (id: string) => api.delete<{ deleted: boolean; message: string }>(`/document/${id}`)
+}
+
+export const systemAPI = {
+  health: () => api.get<SystemHealthResponse>('/health'),
+  initialize: (scope: 'all' | 'graph' | 'vector' = 'all') =>
+    api.post<SystemInitResponse>('/system/init', null, {
+      params: { scope }
+    }),
+  overview: () => api.get<SystemOverviewResponse>('/system/overview'),
+  bootstrapDemo: () => api.post<DemoBootstrapResponse>('/system/demo/bootstrap')
 }
 
 export default api

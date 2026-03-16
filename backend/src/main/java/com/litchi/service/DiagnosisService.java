@@ -34,6 +34,34 @@ public class DiagnosisService {
     @Value("${app.diagnosis.timeout-ms:5000}")
     private int timeoutMs;
 
+    public boolean isAvailable() {
+        return getHealth().reachable();
+    }
+
+    public HealthStatus getHealth() {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofMillis(timeoutMs))
+                    .build();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(resolveHealthUrl()))
+                    .timeout(Duration.ofMillis(timeoutMs))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return HealthStatus.unavailable();
+            }
+
+            return parseHealthStatus(response.body());
+        } catch (Exception e) {
+            log.debug("Diagnosis service availability check failed", e);
+            return HealthStatus.unavailable();
+        }
+    }
+
     public DiagnosisResult diagnose(MultipartFile image) {
         log.info("Processing diagnosis image: {}", image.getOriginalFilename());
 
@@ -85,6 +113,20 @@ public class DiagnosisService {
         }
     }
 
+    private String resolveHealthUrl() {
+        URI uri = URI.create(diagnosisServiceUrl);
+        String path = uri.getPath();
+        String healthPath = path == null || path.isBlank()
+                ? "/health"
+                : path.replaceFirst("/predict/?$", "/health");
+        URI healthUri = URI.create(String.format("%s://%s%s%s",
+                uri.getScheme(),
+                uri.getAuthority(),
+                healthPath.startsWith("/") ? "" : "/",
+                healthPath));
+        return healthUri.toString();
+    }
+
     private String sanitizeFileName(String originalFilename) {
         if (originalFilename == null || originalFilename.isBlank()) {
             return "diagnosis-image.jpg";
@@ -101,17 +143,36 @@ public class DiagnosisService {
 
     private DiagnosisResult buildFallbackResult(String fileName) {
         String lowered = fileName == null ? "" : fileName.toLowerCase();
-        String disease = lowered.contains("tanju") || lowered.contains("anthracnose") ? "炭疽病" : "霜疫霉病";
+        String disease = lowered.contains("healthy")
+                ? "健康叶片"
+                : lowered.contains("anthracnose") || lowered.contains("tanju")
+                ? "炭疽病"
+                : lowered.contains("blight") || lowered.contains("mildew") || lowered.contains("downy")
+                ? "霜疫霉病"
+                : "疑似病害";
 
-        List<DiagnosisResult.DiseaseInfo> diseases = "炭疽病".equals(disease)
-                ? List.of(
-                DiagnosisResult.DiseaseInfo.builder().name("炭疽病").confidence(new BigDecimal("0.68")).build(),
-                DiagnosisResult.DiseaseInfo.builder().name("霜疫霉病").confidence(new BigDecimal("0.22")).build()
-        )
-                : List.of(
-                DiagnosisResult.DiseaseInfo.builder().name("霜疫霉病").confidence(new BigDecimal("0.71")).build(),
-                DiagnosisResult.DiseaseInfo.builder().name("炭疽病").confidence(new BigDecimal("0.19")).build()
-        );
+        List<DiagnosisResult.DiseaseInfo> diseases = switch (disease) {
+            case "健康叶片" -> List.of(
+                    DiagnosisResult.DiseaseInfo.builder().name("健康叶片").confidence(new BigDecimal("0.82")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("炭疽病").confidence(new BigDecimal("0.10")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("霜疫霉病").confidence(new BigDecimal("0.08")).build()
+            );
+            case "炭疽病" -> List.of(
+                    DiagnosisResult.DiseaseInfo.builder().name("炭疽病").confidence(new BigDecimal("0.68")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("霜疫霉病").confidence(new BigDecimal("0.22")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("健康叶片").confidence(new BigDecimal("0.10")).build()
+            );
+            case "霜疫霉病" -> List.of(
+                    DiagnosisResult.DiseaseInfo.builder().name("霜疫霉病").confidence(new BigDecimal("0.71")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("炭疽病").confidence(new BigDecimal("0.19")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("健康叶片").confidence(new BigDecimal("0.10")).build()
+            );
+            default -> List.of(
+                    DiagnosisResult.DiseaseInfo.builder().name("疑似病害").confidence(new BigDecimal("0.55")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("炭疽病").confidence(new BigDecimal("0.25")).build(),
+                    DiagnosisResult.DiseaseInfo.builder().name("霜疫霉病").confidence(new BigDecimal("0.20")).build()
+            );
+        };
 
         return DiagnosisResult.builder()
                 .disease(diseases.get(0).getName())
@@ -120,29 +181,66 @@ public class DiagnosisService {
                 .diseases(diseases)
                 .engine("backend-fallback")
                 .demoMode(true)
-                .note("独立识病服务不可用，当前结果来自后端兜底规则。")
+                .note("独立识别服务不可用，当前结果来自后端兜底规则。")
                 .build();
     }
 
     private List<String> generateSuggestions(String diseaseName) {
         return switch (diseaseName) {
+            case "健康叶片" -> List.of(
+                    "当前叶片状态较稳定，可继续保持通风透光和常规巡园。",
+                    "花果期注意雨后复查，重点观察是否出现新病斑或虫孔。",
+                    "答辩展示时可说明系统也支持健康样本的基础识别。"
+            );
             case "霜疫霉病" -> List.of(
-                    "加强果园通风透光，及时清理病叶病果。",
-                    "发病初期可喷施烯酰吗啉或霜霉威盐酸盐。",
-                    "雨季来临前提前预防，每 7 到 10 天复查一次。"
+                    "加强果园排水和通风，及时清理病果病枝。",
+                    "发病初期可结合烯酰吗啉等药剂开展防治，并注意轮换用药。",
+                    "雨季前后提高巡园频次，重点检查花穗和幼果。"
             );
             case "炭疽病" -> List.of(
                     "冬季清园并剪除病枝病叶，降低越冬病源。",
-                    "可结合咪鲜胺或苯醚甲环唑进行防治。",
+                    "可轮换使用咪鲜胺或苯醚甲环唑等药剂开展防治。",
                     "果实发育期重点巡查，避免高温高湿环境持续过久。"
             );
             default -> List.of(
-                    "建议结合田间症状做进一步人工复核。",
-                    "如症状持续扩散，请咨询专业农技人员制定防治方案。"
+                    "建议结合田间症状进一步人工复核。",
+                    "如症状持续扩散，请咨询农技人员制定针对性防治方案。",
+                    "演示时可说明该模式用于缺少模型时的兜底识别。"
             );
         };
     }
 
+    private HealthStatus parseHealthStatus(String body) {
+        try {
+            var root = objectMapper.readTree(body);
+            boolean demoMode = root.path("demoMode").asBoolean(true);
+            boolean modelLoaded = root.path("modelLoaded").asBoolean(false);
+            String engine = root.path("engine").asText(modelLoaded ? "ultralytics-yolo" : "demo-rule");
+            String systemStatus = root.path("status").asText(modelLoaded ? "connected" : "degraded");
+
+            if (modelLoaded && !demoMode) {
+                return new HealthStatus(true, false, true, engine, "connected");
+            }
+
+            return new HealthStatus(true, demoMode, false, engine, systemStatus);
+        } catch (Exception e) {
+            log.debug("Failed to parse diagnosis service health payload", e);
+            return new HealthStatus(true, true, false, "unknown", "degraded");
+        }
+    }
+
     private record MultipartPayload(String boundary, byte[] body) {
+    }
+
+    public record HealthStatus(
+            boolean reachable,
+            boolean demoMode,
+            boolean modelLoaded,
+            String engine,
+            String systemStatus
+    ) {
+        public static HealthStatus unavailable() {
+            return new HealthStatus(false, true, false, "unavailable", "unavailable");
+        }
     }
 }

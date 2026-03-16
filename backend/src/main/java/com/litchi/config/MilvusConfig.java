@@ -19,6 +19,7 @@ public class MilvusConfig {
     public MilvusClientV2 milvusClient() {
         ConnectConfig connectConfig = ConnectConfig.builder()
                 .uri("http://" + milvusHost + ":" + milvusPort)
+                .connectTimeoutMs(2_000)
                 .build();
         return new MilvusClientV2(connectConfig);
     }

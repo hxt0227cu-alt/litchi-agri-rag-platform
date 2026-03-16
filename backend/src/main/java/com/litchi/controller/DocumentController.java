@@ -40,13 +40,13 @@ public class DocumentController {
         if (!deleted) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "deleted", false,
-                    "message", "Document not found."
+                    "message", "文档不存在。"
             ));
         }
 
         return ResponseEntity.ok(Map.of(
                 "deleted", true,
-                "message", "Document deleted successfully."
+                "message", "文档已删除。"
         ));
     }
 }

@@ -63,3 +63,9 @@ logs/
 
 # Build
 build/
+
+# Automation reports
+reports/auto-dev/
+reports/runtime/
+tasks/*.local.task.json
+.cache/

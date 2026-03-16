@@ -1,0 +1,13 @@
+.git
+.smoke
+backend
+docker
+docs
+frontend
+datasets
+README.md
+*.md
+!diagnosis-service/
+!diagnosis-service/**
+!models/
+!models/**

@@ -1,16 +1,32 @@
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
+
+RUN set -eux; \
+    sed -i 's@http://deb.debian.org@https://mirrors.aliyun.com@g' /etc/apt/sources.list.d/debian.sources; \
+    sed -i 's@http://security.debian.org@https://mirrors.aliyun.com@g' /etc/apt/sources.list.d/debian.sources; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates openjdk-21-jdk-headless maven; \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=m2repo . /root/.m2/repository
+RUN find /root/.m2/repository -name _remote.repositories -delete && \
+    find /root/.m2/repository -name "*.lastUpdated" -delete
 
 COPY pom.xml ./
-RUN mvn dependency:go-offline
-
 COPY src ./src
-RUN mvn package -DskipTests
+RUN mvn -o -B -ntp package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine
+FROM python:3.11-slim
 
 WORKDIR /app
+
+RUN set -eux; \
+    sed -i 's@http://deb.debian.org@https://mirrors.aliyun.com@g' /etc/apt/sources.list.d/debian.sources; \
+    sed -i 's@http://security.debian.org@https://mirrors.aliyun.com@g' /etc/apt/sources.list.d/debian.sources; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates openjdk-21-jre-headless; \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/*.jar app.jar
 

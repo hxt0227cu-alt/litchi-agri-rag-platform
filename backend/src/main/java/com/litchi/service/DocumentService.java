@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,6 +50,7 @@ public class DocumentService {
     private final ObjectMapper objectMapper;
     private final SimpleEmbeddingService simpleEmbeddingService;
     private final VectorSearchService vectorSearchService;
+    private final DemoContentService demoContentService;
 
     @Value("${app.document.storage-dir:data/documents}")
     private String storageDir;
@@ -63,8 +66,8 @@ public class DocumentService {
 
     @PostConstruct
     public void init() {
-        storagePath = Paths.get(storageDir);
-        statePath = Paths.get(stateFile);
+        storagePath = resolvePath(storageDir);
+        statePath = resolvePath(stateFile);
 
         try {
             Files.createDirectories(storagePath);
@@ -76,6 +79,11 @@ public class DocumentService {
         }
 
         loadState();
+
+        if (documents.isEmpty()) {
+            DemoImportResult result = bootstrapDemoDocuments(false);
+            log.info("Auto bootstrapped {} demo documents on startup", result.getImported());
+        }
     }
 
     public synchronized DocumentRecord upload(MultipartFile file) {
@@ -83,23 +91,152 @@ public class DocumentService {
             throw new IllegalArgumentException("Uploaded file is empty");
         }
 
-        String documentId = UUID.randomUUID().toString().replace("-", "");
-        String originalName = sanitizeFileName(file.getOriginalFilename());
-        String extension = getExtension(originalName);
-        String storedFileName = documentId + (extension.isBlank() ? "" : "." + extension);
-        Path targetPath = storagePath.resolve(storedFileName);
-
         try {
+            String originalName = sanitizeFileName(file.getOriginalFilename());
+            String contentType = resolveContentType(file);
+            String extension = getExtension(originalName);
+            String documentId = newDocumentId();
+            Path targetPath = storagePath.resolve(buildStoredFileName(documentId, extension));
+
             file.transferTo(targetPath);
+            String extractedText = extractText(targetPath, originalName);
+            StoredDocument storedDocument = persistDocument(
+                    documentId,
+                    originalName,
+                    contentType,
+                    file.getSize(),
+                    targetPath,
+                    extractedText
+            );
+            return toRecord(storedDocument);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to store uploaded file", e);
         }
+    }
 
-        String extractedText = extractText(targetPath, originalName);
+    public synchronized List<DocumentRecord> list() {
+        return documents.values().stream()
+                .sorted(Comparator.comparing(StoredDocument::getUploadTime).reversed())
+                .map(this::toRecord)
+                .toList();
+    }
+
+    public synchronized int countDocuments() {
+        return documents.size();
+    }
+
+    public synchronized int countIndexedDocuments() {
+        return (int) documents.values().stream()
+                .filter(StoredDocument::isIndexed)
+                .count();
+    }
+
+    public synchronized DemoImportResult bootstrapDemoDocuments(boolean replaceManagedDemoDocuments) {
+        Set<String> managedFileNames = demoContentService.getManagedDemoFileNames();
+        if (replaceManagedDemoDocuments) {
+            List<String> toDelete = documents.values().stream()
+                    .filter(document -> managedFileNames.contains(document.getName()))
+                    .map(StoredDocument::getId)
+                    .toList();
+            toDelete.forEach(this::delete);
+        }
+
+        int imported = 0;
+        int skipped = 0;
+        for (DemoContentService.DemoDocument demoDocument : demoContentService.getDemoDocuments()) {
+            boolean exists = documents.values().stream()
+                    .anyMatch(document -> demoDocument.fileName().equals(document.getName()));
+            if (exists) {
+                skipped++;
+                continue;
+            }
+
+            createTextDocument(demoDocument.fileName(), demoDocument.content(), "text/markdown");
+            imported++;
+        }
+
+        return DemoImportResult.builder()
+                .imported(imported)
+                .skipped(skipped)
+                .totalDocuments(countDocuments())
+                .build();
+    }
+
+    public synchronized boolean delete(String documentId) {
+        StoredDocument removed = documents.remove(documentId);
+        if (removed == null) {
+            return false;
+        }
+
+        List<String> chunkIds = chunks.stream()
+                .filter(chunk -> chunk.getDocumentId().equals(documentId))
+                .map(StoredChunk::getId)
+                .toList();
+        chunks.removeIf(chunk -> chunk.getDocumentId().equals(documentId));
+
+        try {
+            Files.deleteIfExists(Paths.get(removed.getStoragePath()));
+        } catch (IOException e) {
+            log.warn("Failed to delete stored file for document {}", documentId, e);
+        }
+
+        if (!chunkIds.isEmpty()) {
+            vectorSearchService.deleteDocuments(chunkIds);
+        }
+
+        persistState();
+        return true;
+    }
+
+    public synchronized List<ChunkMatch> search(String question, int topK) {
+        if (question == null || question.isBlank() || chunks.isEmpty()) {
+            return List.of();
+        }
+
+        float[] queryVector = simpleEmbeddingService.embed(question);
+        List<ChunkMatch> vectorMatches = searchFromVectorStore(queryVector, topK);
+        if (!vectorMatches.isEmpty()) {
+            return vectorMatches;
+        }
+
+        return searchFromLocalChunks(queryVector, topK);
+    }
+
+    private Path resolvePath(String configuredPath) {
+        Path path = Paths.get(configuredPath);
+        if (path.isAbsolute()) {
+            return path.normalize();
+        }
+
+        Path applicationDir = new ApplicationHome(DocumentService.class).getDir().toPath().toAbsolutePath();
+        return applicationDir.resolve(path).normalize();
+    }
+
+    private StoredDocument createTextDocument(String originalName, String content, String contentType) {
+        try {
+            String documentId = newDocumentId();
+            String extension = getExtension(originalName);
+            Path targetPath = storagePath.resolve(buildStoredFileName(documentId, extension));
+            Files.writeString(targetPath, content, StandardCharsets.UTF_8);
+            long size = Files.size(targetPath);
+            return persistDocument(documentId, originalName, contentType, size, targetPath, content);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create demo document " + originalName, e);
+        }
+    }
+
+    private StoredDocument persistDocument(
+            String documentId,
+            String originalName,
+            String contentType,
+            long size,
+            Path targetPath,
+            String extractedText
+    ) {
         List<String> chunkTexts = chunkText(extractedText);
-
         List<StoredChunk> newChunks = new ArrayList<>();
         List<VectorSearchService.Document> vectorDocuments = new ArrayList<>();
+
         for (int i = 0; i < chunkTexts.size(); i++) {
             String chunkId = documentId + "-" + i;
             String chunkText = chunkTexts.get(i);
@@ -127,14 +264,14 @@ public class DocumentService {
         }
 
         String message = chunkTexts.isEmpty()
-                ? "Stored file successfully, but no readable text was extracted."
-                : "Stored and indexed successfully.";
+                ? "文档已保存，但未提取到可用于问答的文本内容。"
+                : "文档已完成切块并建立检索索引。";
 
         StoredDocument storedDocument = StoredDocument.builder()
                 .id(documentId)
                 .name(originalName)
-                .contentType(resolveContentType(file))
-                .size(file.getSize())
+                .contentType(contentType)
+                .size(size)
                 .uploadTime(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                 .chunkCount(chunkTexts.size())
                 .indexed(!chunkTexts.isEmpty())
@@ -151,40 +288,28 @@ public class DocumentService {
             vectorSearchService.insertDocuments(vectorDocuments);
         }
 
-        return toRecord(storedDocument);
+        return storedDocument;
     }
 
-    public synchronized List<DocumentRecord> list() {
-        return documents.values().stream()
-                .sorted(Comparator.comparing(StoredDocument::getUploadTime).reversed())
-                .map(this::toRecord)
-                .toList();
-    }
-
-    public synchronized boolean delete(String documentId) {
-        StoredDocument removed = documents.remove(documentId);
-        if (removed == null) {
-            return false;
-        }
-
-        chunks.removeIf(chunk -> chunk.getDocumentId().equals(documentId));
-
-        try {
-            Files.deleteIfExists(Paths.get(removed.getStoragePath()));
-        } catch (IOException e) {
-            log.warn("Failed to delete stored file for document {}", documentId, e);
-        }
-
-        persistState();
-        return true;
-    }
-
-    public synchronized List<ChunkMatch> search(String question, int topK) {
-        if (question == null || question.isBlank() || chunks.isEmpty()) {
+    private List<ChunkMatch> searchFromVectorStore(float[] queryVector, int topK) {
+        List<VectorSearchService.SearchResult> results = vectorSearchService.search(queryVector, topK);
+        if (results.isEmpty()) {
             return List.of();
         }
 
-        float[] queryVector = simpleEmbeddingService.embed(question);
+        return results.stream()
+                .map(result -> ChunkMatch.builder()
+                        .documentId(extractDocumentId(result.getId()))
+                        .title(result.getTitle())
+                        .content(result.getContent())
+                        .source(result.getSource())
+                        .page(result.getPage())
+                        .score(result.getScore())
+                        .build())
+                .toList();
+    }
+
+    private List<ChunkMatch> searchFromLocalChunks(float[] queryVector, int topK) {
         return chunks.stream()
                 .map(chunk -> ChunkMatch.builder()
                         .documentId(chunk.getDocumentId())
@@ -198,6 +323,15 @@ public class DocumentService {
                 .sorted(Comparator.comparing(ChunkMatch::getScore).reversed())
                 .limit(topK)
                 .toList();
+    }
+
+    private String extractDocumentId(Object chunkId) {
+        if (!(chunkId instanceof String value) || value.isBlank()) {
+            return null;
+        }
+
+        int separatorIndex = value.lastIndexOf('-');
+        return separatorIndex > 0 ? value.substring(0, separatorIndex) : value;
     }
 
     private void loadState() {
@@ -335,7 +469,12 @@ public class DocumentService {
     }
 
     private String normalizeText(String text) {
-        return text == null ? "" : text.replaceAll("\\s+", " ").trim();
+        if (text == null) {
+            return "";
+        }
+        return text.replace("\uFEFF", "")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     private float similarity(float[] left, float[] right) {
@@ -381,6 +520,14 @@ public class DocumentService {
         };
     }
 
+    private String newDocumentId() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    private String buildStoredFileName(String documentId, String extension) {
+        return documentId + (extension.isBlank() ? "" : "." + extension);
+    }
+
     private DocumentRecord toRecord(StoredDocument document) {
         return DocumentRecord.builder()
                 .id(document.getId())
@@ -405,6 +552,16 @@ public class DocumentService {
         private String source;
         private Integer page;
         private Float score;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DemoImportResult {
+        private int imported;
+        private int skipped;
+        private int totalDocuments;
     }
 
     @Data

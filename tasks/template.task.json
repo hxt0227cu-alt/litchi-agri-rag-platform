@@ -1,0 +1,23 @@
+{
+  "title": "Replace me",
+  "goal": "Describe the single task this automation run should complete.",
+  "allowedPaths": [
+    "frontend/src",
+    "backend/src"
+  ],
+  "implementCommand": "",
+  "baseUrl": "http://localhost:8080/api",
+  "requireRealDiagnosisModel": false,
+  "composeServices": [
+    "diagnosis-service",
+    "backend",
+    "frontend"
+  ],
+  "checks": {
+    "frontendBuild": true,
+    "backendBuild": true,
+    "composeUp": false,
+    "systemInit": false,
+    "smokeTest": false
+  }
+}

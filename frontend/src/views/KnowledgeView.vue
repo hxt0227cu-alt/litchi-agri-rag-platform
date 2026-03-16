@@ -1,50 +1,77 @@
 <template>
-  <div class="page">
-    <header class="page-header">
+  <div class="knowledge-page page-shell">
+    <section class="toolbar soft-card">
       <div>
-        <h2>知识图谱</h2>
-        <p>支持关键词查询、节点关系展示和基础属性查看。</p>
+        <h3 class="section-title">关系检索</h3>
+        <p class="section-copy">可按品种、病害、虫害或药剂名称搜索。没有 Neo4j 时系统会自动使用本地演示图谱。</p>
       </div>
-    </header>
 
-    <div class="toolbar">
-      <el-input
-        v-model="searchKeyword"
-        clearable
-        placeholder="输入品种、病害、害虫或农药关键词"
-        @keyup.enter="handleSearch"
-      >
-        <template #append>
-          <el-button :icon="Search" @click="handleSearch" />
-        </template>
-      </el-input>
-      <el-button :icon="Refresh" :loading="loading" @click="refreshGraph">刷新</el-button>
-    </div>
+      <div class="toolbar-actions">
+        <el-input
+          v-model="searchKeyword"
+          clearable
+          placeholder="输入关键词，例如：桂味、炭疽病、咪鲜胺"
+          @keyup.enter="handleSearch"
+        >
+          <template #append>
+            <el-button :icon="Search" @click="handleSearch" />
+          </template>
+        </el-input>
+        <el-button :icon="Refresh" :loading="loading" @click="refreshGraph">刷新</el-button>
+      </div>
 
-    <div class="content">
-      <el-card class="graph-card" v-loading="loading">
-        <template #header>
-          <div class="card-header">
-            <span>关系图</span>
-            <el-tag type="info" effect="plain">
-              {{ graphData.nodes.length }} 个节点 / {{ graphData.edges.length }} 条关系
-            </el-tag>
+      <div class="pill-row">
+        <button v-for="keyword in hotKeywords" :key="keyword" class="chip-button" type="button" @click="applyKeyword(keyword)">
+          {{ keyword }}
+        </button>
+      </div>
+    </section>
+
+    <section class="metric-grid">
+      <article class="metric-card">
+        <div class="metric-label">节点数量</div>
+        <div class="metric-value">{{ graphData.nodes.length }}</div>
+        <div class="metric-note">用于展示图谱规模和搜索结果范围。</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">关系数量</div>
+        <div class="metric-value">{{ graphData.edges.length }}</div>
+        <div class="metric-note">图谱会保留与当前查询节点相关的主要关系链路。</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">当前焦点</div>
+        <div class="metric-value focus-value">{{ selectedNode ? displayName(selectedNode) : '未选择' }}</div>
+        <div class="metric-note">点击任意节点查看右侧详细属性。</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">图谱模式</div>
+        <div class="metric-value focus-value">{{ graphData.nodes.length ? '已加载' : '待查询' }}</div>
+        <div class="metric-note">离线模式下仍可演示核心节点和边的关系。</div>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="graph-panel glass-card">
+        <header class="panel-header">
+          <div>
+            <h3 class="section-title">可视化关系图</h3>
+            <p class="section-copy">颜色区分节点类型，线条标签表示关系类型。</p>
           </div>
-        </template>
+          <div class="legend">
+            <span v-for="item in legends" :key="item.label">
+              <i :style="{ backgroundColor: item.color }" />
+              {{ item.text }}
+            </span>
+          </div>
+        </header>
 
         <div v-if="!positionedNodes.length" class="empty-wrapper">
-          <el-empty description="暂无图谱结果，先初始化图谱或换一个关键词试试。" />
+          <el-empty description="当前没有可展示的图谱结果，试试更换关键词。" />
         </div>
 
         <svg v-else :viewBox="`0 0 ${canvasWidth} ${canvasHeight}`" class="graph-svg">
           <g v-for="edge in edgeLines" :key="`${edge.source}-${edge.target}-${edge.label}`">
-            <line
-              :x1="edge.x1"
-              :y1="edge.y1"
-              :x2="edge.x2"
-              :y2="edge.y2"
-              class="edge-line"
-            />
+            <line :x1="edge.x1" :y1="edge.y1" :x2="edge.x2" :y2="edge.y2" class="edge-line" />
             <text :x="edge.labelX" :y="edge.labelY" class="edge-label">{{ edge.label }}</text>
           </g>
 
@@ -57,37 +84,43 @@
             <circle
               :cx="node.x"
               :cy="node.y"
-              :r="selectedNode?.id === node.id ? 28 : 24"
+              :r="selectedNode?.id === node.id ? 32 : 27"
               :fill="node.color"
+              :stroke="selectedNode?.id === node.id ? '#ffd26f' : 'rgba(255,255,255,0.84)'"
+              :stroke-width="selectedNode?.id === node.id ? 4 : 2"
             />
             <text :x="node.x" :y="node.y + 5" class="node-text">
               {{ displayName(node) }}
             </text>
           </g>
         </svg>
-      </el-card>
+      </article>
 
-      <el-card class="detail-card">
-        <template #header>
-          <div class="card-header">
-            <span>节点详情</span>
-            <el-tag v-if="selectedNode" effect="plain">{{ selectedNode.label }}</el-tag>
+      <article class="detail-panel soft-card">
+        <header class="panel-header">
+          <div>
+            <h3 class="section-title">节点详情</h3>
+            <p class="section-copy">适合答辩时停留讲解某个品种或病害的属性信息。</p>
           </div>
-        </template>
+        </header>
 
-        <el-empty v-if="!selectedNode" description="点击左侧节点查看属性详情。" />
+        <el-empty v-if="!selectedNode" description="点击左侧任意节点查看详情。" />
 
         <div v-else class="detail-content">
-          <h3>{{ displayName(selectedNode) }}</h3>
+          <div class="detail-heading">
+            <strong>{{ displayName(selectedNode) }}</strong>
+            <el-tag effect="plain">{{ selectedNode.label }}</el-tag>
+          </div>
+
           <div class="property-list">
-            <div v-for="([key, value]) in entries(selectedNode.properties)" :key="key" class="property-item">
+            <div v-for="[key, value] in entries(selectedNode.properties)" :key="key" class="property-item">
               <span class="property-key">{{ key }}</span>
               <span class="property-value">{{ formatValue(value) }}</span>
             </div>
           </div>
         </div>
-      </el-card>
-    </div>
+      </article>
+    </section>
   </div>
 </template>
 
@@ -96,7 +129,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh, Search } from '@element-plus/icons-vue'
 
-import { knowledgeGraphAPI, type KnowledgeGraphResponse, type KnowledgeGraphNode } from '@/api'
+import { knowledgeGraphAPI, type KnowledgeGraphNode, type KnowledgeGraphResponse } from '@/api'
 
 type PositionedNode = KnowledgeGraphNode & { x: number; y: number; color: string }
 type PositionedEdge = {
@@ -111,24 +144,34 @@ type PositionedEdge = {
   labelY: number
 }
 
-const canvasWidth = 980
-const canvasHeight = 620
+const canvasWidth = 1040
+const canvasHeight = 640
 
 const loading = ref(false)
 const searchKeyword = ref('')
 const graphData = ref<KnowledgeGraphResponse>({ nodes: [], edges: [] })
 const selectedNode = ref<PositionedNode | null>(null)
 
+const hotKeywords = ['桂味', '炭疽病', '霜疫霉病', '咪鲜胺', '蒂蛀虫']
+
+const legends = [
+  { label: 'LitchiVariety', text: '品种', color: '#2f6a59' },
+  { label: 'Disease', text: '病害', color: '#c65d1a' },
+  { label: 'Pest', text: '虫害', color: '#d97706' },
+  { label: 'Pesticide', text: '药剂', color: '#2f855a' },
+  { label: 'CultivationTechnique', text: '技术', color: '#6b7280' }
+]
+
 const labelColor = (label: string) => {
   const palette: Record<string, string> = {
-    LitchiVariety: '#2563eb',
-    Disease: '#dc2626',
-    Pest: '#f97316',
-    Pesticide: '#16a34a',
-    CultivationTechnique: '#7c3aed'
+    LitchiVariety: '#2f6a59',
+    Disease: '#c65d1a',
+    Pest: '#d97706',
+    Pesticide: '#2f855a',
+    CultivationTechnique: '#54656f'
   }
 
-  return palette[label] ?? '#475569'
+  return palette[label] ?? '#64748b'
 }
 
 const positionedNodes = computed<PositionedNode[]>(() => {
@@ -137,7 +180,7 @@ const positionedNodes = computed<PositionedNode[]>(() => {
     return []
   }
 
-  const radius = Math.max(160, Math.min(canvasWidth, canvasHeight) / 2 - 90)
+  const radius = Math.max(170, Math.min(canvasWidth, canvasHeight) / 2 - 96)
   const centerX = canvasWidth / 2
   const centerY = canvasHeight / 2
 
@@ -187,21 +230,18 @@ const edgeLines = computed<PositionedEdge[]>(() => {
 
 const displayName = (node: KnowledgeGraphNode) => {
   const name = node.properties.name
-  if (typeof name === 'string' && name.trim()) {
-    return name
-  }
-  return node.label
+  return typeof name === 'string' && name.trim() ? name : node.label
 }
 
 const entries = (properties: Record<string, unknown>) => Object.entries(properties)
 
 const formatValue = (value: unknown) => {
   if (Array.isArray(value)) {
-    return value.join(', ')
+    return value.join('、')
   }
 
   if (value && typeof value === 'object') {
-    return JSON.stringify(value)
+    return JSON.stringify(value, null, 0)
   }
 
   return String(value ?? '')
@@ -214,7 +254,7 @@ const loadGraphData = async (keyword?: string) => {
     graphData.value = response.data
     selectedNode.value = positionedNodes.value[0] ?? null
   } catch (error) {
-    ElMessage.error('加载知识图谱失败，请检查后端和 Neo4j 服务。')
+    ElMessage.error('加载知识图谱失败，请检查后端服务。')
   } finally {
     loading.value = false
   }
@@ -228,77 +268,97 @@ const refreshGraph = () => {
   loadGraphData(searchKeyword.value)
 }
 
+const applyKeyword = (keyword: string) => {
+  searchKeyword.value = keyword
+  handleSearch()
+}
+
 onMounted(() => {
   loadGraphData()
 })
 </script>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
+.knowledge-page {
   gap: 18px;
-  height: 100%;
-  padding: 24px;
 }
 
-.page-header h2 {
-  margin: 0;
-  font-size: 28px;
-}
-
-.page-header p {
-  margin: 6px 0 0;
-  color: #64748b;
+.toolbar,
+.detail-panel {
+  padding: 22px;
 }
 
 .toolbar {
-  display: flex;
-  gap: 12px;
-}
-
-.content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 18px;
-  min-height: 0;
-  flex: 1;
+  gap: 16px;
 }
 
-.graph-card,
-.detail-card {
-  border-radius: 24px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.toolbar-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+}
+
+.graph-panel {
+  padding: 22px;
+}
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.legend span {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
 .empty-wrapper {
-  min-height: 620px;
+  min-height: 640px;
   display: grid;
   place-items: center;
 }
 
 .graph-svg {
   width: 100%;
-  min-height: 620px;
+  min-height: 640px;
+  border-radius: 24px;
   background:
-    radial-gradient(circle at center, rgba(37, 99, 235, 0.06), transparent 58%),
-    #f8fafc;
-  border-radius: 20px;
+    radial-gradient(circle at center, rgba(47, 106, 89, 0.1), transparent 56%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(245, 247, 241, 0.96));
 }
 
 .edge-line {
-  stroke: rgba(148, 163, 184, 0.88);
+  stroke: rgba(92, 111, 103, 0.65);
   stroke-width: 2;
 }
 
 .edge-label {
-  fill: #475569;
+  fill: #5d6e67;
   font-size: 12px;
   text-anchor: middle;
 }
@@ -308,48 +368,75 @@ onMounted(() => {
 }
 
 .node-text {
-  fill: white;
+  fill: #fffdf7;
   font-size: 12px;
+  font-weight: 700;
   text-anchor: middle;
   pointer-events: none;
 }
 
-.detail-content h3 {
-  margin: 0 0 16px;
+.detail-content {
+  display: grid;
+  gap: 18px;
+}
+
+.detail-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-heading strong {
+  color: var(--ink-strong);
+  font-size: 24px;
 }
 
 .property-list {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .property-item {
   display: grid;
-  gap: 4px;
-  padding: 12px;
-  border-radius: 14px;
-  background: #f8fafc;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(34, 53, 47, 0.06);
 }
 
 .property-key {
+  color: var(--ink-soft);
   font-size: 12px;
-  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 .property-value {
-  color: #1f2937;
-  word-break: break-word;
+  color: var(--ink-strong);
+  line-height: 1.7;
+}
+
+.focus-value {
+  font-size: 18px;
+  line-height: 1.4;
 }
 
 @media (max-width: 1180px) {
-  .page {
-    padding: 16px;
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .toolbar-actions {
+    grid-template-columns: 1fr;
   }
 
-  .content {
-    grid-template-columns: 1fr;
+  .graph-svg,
+  .empty-wrapper {
+    min-height: 520px;
   }
 }
 </style>
