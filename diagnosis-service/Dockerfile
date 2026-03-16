@@ -9,11 +9,10 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends libglib2.0-0 libgl1; \
     rm -rf /var/lib/apt/lists/*
 
-COPY diagnosis-service/requirements.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY diagnosis-service/server.py ./server.py
-COPY models /models
+COPY server.py ./server.py
 
 ENV DIAGNOSIS_HOST=0.0.0.0
 ENV DIAGNOSIS_PORT=8090

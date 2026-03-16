@@ -37,16 +37,7 @@ public class KnowledgeGraphService {
     }
 
     public Map<String, Object> queryByText(String text) {
-        if (!isNeo4jAvailable()) {
-            return queryFallback(text);
-        }
-
-        try (Session session = neo4jDriver.session()) {
-            return queryFromNeo4j(session, text);
-        } catch (Exception e) {
-            log.warn("Neo4j unavailable, using fallback knowledge entities", e);
-            return queryFallback(text);
-        }
+        return Map.of("entities", searchEntities(text, null));
     }
 
     public boolean isNeo4jAvailable() {
@@ -58,6 +49,32 @@ public class KnowledgeGraphService {
         }
     }
 
+    public List<Map<String, Object>> searchEntities(String keyword, String type) {
+        if (!isNeo4jAvailable()) {
+            return demoContentService.searchEntities(keyword, type);
+        }
+
+        try (Session session = neo4jDriver.session()) {
+            return searchEntitiesFromNeo4j(session, keyword, type);
+        } catch (Exception e) {
+            log.warn("Neo4j unavailable, using fallback entity search", e);
+            return demoContentService.searchEntities(keyword, type);
+        }
+    }
+
+    public Map<String, Object> getEntityDetail(String entityId) {
+        if (!isNeo4jAvailable()) {
+            return demoContentService.getEntityDetail(entityId);
+        }
+
+        try (Session session = neo4jDriver.session()) {
+            return getEntityDetailFromNeo4j(session, entityId);
+        } catch (Exception e) {
+            log.warn("Neo4j unavailable, using fallback entity detail", e);
+            return demoContentService.getEntityDetail(entityId);
+        }
+    }
+
     private Map<String, Object> loadFromNeo4j(Session session, String keyword) {
         Map<String, Object> data = new LinkedHashMap<>();
         List<Map<String, Object>> nodes = new ArrayList<>();
@@ -65,10 +82,11 @@ public class KnowledgeGraphService {
         Set<String> nodeIds = new HashSet<>();
 
         String cypher;
+        List<String> searchTerms = prepareSearchTerms(keyword);
         if (keyword != null && !keyword.isBlank()) {
             cypher = """
                 MATCH (n)
-                WHERE n.name CONTAINS $keyword
+                WHERE any(term IN $terms WHERE coalesce(n.name, '') CONTAINS term OR coalesce(n.description, '') CONTAINS term)
                 MATCH path = (n)-[*1..2]-()
                 RETURN path
                 LIMIT 50
@@ -82,7 +100,7 @@ public class KnowledgeGraphService {
         }
 
         Result result = keyword != null && !keyword.isBlank()
-                ? session.run(cypher, Map.of("keyword", keyword))
+                ? session.run(cypher, Map.of("terms", searchTerms))
                 : session.run(cypher);
 
         while (result.hasNext()) {
@@ -118,40 +136,96 @@ public class KnowledgeGraphService {
         return data;
     }
 
-    private Map<String, Object> queryFromNeo4j(Session session, String text) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        List<Map<String, Object>> entities = new ArrayList<>();
+    private List<Map<String, Object>> searchEntitiesFromNeo4j(Session session, String keyword, String type) {
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        String normalizedType = type == null ? "" : type.trim();
+        List<String> searchTerms = prepareSearchTerms(keyword);
 
-        String cypher = """
+        StringBuilder cypher = new StringBuilder("""
             MATCH (n)
-            WHERE n.name CONTAINS $text OR n.description CONTAINS $text
-            RETURN n
-            LIMIT 20
-            """;
+            WHERE ($keyword = '' OR any(term IN $terms WHERE
+                coalesce(n.name, '') CONTAINS term
+                OR coalesce(n.description, '') CONTAINS term
+                OR coalesce(n.symptom, '') CONTAINS term
+                OR coalesce(n.damage, '') CONTAINS term
+                OR coalesce(n.usage, '') CONTAINS term
+            ))
+            """);
+        if (!normalizedType.isBlank()) {
+            cypher.append(" AND $type IN labels(n)");
+        }
+        cypher.append("""
+            RETURN elementId(n) AS id, n
+            LIMIT 50
+            """);
 
-        Result queryResult = session.run(cypher, Map.of("text", text == null ? "" : text));
-        while (queryResult.hasNext()) {
-            Record record = queryResult.next();
+        Result result = session.run(cypher.toString(), Map.of(
+                "keyword", normalizedKeyword,
+                "terms", searchTerms,
+                "type", normalizedType
+        ));
+
+        List<Map<String, Object>> entities = new ArrayList<>();
+        while (result.hasNext()) {
+            Record record = result.next();
             var node = record.get("n").asNode();
-            Map<String, Object> entity = new LinkedHashMap<>();
-            entity.put("label", node.labels().iterator().next());
-            entity.put("properties", node.asMap());
-            entities.add(entity);
+            entities.add(Map.of(
+                    "id", record.get("id").asString(),
+                    "label", node.labels().iterator().next(),
+                    "properties", node.asMap()
+            ));
         }
 
         if (entities.isEmpty()) {
-            return queryFallback(text);
+            return demoContentService.searchEntities(keyword, type);
+        }
+        return entities;
+    }
+
+    private Map<String, Object> getEntityDetailFromNeo4j(Session session, String entityId) {
+        String cypher = """
+            MATCH (n)
+            WHERE elementId(n) = $id OR n.id = $id
+            OPTIONAL MATCH (n)-[r]-(m)
+            RETURN n, collect({
+                type: type(r),
+                target: {
+                    id: elementId(m),
+                    label: head(labels(m)),
+                    name: m.name
+                }
+            }) AS relations
+            LIMIT 1
+            """;
+
+        Result result = session.run(cypher, Map.of("id", entityId));
+        if (!result.hasNext()) {
+            return demoContentService.getEntityDetail(entityId);
         }
 
-        result.put("entities", entities);
-        return result;
+        Record record = result.next();
+        var node = record.get("n").asNode();
+        return Map.of(
+                "id", node.elementId(),
+                "label", node.labels().iterator().next(),
+                "name", node.asMap().get("name"),
+                "properties", node.asMap(),
+                "relations", record.get("relations").asList()
+        );
     }
 
     private Map<String, Object> loadFallbackGraph(String keyword) {
         return demoContentService.getFallbackGraph(keyword);
     }
 
-    private Map<String, Object> queryFallback(String text) {
-        return Map.of("entities", demoContentService.searchEntities(text));
+    private List<String> prepareSearchTerms(String text) {
+        List<String> terms = demoContentService.extractKnowledgeTerms(text);
+        if (!terms.isEmpty()) {
+            return terms;
+        }
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+        return List.of(text.trim());
     }
 }

@@ -1,420 +1,299 @@
 # API 接口文档
 
-## 接口说明
+## 1. 基本说明
 
-- **Base URL**: `http://localhost:8080/api`
-- **数据格式**: JSON
-- **字符编码**: UTF-8
+- Base URL: `http://localhost:8080/api`
+- 数据格式: `application/json`
+- 文件上传: `multipart/form-data`
+- 认证方式: `Authorization: Bearer <token>`
 
----
+错误响应统一为:
 
-## 1. 问答模块
-
-### 1.1 发送问答请求
-
-**接口**: `POST /chat`
-
-**请求参数**:
 ```json
 {
-  "sessionId": "session_123456",
-  "question": "桂味荔枝有什么特点？",
+  "message": "错误说明"
+}
+```
+
+## 2. 认证模块
+
+### 2.1 注册
+
+- `POST /auth/register`
+
+请求:
+
+```json
+{
+  "username": "demo_user",
+  "password": "demo123",
+  "role": "farmer"
+}
+```
+
+响应:
+
+```json
+{
+  "token": "token_value",
+  "expiresAt": "2026-03-23T10:00:00+08:00",
+  "user": {
+    "id": "user_id",
+    "username": "demo_user",
+    "role": "farmer",
+    "createdAt": "2026-03-16T10:00:00+08:00"
+  }
+}
+```
+
+### 2.2 登录
+
+- `POST /auth/login`
+
+请求:
+
+```json
+{
+  "username": "farmer",
+  "password": "demo123"
+}
+```
+
+### 2.3 当前用户
+
+- `GET /auth/me`
+- 需要登录
+
+### 2.4 登出
+
+- `POST /auth/logout`
+- 需要登录
+
+响应:
+
+```json
+{
+  "success": true,
+  "message": "已退出登录"
+}
+```
+
+## 3. 问答模块
+
+### 3.1 发起问答
+
+- `POST /chat`
+- 需要登录
+
+请求:
+
+```json
+{
+  "sessionId": "session_001",
+  "question": "荔枝雨季如何防治炭疽病？",
   "useKnowledgeGraph": true,
   "useVectorSearch": true
 }
 ```
 
-**响应示例**:
+响应:
+
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "answer": "桂味荔枝是广东著名的荔枝品种，特点是...",
-    "knowledgeGraph": {
-      "nodes": [...],
-      "edges": [...]
-    },
-    "sources": [
-      {
-        "title": "荔枝品种介绍.pdf",
-        "content": "桂味荔枝...",
-        "page": 10
-      }
-    ],
-    "timestamp": "2026-03-11T10:30:00"
-  }
-}
-```
-
----
-
-## 2. 拍照识病模块
-
-### 2.1 上传图片识别病害
-
-**接口**: `POST /diagnosis`
-
-**Content-Type**: `multipart/form-data`
-
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| image | File | 是 | 图片文件 |
-| userId | Long | 否 | 用户ID |
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "diseaseName": "霜疫霉病",
-    "confidence": 0.95,
-    "bbox": {
-      "x": 100,
-      "y": 150,
-      "width": 200,
-      "height": 180
-    },
-    "suggestion": "防治建议：...",
-    "pesticides": [
-      {
-        "name": "烯酰吗啉",
-        "usage": "稀释1000倍喷雾"
-      }
-    ]
-  }
-}
-```
-
----
-
-## 3. 知识图谱模块
-
-### 3.1 获取知识图谱可视化数据
-
-**接口**: `GET /kg/visualize`
-
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| entityName | String | 否 | 实体名称（不传则返回全图） |
-| limit | Integer | 否 | 返回节点数限制，默认50 |
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "nodes": [
-      {
-        "id": "1",
-        "label": "LitchiVariety",
-        "name": "桂味",
-        "properties": {...}
-      },
-      {
-        "id": "2",
-        "label": "Disease",
-        "name": "霜疫霉病",
-        "properties": {...}
-      }
-    ],
-    "edges": [
-      {
-        "source": "1",
-        "target": "2",
-        "label": "HAS_DISEASE",
-        "properties": {...}
-      }
-    ]
-  }
-}
-```
-
-### 3.2 搜索实体
-
-**接口**: `GET /kg/search`
-
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| keyword | String | 是 | 搜索关键词 |
-| type | String | 否 | 实体类型（LitchiVariety/Disease/Pest/Pesticide） |
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": [
+  "answer": "回答内容",
+  "sources": [
     {
-      "id": "1",
-      "label": "LitchiVariety",
-      "name": "桂味",
-      "properties": {...}
+      "title": "荔枝病害手册.md",
+      "content": "命中的文档片段",
+      "source": "荔枝病害手册.md",
+      "page": 1,
+      "score": 0.91
+    }
+  ],
+  "knowledgeGraph": {
+    "nodes": [],
+    "edges": []
+  }
+}
+```
+
+### 3.2 会话历史
+
+- `GET /chat/history?sessionId=session_001&page=1&size=20`
+- 需要登录
+
+响应:
+
+```json
+{
+  "total": 12,
+  "page": 1,
+  "size": 20,
+  "items": [
+    {
+      "id": "history_id",
+      "sessionId": "session_001",
+      "question": "问题",
+      "answer": "回答",
+      "sources": [],
+      "knowledgeGraph": {},
+      "createdAt": "2026-03-16T10:00:00+08:00"
     }
   ]
 }
 ```
 
-### 3.3 获取实体详情
+### 3.3 会话列表
 
-**接口**: `GET /kg/entity/{id}`
+- `GET /chat/sessions?page=1&size=10`
+- 需要登录
 
-**路径参数**:
-| 参数名 | 类型 | 说明 |
-|--------|------|------|
-| id | String | 实体ID |
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": "1",
-    "label": "Disease",
-    "name": "霜疫霉病",
-    "properties": {
-      "symptom": "果实褐色病斑、白色霉层",
-      "cause": "高湿低温",
-      "highSeason": "雨季"
-    },
-    "relations": [
-      {
-        "type": "TREATS",
-        "target": {
-          "id": "10",
-          "label": "Pesticide",
-          "name": "烯酰吗啉"
-        }
-      }
-    ]
-  }
-}
-```
-
----
-
-## 4. 文档管理模块
+## 4. 文档模块
 
 ### 4.1 上传文档
 
-**接口**: `POST /document`
+- `POST /document`
+- 需要登录
+- 表单字段:
+  - `file`: 必填
+  - `title`: 可选
 
-**Content-Type**: `multipart/form-data`
+响应:
 
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| file | File | 是 | 文档文件（pdf/docx） |
-| title | String | 否 | 文档标题（默认文件名） |
-| userId | Long | 否 | 上传用户ID |
-
-**响应示例**:
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": 1,
-    "title": "荔枝种植技术.pdf",
-    "status": "uploaded"
-  }
+  "id": "doc_id",
+  "name": "guide.md",
+  "title": "荔枝病害指南",
+  "size": 1024,
+  "contentType": "text/markdown",
+  "uploadTime": "2026-03-16T10:00:00+08:00",
+  "chunkCount": 3,
+  "indexed": true,
+  "statusMessage": "文档已完成切块并建立检索索引。",
+  "ownerId": "user_id",
+  "ownerUsername": "farmer"
 }
 ```
 
-### 4.2 获取文档列表
+### 4.2 文档列表
 
-**接口**: `GET /document`
+- `GET /document?page=1&size=10&keyword=病害`
+- 需要登录
 
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| page | Integer | 否 | 页码，默认1 |
-| size | Integer | 否 | 每页数量，默认10 |
-| keyword | String | 否 | 搜索关键词 |
+响应:
 
-**响应示例**:
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 50,
-    "page": 1,
-    "size": 10,
-    "items": [
-      {
-        "id": 1,
-        "title": "荔枝种植技术.pdf",
-        "fileType": "pdf",
-        "fileSize": 1048576,
-        "status": "indexed",
-        "createdAt": "2026-03-01T10:00:00"
-      }
-    ]
-  }
+  "total": 4,
+  "page": 1,
+  "size": 10,
+  "items": []
 }
 ```
 
 ### 4.3 删除文档
 
-**接口**: `DELETE /document/{id}`
+- `DELETE /document/{id}`
+- 需要登录
 
-**路径参数**:
-| 参数名 | 类型 | 说明 |
-|--------|------|------|
-| id | Long | 文档ID |
+响应:
 
-**响应示例**:
 ```json
 {
-  "code": 200,
-  "message": "success"
+  "deleted": true,
+  "message": "文档已删除。"
 }
 ```
 
----
+## 5. 知识图谱模块
 
-## 5. 对话历史模块
+### 5.1 可视化数据
 
-### 5.1 获取对话历史
+- `GET /kg/visualize`
+- `GET /kg/visualize?keyword=炭疽病`
 
-**接口**: `GET /chat/history`
+### 5.2 实体搜索
 
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| sessionId | String | 是 | 会话ID |
-| page | Integer | 否 | 页码，默认1 |
-| size | Integer | 否 | 每页数量，默认20 |
+- `GET /kg/search?keyword=炭疽&type=Disease`
 
-**响应示例**:
+响应:
+
 ```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 100,
-    "page": 1,
-    "size": 20,
-    "items": [
-      {
-        "id": 1,
-        "question": "桂味荔枝有什么特点？",
-        "answer": "桂味荔枝是...",
-        "createdAt": "2026-03-11T10:30:00"
-      }
-    ]
+[
+  {
+    "id": "entity_id",
+    "label": "Disease",
+    "name": "炭疽病",
+    "properties": {}
   }
-}
+]
 ```
 
-### 5.2 获取会话列表
+### 5.3 实体详情
 
-**接口**: `GET /chat/sessions`
+- `GET /kg/entity/{id}`
 
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| userId | Long | 否 | 用户ID |
-| page | Integer | 否 | 页码，默认1 |
-| size | Integer | 否 | 每页数量，默认10 |
+## 6. 病害识别模块
 
-**响应示例**:
+### 6.1 图片识别
+
+- `POST /diagnosis`
+- 表单字段:
+  - `file`: 必填
+
+响应:
+
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 20,
-    "page": 1,
-    "size": 10,
-    "items": [
-      {
-        "sessionId": "session_123456",
-        "title": "桂味荔枝咨询",
-        "lastMessage": "桂味荔枝有什么特点？",
-        "updatedAt": "2026-03-11T10:30:00"
-      }
-    ]
-  }
+  "disease": "霜疫霉病",
+  "diseaseName": "霜疫霉病",
+  "confidence": 0.95,
+  "suggestions": [
+    "建议一",
+    "建议二"
+  ],
+  "suggestion": "建议一",
+  "diseases": [
+    {
+      "name": "霜疫霉病",
+      "confidence": 0.95
+    }
+  ],
+  "engine": "demo-rule-engine",
+  "demoMode": true,
+  "note": "当前为演示模式"
 }
 ```
 
----
+## 7. 评测模块
 
-## 6. 评测模块
+所有评测接口都需要登录。
 
-### 6.1 获取评测问题列表
+### 7.1 题库列表
 
-**接口**: `GET /evaluation/questions`
+- `GET /evaluation/questions?page=1&size=20`
+- `GET /evaluation/questions?type=病害识别&evaluated=false`
 
-**请求参数**:
-| 参数名 | 类型 | 必选 | 说明 |
-|--------|------|------|------|
-| type | String | 否 | 问题类型 |
-| evaluated | Boolean | 否 | 是否已评测 |
-| page | Integer | 否 | 页码，默认1 |
-| size | Integer | 否 | 每页数量，默认20 |
+### 7.2 提交系统答案
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 100,
-    "page": 1,
-    "size": 20,
-    "items": [
-      {
-        "id": 1,
-        "question": "桂味荔枝有什么特点？",
-        "referenceAnswer": "桂味荔枝是...",
-        "systemAnswer": null,
-        "bleuScore": null,
-        "humanScore": null,
-        "evaluated": false
-      }
-    ]
-  }
-}
-```
+- `POST /evaluation/answer`
 
-### 6.2 提交系统答案
+请求:
 
-**接口**: `POST /evaluation/answer`
-
-**请求参数**:
 ```json
 {
   "id": 1,
-  "systemAnswer": "桂味荔枝是..."
+  "systemAnswer": "系统生成的答案"
 }
 ```
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": 1,
-    "bleuScore": 0.75
-  }
-}
-```
+### 7.3 提交人工评分
 
-### 6.3 提交人工评分
+- `POST /evaluation/score`
 
-**接口**: `POST /evaluation/score`
+请求:
 
-**请求参数**:
 ```json
 {
   "id": 1,
@@ -422,98 +301,107 @@
 }
 ```
 
-**响应示例**:
+### 7.4 统计信息
+
+- `GET /evaluation/stats`
+
+响应:
+
 ```json
 {
-  "code": 200,
-  "message": "success"
+  "total": 100,
+  "evaluated": 12,
+  "avgBleuScore": 0.713,
+  "avgHumanScore": 4.2,
+  "byType": [
+    {
+      "type": "品种介绍",
+      "count": 16,
+      "avgBleuScore": 0.702,
+      "avgHumanScore": 4.0
+    }
+  ]
 }
 ```
 
-### 6.4 获取评测统计
+## 8. 满意度模块
 
-**接口**: `GET /evaluation/stats`
+### 8.1 提交问卷
 
-**响应示例**:
+- `POST /feedback`
+
+请求:
+
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 100,
-    "evaluated": 80,
-    "avgBleuScore": 0.72,
-    "avgHumanScore": 4.1,
-    "byType": [
-      {
-        "type": "品种介绍",
-        "count": 15,
-        "avgBleuScore": 0.75
-      }
-    ]
-  }
+  "module": "智能问答",
+  "overallScore": 5,
+  "accuracyScore": 5,
+  "practicalityScore": 4,
+  "fluencyScore": 5,
+  "comment": "回答有来源卡片，讲解比较清楚。"
 }
 ```
 
----
+### 8.2 问卷统计
 
-## 7. 系统模块
+- `GET /feedback/stats`
 
-### 7.1 系统健康检查
+响应:
 
-**接口**: `GET /health`
-
-**响应示例**:
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "status": "healthy",
-    "services": {
-      "neo4j": "connected",
-      "milvus": "connected",
-      "ollama": "connected"
-    },
-    "timestamp": "2026-03-11T10:30:00"
-  }
+  "total": 3,
+  "avgOverallScore": 4.67,
+  "avgAccuracyScore": 4.67,
+  "avgPracticalityScore": 4.33,
+  "avgFluencyScore": 4.67,
+  "byModule": [
+    {
+      "module": "智能问答",
+      "count": 2,
+      "avgOverallScore": 4.5
+    }
+  ],
+  "recent": []
 }
 ```
 
-### 7.2 初始化系统
+## 9. 系统模块
 
-**接口**: `POST /system/init`
+### 9.1 健康检查
 
-**响应示例**:
+- `GET /health`
+
+### 9.2 初始化
+
+- `POST /system/init?scope=all`
+
+响应:
+
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "knowledgeGraph": "initialized",
-    "vectorStore": "initialized"
-  }
+  "scope": "all",
+  "graphInitialized": true,
+  "vectorInitialized": true,
+  "message": "初始化完成"
 }
 ```
 
----
+### 9.3 系统概览
 
-## 错误码说明
+- `GET /system/overview`
 
-| 错误码 | 说明 |
-|--------|------|
-| 200 | 成功 |
-| 400 | 请求参数错误 |
-| 401 | 未授权 |
-| 404 | 资源不存在 |
-| 500 | 服务器内部错误 |
-| 503 | 服务不可用（如Ollama未启动） |
+### 9.4 系统设置
 
-**错误响应示例**:
-```json
-{
-  "code": 400,
-  "message": "请求参数错误",
-  "data": null
-}
-```
+- `GET /system/settings`
+
+### 9.5 演示数据引导
+
+- `POST /system/demo/bootstrap`
+
+## 10. 默认账号
+
+- `farmer / demo123`
+- `technician / demo123`
+- `shopkeeper / demo123`

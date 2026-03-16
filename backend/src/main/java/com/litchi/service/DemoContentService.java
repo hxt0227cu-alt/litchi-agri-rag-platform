@@ -3,6 +3,7 @@ package com.litchi.service;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +19,7 @@ public class DemoContentService {
                 new DemoDocument(
                         "demo-anthracnose-guide.md",
                         "荔枝炭疽病防治手册",
-                        "围绕炭疽病的症状识别、雨季管理和防治建议整理的答辩样例文档。",
+                        "围绕炭疽病的症状识别、雨季管理和防治建议整理的平台样例文档。",
                         """
                         # 荔枝炭疽病防治手册
 
@@ -34,7 +35,7 @@ public class DemoContentService {
                         3. 果园保持通风透光，避免枝梢过密和湿度长期过高。
                         4. 发病初期可轮换使用咪鲜胺、苯醚甲环唑等药剂，注意安全间隔期。
 
-                        ## 答辩展示可直接引用
+                        ## 平台知识要点
                         如果用户询问“荔枝炭疽病在雨季怎么防治”，建议回答要点包括：提前预防、雨后复查、加强修剪和轮换用药。
                         """
                 ),
@@ -57,14 +58,14 @@ public class DemoContentService {
                         3. 发现病果后及时清理，避免病原在园内持续传播。
                         4. 可结合烯酰吗啉等药剂开展防治，并注意轮换用药。
 
-                        ## 答辩展示可直接引用
+                        ## 平台知识要点
                         如果问题涉及“霜疫霉病和炭疽病怎么区分”，可说明：霜疫霉病更常见白色霉层，雨季传播更快；炭疽病更常见圆形病斑和果实腐烂。
                         """
                 ),
                 new DemoDocument(
                         "demo-guiwei-management.md",
                         "桂味荔枝栽培管理要点",
-                        "用于演示品种、病害和栽培技术之间的关联。",
+                        "用于展示品种、病害和栽培技术之间的关联。",
                         """
                         # 桂味荔枝栽培管理要点
 
@@ -76,8 +77,8 @@ public class DemoContentService {
                         2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。
                         3. 果实膨大期加强果园巡查，发现病果和虫果后及时清理。
 
-                        ## 与答辩展示相关的结论
-                        在知识图谱里，桂味可与炭疽病、霜疫霉病、通风修剪、雨季巡园等节点建立关系，方便展示“品种 - 病害 - 技术”的关联链路。
+                        ## 与平台图谱相关的结论
+                        在知识图谱里，桂味可与炭疽病、霜疫霉病、通风修剪、雨季巡园等节点建立关系，方便查看“品种 - 病害 - 技术”的关联链路。
                         """
                 ),
                 new DemoDocument(
@@ -121,10 +122,10 @@ public class DemoContentService {
     public List<String> getDemoFlow() {
         return List.of(
                 "先在系统总览页确认后端、知识图谱、文档检索和识别服务状态。",
-                "进入知识库管理页，展示系统已经自动准备好的答辩样例文档，也可以现场追加上传材料。",
-                "进入智能问答页，使用推荐问题演示基于文档检索和图谱实体增强的回答。",
-                "进入知识图谱页，搜索“桂味”或“炭疽病”，展示品种、病害、药剂和技术之间的关联。",
-                "进入病害识别页，选择内置样图或上传图片，展示识别结果、候选类别和处理建议。"
+                "进入知识库管理页，查看系统已经自动准备好的平台样例文档，也可以继续追加上传材料。",
+                "进入智能问答页，使用推荐问题体验基于文档检索和图谱实体增强的回答。",
+                "进入知识图谱页，搜索“桂味”或“炭疽病”，查看品种、病害、药剂和技术之间的关联。",
+                "进入病害识别页，选择内置样图或上传图片，查看识别结果、候选类别和处理建议。"
         );
     }
 
@@ -134,7 +135,7 @@ public class DemoContentService {
                         "name", "桂味",
                         "origin", "广东",
                         "ripeningSeason", "6月下旬至7月上旬",
-                        "description", "优质中熟荔枝品种，适合作为答辩展示的核心品种节点。"
+                        "description", "优质中熟荔枝品种，适合作为平台知识图谱的核心品种节点。"
                 )),
                 node("variety-feizixiao", "LitchiVariety", Map.of(
                         "name", "妃子笑",
@@ -199,6 +200,7 @@ public class DemoContentService {
 
     public Map<String, Object> getFallbackGraph(String keyword) {
         String needle = normalize(keyword);
+        List<String> searchTerms = extractKnowledgeTerms(keyword);
         List<Map<String, Object>> nodes = getFallbackNodes();
         List<Map<String, Object>> edges = getFallbackEdges();
 
@@ -207,7 +209,7 @@ public class DemoContentService {
         }
 
         List<Map<String, Object>> matchedNodes = nodes.stream()
-                .filter(node -> matchesNode(node, needle))
+                .filter(node -> matchesNode(node, needle) || matchesNode(node, searchTerms))
                 .toList();
 
         if (matchedNodes.isEmpty()) {
@@ -239,10 +241,18 @@ public class DemoContentService {
     }
 
     public List<Map<String, Object>> searchEntities(String text) {
+        return searchEntities(text, null);
+    }
+
+    public List<Map<String, Object>> searchEntities(String text, String type) {
         String needle = normalize(text);
+        String normalizedType = normalize(type);
+        List<String> searchTerms = extractKnowledgeTerms(text);
         if (needle.isBlank()) {
             return getFallbackNodes().stream()
+                    .filter(node -> normalizedType.isBlank() || normalize(String.valueOf(node.get("label"))).equals(normalizedType))
                     .map(node -> Map.<String, Object>of(
+                            "id", node.get("id"),
                             "label", node.get("label"),
                             "properties", node.get("properties")
                     ))
@@ -251,14 +261,97 @@ public class DemoContentService {
 
         List<Map<String, Object>> entities = new ArrayList<>();
         for (Map<String, Object> node : getFallbackNodes()) {
-            if (matchesNode(node, needle)) {
+            boolean typeMatched = normalizedType.isBlank()
+                    || normalize(String.valueOf(node.get("label"))).equals(normalizedType);
+            if (typeMatched && (matchesNode(node, needle) || matchesNode(node, searchTerms))) {
                 entities.add(Map.of(
+                        "id", node.get("id"),
                         "label", node.get("label"),
                         "properties", node.get("properties")
                 ));
             }
         }
         return entities;
+    }
+
+    public List<String> extractKnowledgeTerms(String text) {
+        String normalized = normalize(text);
+        if (normalized.isBlank()) {
+            return List.of();
+        }
+
+        Set<String> terms = new LinkedHashSet<>();
+        keywordAliases().forEach((alias, canonical) -> {
+            if (normalized.contains(alias)) {
+                terms.add(canonical);
+            }
+        });
+
+        for (Map<String, Object> node : getFallbackNodes()) {
+            Object propertiesObject = node.get("properties");
+            if (!(propertiesObject instanceof Map<?, ?> properties)) {
+                continue;
+            }
+
+            Object name = properties.get("name");
+            if (name == null) {
+                continue;
+            }
+
+            String candidate = String.valueOf(name).trim();
+            if (!candidate.isBlank() && normalized.contains(normalize(candidate))) {
+                terms.add(candidate);
+            }
+        }
+
+        for (String token : normalized.split("[^\\p{IsAlphabetic}\\p{IsDigit}\\u4e00-\\u9fa5]+")) {
+            String trimmed = token.trim();
+            if (trimmed.length() >= 2 && trimmed.length() <= 12 && !stopWords().contains(trimmed)) {
+                terms.add(trimmed);
+            }
+        }
+
+        if (terms.isEmpty()) {
+            terms.add(normalized);
+        }
+        return List.copyOf(terms);
+    }
+
+    public Map<String, Object> getEntityDetail(String entityId) {
+        Map<String, Object> node = getFallbackNodes().stream()
+                .filter(item -> String.valueOf(item.get("id")).equals(entityId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("实体不存在。"));
+
+        List<Map<String, Object>> relations = new ArrayList<>();
+        for (Map<String, Object> edge : getFallbackEdges()) {
+            String source = String.valueOf(edge.get("source"));
+            String target = String.valueOf(edge.get("target"));
+            if (!entityId.equals(source) && !entityId.equals(target)) {
+                continue;
+            }
+
+            String relatedId = entityId.equals(source) ? target : source;
+            getFallbackNodes().stream()
+                    .filter(item -> String.valueOf(item.get("id")).equals(relatedId))
+                    .findFirst()
+                    .ifPresent(relatedNode -> relations.add(Map.of(
+                            "type", edge.get("label"),
+                            "target", Map.of(
+                                    "id", relatedNode.get("id"),
+                                    "label", relatedNode.get("label"),
+                                    "name", ((Map<?, ?>) relatedNode.get("properties")).get("name")
+                            )
+                    )));
+        }
+
+        return Map.of(
+                "id", node.get("id"),
+                "label", node.get("label"),
+                "name", ((Map<?, ?>) node.get("properties")).get("name"),
+                "properties", node.get("properties"),
+                "relations", relations
+        );
     }
 
     public List<Map<String, String>> getSampleDocuments() {
@@ -272,6 +365,10 @@ public class DemoContentService {
     }
 
     private boolean matchesNode(Map<String, Object> node, String needle) {
+        if (needle == null || needle.isBlank()) {
+            return false;
+        }
+
         Object propertiesObject = node.get("properties");
         if (!(propertiesObject instanceof Map<?, ?> properties)) {
             return false;
@@ -286,8 +383,38 @@ public class DemoContentService {
         return normalize(String.valueOf(node.get("label"))).contains(needle);
     }
 
+    private boolean matchesNode(Map<String, Object> node, List<String> needles) {
+        if (needles == null || needles.isEmpty()) {
+            return false;
+        }
+        return needles.stream().anyMatch(needle -> matchesNode(node, normalize(needle)));
+    }
+
     private String normalize(String value) {
         return value == null ? "" : value.toLowerCase(Locale.ROOT).trim();
+    }
+
+    private Map<String, String> keywordAliases() {
+        return Map.ofEntries(
+                Map.entry("炭疽", "炭疽病"),
+                Map.entry("霜疫霉", "霜疫霉病"),
+                Map.entry("霜霉", "霜疫霉病"),
+                Map.entry("桂味", "桂味"),
+                Map.entry("妃子笑", "妃子笑"),
+                Map.entry("蒂蛀", "蒂蛀虫"),
+                Map.entry("雨季", "雨季巡园"),
+                Map.entry("巡园", "雨季巡园"),
+                Map.entry("修剪", "通风修剪"),
+                Map.entry("咯鲜胺", "咯鲜胺"),
+                Map.entry("烯酰吗啉", "烯酰吗啉")
+        );
+    }
+
+    private Set<String> stopWords() {
+        return Set.of(
+                "荔枝", "请问", "怎么", "如何", "哪些", "什么", "问题", "需要", "可以",
+                "以及", "关于", "时候", "进行", "一下", "处理", "防治", "管理", "怎么做"
+        );
     }
 
     private Map<String, Object> node(String id, String label, Map<String, Object> properties) {

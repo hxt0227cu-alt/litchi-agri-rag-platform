@@ -2,6 +2,7 @@ package com.litchi.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.litchi.dto.DocumentRecord;
+import com.litchi.dto.PageResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +10,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.http.MediaType;
@@ -31,23 +35,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
-
-    private static final Pattern PDF_TEXT_PATTERN = Pattern.compile("\\(([^()]*)\\)\\s*Tj");
-    private static final Pattern PDF_TEXT_ARRAY_PATTERN = Pattern.compile("\\[(.*?)]\\s*TJ", Pattern.DOTALL);
-    private static final Pattern PDF_TEXT_ITEM_PATTERN = Pattern.compile("\\(([^()]*)\\)");
     private static final int CHUNK_SIZE = 480;
     private static final int CHUNK_OVERLAP = 120;
-
     private final ObjectMapper objectMapper;
+    private final MysqlStateStoreService mysqlStateStoreService;
     private final SimpleEmbeddingService simpleEmbeddingService;
     private final VectorSearchService vectorSearchService;
     private final DemoContentService demoContentService;
@@ -87,6 +83,10 @@ public class DocumentService {
     }
 
     public synchronized DocumentRecord upload(MultipartFile file) {
+        return upload(file, null, null, null);
+    }
+
+    public synchronized DocumentRecord upload(MultipartFile file, String title, String ownerId, String ownerUsername) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Uploaded file is empty");
         }
@@ -97,16 +97,20 @@ public class DocumentService {
             String extension = getExtension(originalName);
             String documentId = newDocumentId();
             Path targetPath = storagePath.resolve(buildStoredFileName(documentId, extension));
+            String displayTitle = title == null || title.isBlank() ? originalName : title.trim();
 
             file.transferTo(targetPath);
             String extractedText = extractText(targetPath, originalName);
             StoredDocument storedDocument = persistDocument(
                     documentId,
                     originalName,
+                    displayTitle,
                     contentType,
                     file.getSize(),
                     targetPath,
-                    extractedText
+                    extractedText,
+                    ownerId,
+                    ownerUsername
             );
             return toRecord(storedDocument);
         } catch (IOException e) {
@@ -115,10 +119,26 @@ public class DocumentService {
     }
 
     public synchronized List<DocumentRecord> list() {
+        return list(null, 1, Integer.MAX_VALUE).getItems();
+    }
+
+    public synchronized PageResponse<DocumentRecord> list(String keyword, int page, int size) {
+        int safePage = Math.max(page, 1);
+        int safeSize = Math.max(size, 1);
         return documents.values().stream()
+                .filter(document -> matchesKeyword(document, keyword))
                 .sorted(Comparator.comparing(StoredDocument::getUploadTime).reversed())
                 .map(this::toRecord)
-                .toList();
+                .collect(java.util.stream.Collectors.collectingAndThen(java.util.stream.Collectors.toList(), items -> {
+                    int fromIndex = Math.min((safePage - 1) * safeSize, items.size());
+                    int toIndex = Math.min(fromIndex + safeSize, items.size());
+                    return PageResponse.<DocumentRecord>builder()
+                            .total(items.size())
+                            .page(safePage)
+                            .size(safeSize)
+                            .items(items.subList(fromIndex, toIndex))
+                            .build();
+                }));
     }
 
     public synchronized int countDocuments() {
@@ -151,7 +171,7 @@ public class DocumentService {
                 continue;
             }
 
-            createTextDocument(demoDocument.fileName(), demoDocument.content(), "text/markdown");
+            createTextDocument(demoDocument.fileName(), demoDocument.title(), demoDocument.content(), "text/markdown");
             imported++;
         }
 
@@ -188,6 +208,17 @@ public class DocumentService {
         return true;
     }
 
+    public synchronized int syncVectorIndex() {
+        if (chunks.isEmpty()) {
+            return 0;
+        }
+
+        List<VectorSearchService.Document> vectorDocuments = chunks.stream()
+                .map(this::toVectorDocument)
+                .toList();
+        return upsertVectorDocuments(vectorDocuments) ? vectorDocuments.size() : 0;
+    }
+
     public synchronized List<ChunkMatch> search(String question, int topK) {
         if (question == null || question.isBlank() || chunks.isEmpty()) {
             return List.of();
@@ -212,14 +243,14 @@ public class DocumentService {
         return applicationDir.resolve(path).normalize();
     }
 
-    private StoredDocument createTextDocument(String originalName, String content, String contentType) {
+    private StoredDocument createTextDocument(String originalName, String title, String content, String contentType) {
         try {
             String documentId = newDocumentId();
             String extension = getExtension(originalName);
             Path targetPath = storagePath.resolve(buildStoredFileName(documentId, extension));
             Files.writeString(targetPath, content, StandardCharsets.UTF_8);
             long size = Files.size(targetPath);
-            return persistDocument(documentId, originalName, contentType, size, targetPath, content);
+            return persistDocument(documentId, originalName, title, contentType, size, targetPath, content, null, null);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to create demo document " + originalName, e);
         }
@@ -228,10 +259,13 @@ public class DocumentService {
     private StoredDocument persistDocument(
             String documentId,
             String originalName,
+            String title,
             String contentType,
             long size,
             Path targetPath,
-            String extractedText
+            String extractedText,
+            String ownerId,
+            String ownerUsername
     ) {
         List<String> chunkTexts = chunkText(extractedText);
         List<StoredChunk> newChunks = new ArrayList<>();
@@ -270,6 +304,7 @@ public class DocumentService {
         StoredDocument storedDocument = StoredDocument.builder()
                 .id(documentId)
                 .name(originalName)
+                .title(title)
                 .contentType(contentType)
                 .size(size)
                 .uploadTime(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
@@ -277,16 +312,15 @@ public class DocumentService {
                 .indexed(!chunkTexts.isEmpty())
                 .statusMessage(message)
                 .storagePath(targetPath.toString())
+                .ownerId(ownerId)
+                .ownerUsername(ownerUsername)
                 .build();
 
         documents.put(documentId, storedDocument);
         chunks.addAll(newChunks);
         persistState();
 
-        if (!vectorDocuments.isEmpty()) {
-            vectorSearchService.initCollection();
-            vectorSearchService.insertDocuments(vectorDocuments);
-        }
+        upsertVectorDocuments(vectorDocuments);
 
         return storedDocument;
     }
@@ -334,39 +368,204 @@ public class DocumentService {
         return separatorIndex > 0 ? value.substring(0, separatorIndex) : value;
     }
 
+    private boolean upsertVectorDocuments(List<VectorSearchService.Document> vectorDocuments) {
+        if (vectorDocuments == null || vectorDocuments.isEmpty()) {
+            return true;
+        }
+
+        if (!vectorSearchService.initCollection()) {
+            log.warn("Skipping vector synchronization because Milvus collection is unavailable");
+            return false;
+        }
+
+        List<String> ids = vectorDocuments.stream()
+                .map(VectorSearchService.Document::getId)
+                .toList();
+        vectorSearchService.deleteDocuments(ids);
+        vectorSearchService.insertDocuments(vectorDocuments);
+        return true;
+    }
+
+    private VectorSearchService.Document toVectorDocument(StoredChunk chunk) {
+        VectorSearchService.Document vectorDocument = new VectorSearchService.Document();
+        vectorDocument.setId(chunk.getId());
+        vectorDocument.setTitle(chunk.getTitle());
+        vectorDocument.setContent(chunk.getContent());
+        vectorDocument.setSource(chunk.getSource());
+        vectorDocument.setPage(chunk.getPage());
+        vectorDocument.setVector(chunk.getVector());
+        return vectorDocument;
+    }
+
     private void loadState() {
-        if (!Files.exists(statePath)) {
+        if (Files.exists(statePath)) {
+            try {
+                applyState(objectMapper.readValue(statePath.toFile(), StateSnapshot.class));
+            } catch (IOException e) {
+                log.warn("Failed to load persisted document state, starting with empty state", e);
+                documents.clear();
+                chunks.clear();
+            }
+        }
+
+        if (!mysqlStateStoreService.isActive()) {
             return;
         }
 
-        try {
-            StateSnapshot snapshot = objectMapper.readValue(statePath.toFile(), StateSnapshot.class);
-            documents.clear();
-            chunks.clear();
+        java.util.Optional<MysqlStateStoreService.DocumentStateData> mysqlState = mysqlStateStoreService.loadDocumentState();
+        if (mysqlState.isPresent()) {
+            applyState(fromMysqlState(mysqlState.get()));
+            persistLocalState();
+            return;
+        }
 
-            if (snapshot.getDocuments() != null) {
-                for (StoredDocument document : snapshot.getDocuments()) {
-                    documents.put(document.getId(), document);
-                }
-            }
-
-            if (snapshot.getChunks() != null) {
-                chunks.addAll(snapshot.getChunks());
-            }
-        } catch (IOException e) {
-            log.warn("Failed to load persisted document state, starting with empty state", e);
-            documents.clear();
-            chunks.clear();
+        if (!documents.isEmpty() || !chunks.isEmpty()) {
+            mysqlStateStoreService.saveDocumentState(
+                    toMysqlState(new StateSnapshot(new ArrayList<>(documents.values()), new ArrayList<>(chunks)))
+            );
         }
     }
 
     private void persistState() {
         StateSnapshot snapshot = new StateSnapshot(new ArrayList<>(documents.values()), new ArrayList<>(chunks));
+        persistLocalState(snapshot);
+        mysqlStateStoreService.saveDocumentState(toMysqlState(snapshot));
+    }
+
+    private void persistLocalState() {
+        persistLocalState(new StateSnapshot(new ArrayList<>(documents.values()), new ArrayList<>(chunks)));
+    }
+
+    private void persistLocalState(StateSnapshot snapshot) {
         try {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(statePath.toFile(), snapshot);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to persist document state", e);
         }
+    }
+
+    private void applyState(StateSnapshot snapshot) {
+        documents.clear();
+        chunks.clear();
+
+        if (snapshot == null) {
+            return;
+        }
+
+        if (snapshot.getDocuments() != null) {
+            for (StoredDocument document : snapshot.getDocuments()) {
+                StoredDocument normalized = normalizeDocument(document);
+                documents.put(normalized.getId(), normalized);
+            }
+        }
+
+        if (snapshot.getChunks() != null) {
+            chunks.addAll(snapshot.getChunks());
+        }
+    }
+
+    private MysqlStateStoreService.DocumentStateData toMysqlState(StateSnapshot snapshot) {
+        List<MysqlStateStoreService.DocumentData> mysqlDocuments = snapshot.getDocuments() == null
+                ? List.of()
+                : snapshot.getDocuments().stream()
+                .map(document -> new MysqlStateStoreService.DocumentData(
+                        document.getId(),
+                        document.getName(),
+                        resolveDocumentTitle(document),
+                        document.getSize(),
+                        document.getContentType(),
+                        document.getUploadTime(),
+                        document.getChunkCount(),
+                        document.isIndexed(),
+                        document.getStatusMessage(),
+                        document.getStoragePath(),
+                        document.getOwnerId(),
+                        document.getOwnerUsername()
+                ))
+                .toList();
+
+        List<MysqlStateStoreService.DocumentChunkData> mysqlChunks = snapshot.getChunks() == null
+                ? List.of()
+                : snapshot.getChunks().stream()
+                .map(chunk -> new MysqlStateStoreService.DocumentChunkData(
+                        chunk.getId(),
+                        chunk.getDocumentId(),
+                        chunk.getTitle(),
+                        chunk.getSource(),
+                        chunk.getContent(),
+                        chunk.getPage(),
+                        chunk.getVector()
+                ))
+                .toList();
+
+        return new MysqlStateStoreService.DocumentStateData(mysqlDocuments, mysqlChunks);
+    }
+
+    private StateSnapshot fromMysqlState(MysqlStateStoreService.DocumentStateData state) {
+        List<StoredDocument> mysqlDocuments = state.getDocuments() == null
+                ? List.of()
+                : state.getDocuments().stream()
+                .map(document -> StoredDocument.builder()
+                        .id(document.getId())
+                        .name(document.getName())
+                        .title(document.getTitle())
+                        .size(document.getSize())
+                        .contentType(document.getContentType())
+                        .uploadTime(document.getUploadTime())
+                        .chunkCount(document.getChunkCount())
+                        .indexed(document.isIndexed())
+                        .statusMessage(document.getStatusMessage())
+                        .storagePath(document.getStoragePath())
+                        .ownerId(document.getOwnerId())
+                        .ownerUsername(document.getOwnerUsername())
+                        .build())
+                .toList();
+
+        List<StoredChunk> mysqlChunks = state.getChunks() == null
+                ? List.of()
+                : state.getChunks().stream()
+                .map(chunk -> StoredChunk.builder()
+                        .id(chunk.getId())
+                        .documentId(chunk.getDocumentId())
+                        .title(chunk.getTitle())
+                        .source(chunk.getSource())
+                        .content(chunk.getContent())
+                        .page(chunk.getPage())
+                        .vector(chunk.getVector())
+                        .build())
+                .toList();
+
+        return new StateSnapshot(new ArrayList<>(mysqlDocuments), new ArrayList<>(mysqlChunks));
+    }
+
+    private StoredDocument normalizeDocument(StoredDocument document) {
+        if (document == null) {
+            return null;
+        }
+        return StoredDocument.builder()
+                .id(document.getId())
+                .name(document.getName())
+                .title(resolveDocumentTitle(document))
+                .size(document.getSize())
+                .contentType(document.getContentType())
+                .uploadTime(document.getUploadTime())
+                .chunkCount(document.getChunkCount())
+                .indexed(document.isIndexed())
+                .statusMessage(document.getStatusMessage())
+                .storagePath(document.getStoragePath())
+                .ownerId(document.getOwnerId())
+                .ownerUsername(document.getOwnerUsername())
+                .build();
+    }
+
+    private String resolveDocumentTitle(StoredDocument document) {
+        if (document == null) {
+            return "";
+        }
+        if (document.getTitle() != null && !document.getTitle().isBlank()) {
+            return document.getTitle();
+        }
+        return document.getName() == null ? "" : document.getName();
     }
 
     private String extractText(Path filePath, String originalName) {
@@ -387,20 +586,25 @@ public class DocumentService {
 
     private String extractDocxText(Path filePath) {
         try (InputStream inputStream = Files.newInputStream(filePath);
-             ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
-            ZipEntry entry;
-            while ((entry = zipInputStream.getNextEntry()) != null) {
-                if ("word/document.xml".equals(entry.getName())) {
-                    String xml = new String(zipInputStream.readAllBytes(), StandardCharsets.UTF_8);
-                    String text = xml.replace("</w:p>", "\n")
-                            .replace("<w:tab/>", "\t")
-                            .replaceAll("<[^>]+>", "")
-                            .replace("&amp;", "&")
-                            .replace("&lt;", "<")
-                            .replace("&gt;", ">");
-                    return normalizeText(text);
+             XWPFDocument document = new XWPFDocument(inputStream)) {
+            StringBuilder builder = new StringBuilder();
+            for (var paragraph : document.getParagraphs()) {
+                String text = paragraph.getText();
+                if (text != null && !text.isBlank()) {
+                    builder.append(text).append('\n');
                 }
             }
+            for (var table : document.getTables()) {
+                table.getRows().forEach(row -> {
+                    row.getTableCells().forEach(cell -> {
+                        String text = cell.getText();
+                        if (text != null && !text.isBlank()) {
+                            builder.append(text).append('\n');
+                        }
+                    });
+                });
+            }
+            return normalizeText(builder.toString());
         } catch (IOException e) {
             log.warn("Failed to extract DOCX text from {}", filePath, e);
         }
@@ -408,32 +612,15 @@ public class DocumentService {
     }
 
     private String extractPdfText(Path filePath) throws IOException {
-        String raw = Files.readString(filePath, StandardCharsets.ISO_8859_1);
-        StringBuilder builder = new StringBuilder();
-
-        Matcher matcher = PDF_TEXT_PATTERN.matcher(raw);
-        while (matcher.find()) {
-            builder.append(decodePdfText(matcher.group(1))).append('\n');
-        }
-
-        Matcher arrayMatcher = PDF_TEXT_ARRAY_PATTERN.matcher(raw);
-        while (arrayMatcher.find()) {
-            Matcher itemMatcher = PDF_TEXT_ITEM_PATTERN.matcher(arrayMatcher.group(1));
-            while (itemMatcher.find()) {
-                builder.append(decodePdfText(itemMatcher.group(1))).append(' ');
+        try (PDDocument document = PDDocument.load(filePath.toFile())) {
+            if (document.isEncrypted()) {
+                log.warn("PDF {} is encrypted and cannot be indexed", filePath);
+                return "";
             }
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            return normalizeText(stripper.getText(document));
         }
-
-        return normalizeText(builder.toString());
-    }
-
-    private String decodePdfText(String text) {
-        return text.replace("\\(", "(")
-                .replace("\\)", ")")
-                .replace("\\n", " ")
-                .replace("\\r", " ")
-                .replace("\\t", " ")
-                .replace("\\\\", "\\");
     }
 
     private List<String> chunkText(String text) {
@@ -524,6 +711,16 @@ public class DocumentService {
         return UUID.randomUUID().toString().replace("-", "");
     }
 
+    private boolean matchesKeyword(StoredDocument document, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+        String needle = keyword.trim().toLowerCase(Locale.ROOT);
+        return document.getName().toLowerCase(Locale.ROOT).contains(needle)
+                || (document.getTitle() != null && document.getTitle().toLowerCase(Locale.ROOT).contains(needle))
+                || (document.getOwnerUsername() != null && document.getOwnerUsername().toLowerCase(Locale.ROOT).contains(needle));
+    }
+
     private String buildStoredFileName(String documentId, String extension) {
         return documentId + (extension.isBlank() ? "" : "." + extension);
     }
@@ -532,12 +729,15 @@ public class DocumentService {
         return DocumentRecord.builder()
                 .id(document.getId())
                 .name(document.getName())
+                .title(resolveDocumentTitle(document))
                 .size(document.getSize())
                 .contentType(document.getContentType())
                 .uploadTime(document.getUploadTime())
                 .chunkCount(document.getChunkCount())
                 .indexed(document.isIndexed())
                 .statusMessage(document.getStatusMessage())
+                .ownerId(document.getOwnerId())
+                .ownerUsername(document.getOwnerUsername())
                 .build();
     }
 
@@ -571,6 +771,7 @@ public class DocumentService {
     private static class StoredDocument {
         private String id;
         private String name;
+        private String title;
         private long size;
         private String contentType;
         private String uploadTime;
@@ -578,6 +779,8 @@ public class DocumentService {
         private boolean indexed;
         private String statusMessage;
         private String storagePath;
+        private String ownerId;
+        private String ownerUsername;
     }
 
     @Data

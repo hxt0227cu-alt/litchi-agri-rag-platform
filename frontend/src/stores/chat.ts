@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import type { ChatSource, GraphEntity } from '@/api'
+import type { ChatHistoryItem, ChatSource, GraphEntity } from '@/api'
 
 export interface ChatMessage {
   id: string
@@ -17,6 +17,7 @@ export interface ChatMessage {
 export const useChatStore = defineStore('chat', () => {
   const messages = ref<ChatMessage[]>([])
   const isLoading = ref(false)
+  const currentSessionId = ref<string>(window.crypto.randomUUID())
 
   const addMessage = (message: ChatMessage) => {
     messages.value.push(message)
@@ -26,6 +27,33 @@ export const useChatStore = defineStore('chat', () => {
     messages.value = []
   }
 
+  const startNewSession = () => {
+    currentSessionId.value = window.crypto.randomUUID()
+    clearMessages()
+  }
+
+  const loadHistory = (items: ChatHistoryItem[]) => {
+    messages.value = items
+      .slice()
+      .reverse()
+      .flatMap(item => ([
+        {
+          id: `${item.id}-user`,
+          role: 'user' as const,
+          content: item.question,
+          timestamp: new Date(item.createdAt).getTime()
+        },
+        {
+          id: `${item.id}-assistant`,
+          role: 'assistant' as const,
+          content: item.answer,
+          timestamp: new Date(item.createdAt).getTime(),
+          sources: item.sources,
+          knowledgeGraph: item.knowledgeGraph
+        }
+      ]))
+  }
+
   const setLoading = (loading: boolean) => {
     isLoading.value = loading
   }
@@ -33,8 +61,11 @@ export const useChatStore = defineStore('chat', () => {
   return {
     messages,
     isLoading,
+    currentSessionId,
     addMessage,
     clearMessages,
+    startNewSession,
+    loadHistory,
     setLoading
   }
 })

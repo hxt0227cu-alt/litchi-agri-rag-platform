@@ -1,46 +1,53 @@
 # 荔枝智能问答平台
 
-毕业设计可演示版，当前已具备以下闭环：
+面向荔枝种植场景的完整平台实现，包含账号体系、智能问答、知识图谱、文档管理、病害识别、评测中心，以及 MySQL/Neo4j/Milvus/Ollama 组合存储与推理链路。
 
-- 文档上传 -> 本地存储 -> 解析/切块 -> 向量化 -> 检索 -> 问答来源展示
-- 知识图谱查询与关系可视化
-- 拍照识病页面与后端接口字段对齐
-- 显式初始化命令与接口
-- 根目录 `docker-compose.yml`、`.env.example` 和前端 `Dockerfile`
+## 当前能力
 
-## 当前状态
+- 用户注册、登录、登出、登录态恢复
+- 多轮问答、会话列表、历史消息回放
+- 文档上传、分页检索、删除、向量检索增强
+- 知识图谱可视化、实体搜索、关系查询、实体详情
+- 病害图片识别接口与前端识别页面
+- 评测题库、系统答案提交、人工评分、统计面板
+- 技术员培训课堂、农资店快配药与用药指南
+- 满意度问卷提交与统计
+- 语音输入与回答朗读
+- MySQL 主持久化，JSON 本地状态文件作为回退
 
-- 后端可正常执行 `mvn -q -DskipTests package`
-- 前端可正常执行 `npm run build`
-- 文档管理已实现上传、列表、删除和本地元数据持久化
-- 智能问答已返回来源片段，知识图谱页支持关键词查询
-- 拍照识病当前为“演示版规则识别”，不是 YOLO 完成版
+## 技术栈
 
-## 本机启动
+- 前端: Vue 3 + TypeScript + Pinia + Element Plus
+- 后端: Spring Boot 3
+- 关系存储: MySQL 8
+- 图数据库: Neo4j 5
+- 向量数据库: Milvus 2
+- 大模型服务: Ollama
+- 识别服务: Python + FastAPI 风格 HTTP 服务
 
-### 1. 启动依赖服务
+## 默认账号
 
-至少准备以下服务：
+- `farmer / demo123`
+- `technician / demo123`
+- `shopkeeper / demo123`
 
-- Neo4j: `bolt://localhost:7687`
-- Milvus: `localhost:19530`
-- Ollama: `http://localhost:11434`
+## 本机开发
+
+### 1. 启动依赖
+
+至少需要准备以下服务:
+
+- MySQL: `127.0.0.1:3306`
+- Neo4j: `127.0.0.1:7687`
+- Milvus: `127.0.0.1:19530`
+- Ollama: `http://127.0.0.1:11434`
+- 识别服务: `http://127.0.0.1:8090`
 
 ### 2. 启动后端
 
 ```bash
 cd backend
 mvn spring-boot:run
-```
-
-显式初始化二选一：
-
-```bash
-# 方式 A：启动时执行初始化
-mvn spring-boot:run -Dspring-boot.run.arguments="--init=all"
-
-# 方式 B：服务启动后调用接口
-curl -X POST "http://localhost:8080/api/system/init?scope=all"
 ```
 
 ### 3. 启动前端
@@ -51,34 +58,48 @@ npm install
 npm run dev
 ```
 
-前端默认地址：
+前端默认地址: `http://localhost:5173`
 
-- `http://localhost:5173`
-
-## Docker 一键部署
+## Docker 一键启动
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
-docker compose exec backend java -jar app.jar --init=all
 ```
 
-默认访问地址：
+启动完成后可访问:
 
-- 前端：`http://localhost`
-- 后端：`http://localhost:8080/api`
-- Neo4j Browser：`http://localhost:7474`
+- 前端: `http://localhost`
+- 后端 API: `http://localhost:8080/api`
+- Neo4j Browser: `http://localhost:7474`
+- MySQL: `localhost:3306`
 
-## 5 分钟演示脚本
+## 关键接口
 
-1. 执行一次 `/api/system/init?scope=all`，确认图谱和向量库初始化完成。
-2. 打开“文档管理”，上传一份 `txt` 或 `md` 知识文档，确认列表出现、状态为“已入库”。
-3. 打开“智能问答”，提问与文档内容相关的问题，展示答案下方的来源卡片。
-4. 打开“知识图谱”，输入病害或品种关键词，展示节点关系和属性面板。
-5. 打开“拍照识病”，上传示例图片，展示病害名称、置信度和防治建议。
+- 认证: `/api/auth/*`
+- 问答: `/api/chat`
+- 会话历史: `/api/chat/history`、`/api/chat/sessions`
+- 文档: `/api/document`
+- 图谱: `/api/kg/visualize`、`/api/kg/search`、`/api/kg/entity/{id}`
+- 识别: `/api/diagnosis`
+- 评测: `/api/evaluation/*`
+- 满意度: `/api/feedback`、`/api/feedback/stats`
+- 系统: `/api/health`、`/api/system/overview`、`/api/system/settings`、`/api/system/init`、`/api/system/demo/bootstrap`
 
-## 说明
+## 持久化说明
 
-- 文档解析目前优先保障 `txt / md / csv / json`，`pdf / docx` 为尽力解析。
-- 向量化使用本地轻量哈希向量，结果会同时尝试同步到 Milvus。
-- 若 Ollama 未启动，问答接口仍会返回失败提示，但来源检索链路可单独演示。
+- MySQL 启用时，平台状态以 MySQL 为主存储
+- 本地 `data/*.json` 状态文件会继续同步，作为离线与故障回退
+- 上传文档原文件存放在后端本地目录或容器挂载目录
+- 知识图谱存储在 Neo4j，向量索引存储在 Milvus
+
+## 构建验证
+
+- 后端可通过 `mvn -q -DskipTests package`
+- 前端可通过 `npm run build`
+
+## 相关文档
+
+- [部署文档](docs/部署文档.md)
+- [API 接口文档](docs/API接口文档.md)
+- [数据库设计](docs/数据库设计.md)

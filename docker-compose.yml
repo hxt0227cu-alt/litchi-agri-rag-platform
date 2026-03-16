@@ -1,4 +1,28 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: litchi-mysql
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-litchi_platform}
+      MYSQL_USER: ${MYSQL_USER:-litchi}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-litchi123456}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
   neo4j:
     image: neo4j:5.15-community
     container_name: litchi-neo4j
@@ -93,8 +117,8 @@ services:
 
   diagnosis-service:
     build:
-      context: .
-      dockerfile: diagnosis-service/Dockerfile
+      context: ./diagnosis-service
+      dockerfile: Dockerfile
     container_name: litchi-diagnosis
     environment:
       DIAGNOSIS_HOST: 0.0.0.0
@@ -121,6 +145,8 @@ services:
         m2repo: ${USERPROFILE}/.m2/repository
     container_name: litchi-backend
     depends_on:
+      mysql:
+        condition: service_healthy
       neo4j:
         condition: service_started
       milvus:
@@ -142,6 +168,13 @@ services:
       APP_DOCUMENT_STORAGE_DIR: /app/data/documents
       APP_DOCUMENT_STATE_FILE: /app/data/document-state.json
       APP_DIAGNOSIS_SERVICE_URL: http://diagnosis-service:8090/predict
+      APP_MYSQL_ENABLED: ${APP_MYSQL_ENABLED:-true}
+      APP_MYSQL_URL: ${APP_MYSQL_URL:-jdbc:mysql://mysql:3306/litchi_platform?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+      APP_MYSQL_USERNAME: ${APP_MYSQL_USERNAME:-litchi}
+      APP_MYSQL_PASSWORD: ${APP_MYSQL_PASSWORD:-litchi123456}
+      APP_STARTUP_AUTO_BOOTSTRAP: ${APP_STARTUP_AUTO_BOOTSTRAP:-true}
+      APP_STARTUP_MAX_ATTEMPTS: ${APP_STARTUP_MAX_ATTEMPTS:-12}
+      APP_STARTUP_RETRY_DELAY_MS: ${APP_STARTUP_RETRY_DELAY_MS:-5000}
     ports:
       - "8080:8080"
     volumes:
@@ -161,6 +194,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  mysql_data:
   neo4j_data:
   neo4j_logs:
   etcd_data:

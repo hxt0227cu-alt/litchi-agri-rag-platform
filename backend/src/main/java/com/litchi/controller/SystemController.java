@@ -1,5 +1,7 @@
 package com.litchi.controller;
 
+import com.litchi.auth.AuthRequired;
+import com.litchi.auth.RoleAllowed;
 import com.litchi.service.DataInitializer;
 import com.litchi.service.DemoContentService;
 import com.litchi.service.DiagnosisService;
@@ -8,6 +10,7 @@ import com.litchi.service.KnowledgeGraphService;
 import com.litchi.service.LLMService;
 import com.litchi.service.VectorSearchService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +26,45 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SystemController {
 
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
+    private String ollamaBaseUrl;
+
+    @Value("${spring.ai.ollama.chat.options.model:qwen2.5:0.5b}")
+    private String ollamaModel;
+
+    @Value("${spring.neo4j.uri:bolt://127.0.0.1:7687}")
+    private String neo4jUri;
+
+    @Value("${milvus.collection-name:litchi_knowledge}")
+    private String milvusCollectionName;
+
+    @Value("${app.mysql.enabled:false}")
+    private boolean mysqlEnabled;
+
+    @Value("${app.mysql.url:}")
+    private String mysqlUrl;
+
+    @Value("${app.document.storage-dir:data/documents}")
+    private String documentStorageDir;
+
+    @Value("${app.document.state-file:data/document-state.json}")
+    private String documentStateFile;
+
+    @Value("${app.diagnosis.service-url:http://127.0.0.1:8090/predict}")
+    private String diagnosisServiceUrl;
+
+    @Value("${app.startup.auto-bootstrap:false}")
+    private boolean startupAutoBootstrap;
+
+    @Value("${app.startup.max-attempts:8}")
+    private int startupMaxAttempts;
+
+    @Value("${app.startup.retry-delay-ms:5000}")
+    private long startupRetryDelayMs;
+
     private final DataInitializer dataInitializer;
     private final KnowledgeGraphService knowledgeGraphService;
     private final VectorSearchService vectorSearchService;
@@ -37,6 +79,8 @@ public class SystemController {
     }
 
     @PostMapping("/system/init")
+    @AuthRequired
+    @RoleAllowed("technician")
     public ResponseEntity<Map<String, Object>> initialize(@RequestParam(defaultValue = "all") String scope) {
         DataInitializer.InitResult result = dataInitializer.initialize(scope);
         return ResponseEntity.ok(Map.of(
@@ -76,14 +120,53 @@ public class SystemController {
         ));
     }
 
+    @GetMapping("/system/settings")
+    @AuthRequired
+    @RoleAllowed("technician")
+    public ResponseEntity<Map<String, Object>> settings() {
+        Map<String, Object> environment = new LinkedHashMap<>();
+        environment.put("profile", valueOrBlank(activeProfile));
+        environment.put("autoBootstrap", startupAutoBootstrap);
+        environment.put("startupMaxAttempts", startupMaxAttempts);
+        environment.put("startupRetryDelayMs", startupRetryDelayMs);
+
+        Map<String, Object> storage = new LinkedHashMap<>();
+        storage.put("mysqlEnabled", mysqlEnabled);
+        storage.put("mysqlUrl", sanitizeUrl(mysqlUrl));
+        storage.put("neo4jUri", valueOrBlank(neo4jUri));
+        storage.put("milvusCollectionName", valueOrBlank(milvusCollectionName));
+        storage.put("documentStorageDir", valueOrBlank(documentStorageDir));
+        storage.put("documentStateFile", valueOrBlank(documentStateFile));
+
+        Map<String, Object> services = new LinkedHashMap<>();
+        services.put("ollamaBaseUrl", valueOrBlank(ollamaBaseUrl));
+        services.put("ollamaModel", valueOrBlank(ollamaModel));
+        services.put("diagnosisServiceUrl", valueOrBlank(diagnosisServiceUrl));
+
+        Map<String, Object> platform = new LinkedHashMap<>();
+        platform.put("documentsTotal", documentService.countDocuments());
+        platform.put("documentsIndexed", documentService.countIndexedDocuments());
+        platform.put("sampleQuestions", demoContentService.getSuggestedQuestions());
+        platform.put("managedRoles", List.of("farmer", "technician", "shopkeeper"));
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("environment", environment);
+        response.put("storage", storage);
+        response.put("services", services);
+        response.put("platform", platform);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/system/demo/bootstrap")
+    @AuthRequired
+    @RoleAllowed("technician")
     public ResponseEntity<Map<String, Object>> bootstrapDemo() {
         DataInitializer.InitResult result = dataInitializer.initialize("all");
         DocumentService.DemoImportResult importResult = documentService.bootstrapDemoDocuments(true);
 
         String message = importResult.getImported() > 0
-                ? "答辩样例数据已重新导入，可以直接开始演示。"
-                : "答辩样例数据已准备完成。";
+                ? "平台样例数据已重新导入，可以直接开始使用。"
+                : "平台样例数据已准备完成。";
 
         return ResponseEntity.ok(Map.of(
                 "message", message,
@@ -124,5 +207,16 @@ public class SystemController {
                 ),
                 "timestamp", OffsetDateTime.now().toString()
         );
+    }
+
+    private String sanitizeUrl(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return value.replaceAll("(?i)(password=)[^&]+", "$1******");
+    }
+
+    private String valueOrBlank(String value) {
+        return value == null ? "" : value;
     }
 }

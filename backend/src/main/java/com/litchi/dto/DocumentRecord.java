@@ -12,10 +12,13 @@ import lombok.NoArgsConstructor;
 public class DocumentRecord {
     private String id;
     private String name;
+    private String title;
     private long size;
     private String contentType;
     private String uploadTime;
     private int chunkCount;
     private boolean indexed;
     private String statusMessage;
+    private String ownerId;
+    private String ownerUsername;
 }

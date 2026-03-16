@@ -19,6 +19,15 @@ milvus:
   collection-name: litchi_knowledge
 
 app:
+  mysql:
+    enabled: ${APP_MYSQL_ENABLED:false}
+    url: ${APP_MYSQL_URL:}
+    username: ${APP_MYSQL_USERNAME:}
+    password: ${APP_MYSQL_PASSWORD:}
+  startup:
+    auto-bootstrap: ${APP_STARTUP_AUTO_BOOTSTRAP:false}
+    max-attempts: ${APP_STARTUP_MAX_ATTEMPTS:8}
+    retry-delay-ms: ${APP_STARTUP_RETRY_DELAY_MS:5000}
   diagnosis:
     service-url: http://127.0.0.1:8090/predict
     timeout-ms: 5000

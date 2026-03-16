@@ -1,5 +1,7 @@
 package com.litchi.controller;
 
+import com.litchi.auth.AuthRequired;
+import com.litchi.auth.RoleAllowed;
 import com.litchi.dto.DiagnosisResult;
 import com.litchi.service.DiagnosisService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/diagnosis")
 @RequiredArgsConstructor
+@AuthRequired
+@RoleAllowed({"farmer", "technician"})
 public class DiagnosisController {
 
     private final DiagnosisService diagnosisService;

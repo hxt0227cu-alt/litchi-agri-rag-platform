@@ -2,9 +2,9 @@
   <div class="diagnosis-page page-shell">
     <section class="hero glass-card">
       <div>
-        <h3 class="section-title">病害识别演示区</h3>
+        <h3 class="section-title">病害识别工作台</h3>
         <p class="section-copy">
-          当前识别服务支持两种模式：有权重时走 YOLO 推理，没有权重时自动切换为数据集特征匹配或规则兜底。你可以直接使用内置样图完成答辩演示。
+          当前识别服务支持两种模式：有权重时走 YOLO 推理，没有权重时自动切换为数据集特征匹配或规则兜底。你可以直接使用内置样图快速体验识别流程。
         </p>
       </div>
 
@@ -19,7 +19,7 @@
       <header class="sample-header">
         <div>
           <h3 class="section-title">内置样图</h3>
-          <p class="section-copy">点击任意样图会自动填充预览和待识别文件，现场演示会更顺畅。</p>
+          <p class="section-copy">点击任意样图会自动填充预览和待识别文件，方便快速完成识别验证。</p>
         </div>
       </header>
 
@@ -62,7 +62,7 @@
             拖拽病叶或果实图片到这里，或 <em>点击选择</em>
           </div>
           <template #tip>
-            <div class="el-upload__tip">如果现场网络或模型不稳定，也可以直接使用上方内置样图完成演示。</div>
+            <div class="el-upload__tip">如果网络或模型不稳定，也可以直接使用上方内置样图完成识别验证。</div>
           </template>
         </el-upload>
 
@@ -118,7 +118,7 @@
             <h4>识别引擎</h4>
             <div class="pill-row">
               <span class="result-pill">{{ result.engine ?? 'unknown' }}</span>
-              <span class="result-pill">{{ result.demoMode ? '演示模式' : '模型模式' }}</span>
+              <span class="result-pill">{{ result.demoMode ? '保障模式' : '模型模式' }}</span>
             </div>
           </section>
 
@@ -154,19 +154,19 @@ type SampleCard = {
 const samples: SampleCard[] = [
   {
     title: '健康叶片',
-    description: '用于演示系统对正常样本的基础识别能力。',
+    description: '用于验证系统对正常样本的基础识别能力。',
     url: '/demo/healthy-demo.jpg',
     fileName: 'healthy-demo.jpg'
   },
   {
     title: '炭疽病样图',
-    description: '适合演示疑似真菌病害的识别与防治建议输出。',
+    description: '适合验证疑似真菌病害的识别与防治建议输出。',
     url: '/demo/anthracnose-demo.jpg',
     fileName: 'anthracnose-demo.jpg'
   },
   {
     title: '霜疫霉病样图',
-    description: '用于演示雨季病害场景下的识别与建议。',
+    description: '用于验证雨季病害场景下的识别与建议。',
     url: '/demo/blight-demo.jpg',
     fileName: 'blight-demo.jpg'
   },

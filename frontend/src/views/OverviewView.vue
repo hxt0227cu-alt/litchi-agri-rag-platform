@@ -2,14 +2,14 @@
   <div class="page-shell overview-page">
     <section class="hero glass-card">
       <div class="hero-copy">
-        <span class="hero-kicker">Defense Ready</span>
-        <h3>一套可以直接演示的荔枝智能诊断与问答系统</h3>
+        <span class="hero-kicker">Platform Ready</span>
+        <h3>一套可直接投入使用的荔枝智能诊断与问答平台</h3>
         <p>
-          当前页面会集中展示服务状态、样例数据、推荐问答和答辩流程。你可以先点击“一键准备答辩样例”，再按下方流程逐页演示。
+          当前页面会集中展示服务状态、样例数据、推荐问答和平台操作流程。你可以先点击“初始化平台样例”，再按下方流程逐页体验核心功能。
         </p>
         <div class="hero-actions">
-          <el-button type="primary" size="large" :loading="bootstrapping" @click="bootstrapDemo">
-            一键准备答辩样例
+          <el-button v-if="canManageSystem" type="primary" size="large" :loading="bootstrapping" @click="bootstrapDemo">
+            初始化平台样例
           </el-button>
           <el-button size="large" @click="loadOverview">刷新状态</el-button>
         </div>
@@ -19,10 +19,10 @@
         <div class="hero-status">
           <div>
             <span class="hero-status-label">系统状态</span>
-            <strong>{{ overview?.services.status === 'healthy' ? '全链路就绪' : '离线可演示' }}</strong>
+            <strong>{{ overview?.services.status === 'healthy' ? '全链路就绪' : '离线可用' }}</strong>
           </div>
           <el-tag :type="overview?.services.status === 'healthy' ? 'success' : 'warning'" effect="dark">
-            {{ overview?.services.status === 'healthy' ? '在线增强模式' : '本地答辩模式' }}
+            {{ overview?.services.status === 'healthy' ? '在线增强模式' : '本地保障模式' }}
           </el-tag>
         </div>
 
@@ -66,7 +66,7 @@
       <article class="soft-card block">
         <header class="block-header">
           <div>
-            <h3 class="section-title">推荐答辩问题</h3>
+            <h3 class="section-title">推荐业务问题</h3>
             <p class="section-copy">点击任意问题可直接跳转到智能问答页并自动发起提问。</p>
           </div>
         </header>
@@ -88,7 +88,7 @@
       <article class="soft-card block">
         <header class="block-header">
           <div>
-            <h3 class="section-title">演示流程</h3>
+            <h3 class="section-title">平台流程</h3>
             <p class="section-copy">按这个顺序讲，逻辑最完整，也最方便老师理解系统闭环。</p>
           </div>
         </header>
@@ -105,7 +105,7 @@
     <section class="soft-card block">
       <header class="block-header">
         <div>
-          <h3 class="section-title">内置答辩文档</h3>
+          <h3 class="section-title">内置平台文档</h3>
           <p class="section-copy">这些样例文档已经用于支撑问答和知识图谱演示，不够的话还可以在文档页继续上传。</p>
         </div>
       </header>
@@ -126,11 +126,15 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
+import { hasPermission } from '@/auth/access'
 import { systemAPI, type SystemOverviewResponse } from '@/api'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const overview = ref<SystemOverviewResponse | null>(null)
 const bootstrapping = ref(false)
+const canManageSystem = computed(() => hasPermission(authStore.user?.role, 'system.manage'))
 
 const serviceItems = computed(() => {
   const services = overview.value?.services.services ?? {}
@@ -152,13 +156,17 @@ const loadOverview = async () => {
 }
 
 const bootstrapDemo = async () => {
+  if (!canManageSystem.value) {
+    ElMessage.warning('当前账号没有初始化系统与重建平台样例数据的权限。')
+    return
+  }
   bootstrapping.value = true
   try {
     const response = await systemAPI.bootstrapDemo()
     ElMessage.success(response.data.message)
     await loadOverview()
   } catch (error) {
-    ElMessage.error('准备答辩样例失败，请检查后端依赖服务。')
+    ElMessage.error('初始化平台样例失败，请检查后端依赖服务。')
   } finally {
     bootstrapping.value = false
   }

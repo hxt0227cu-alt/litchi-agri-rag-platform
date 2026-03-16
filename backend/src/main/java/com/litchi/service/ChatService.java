@@ -24,15 +24,20 @@ public class ChatService {
         log.info("Processing chat request: {}", question);
 
         try {
-            List<ChatResponse.Source> sources = buildSources(question);
-            Map<String, Object> kgResult = knowledgeGraphService.queryByText(question);
+            boolean useVectorSearch = request.getUseVectorSearch() == null || request.getUseVectorSearch();
+            boolean useKnowledgeGraph = request.getUseKnowledgeGraph() == null || request.getUseKnowledgeGraph();
+
+            List<ChatResponse.Source> sources = useVectorSearch ? buildSources(question) : List.of();
+            Map<String, Object> kgResult = useKnowledgeGraph
+                    ? knowledgeGraphService.queryByText(question)
+                    : Map.of("entities", List.of());
             Map<String, Object> knowledgeGraph = Map.of(
                     "entities", kgResult.getOrDefault("entities", List.of())
             );
 
             String answer;
             if (sources.isEmpty() && ((List<?>) knowledgeGraph.get("entities")).isEmpty()) {
-                answer = "当前知识库里还没有可引用的资料。你可以先在“知识库管理”页导入答辩样例文档，或再上传一份新的种植资料。";
+                answer = "当前知识库里还没有可引用的资料。你可以先在“知识库管理”页导入平台样例文档，或再上传一份新的种植资料。";
             } else {
                 String systemPrompt = buildSystemPrompt();
                 String userPrompt = buildUserPrompt(question, sources, kgResult);
@@ -60,7 +65,7 @@ public class ChatService {
     private String buildFallbackAnswer(String question, List<ChatResponse.Source> sources, Map<String, Object> kgResult) {
         List<String> entityNames = extractEntityNames(kgResult);
         StringBuilder answer = new StringBuilder();
-        answer.append("当前使用本地答辩模式生成回答。\n");
+        answer.append("当前使用本地保障模式生成回答。\n");
         answer.append("问题：").append(question).append("\n\n");
 
         if (!sources.isEmpty()) {
@@ -87,7 +92,7 @@ public class ChatService {
         } else {
             answer.append("先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。");
         }
-        answer.append(" 答辩展示时可以同时打开来源卡片，说明结论如何由知识库和图谱共同支持。");
+        answer.append(" 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。");
         return answer.toString();
     }
 

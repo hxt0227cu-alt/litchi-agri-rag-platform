@@ -3,7 +3,7 @@
     <aside class="chat-sidebar soft-card">
       <section>
         <h3 class="section-title">推荐提问</h3>
-        <p class="section-copy">点一下就能直接演示检索增强问答，不需要现场现想问题。</p>
+        <p class="section-copy">点一下就能直接体验检索增强问答，不需要临时组织问题。</p>
       </section>
 
       <div class="question-palette">
@@ -22,6 +22,8 @@
         <strong>讲解建议</strong>
         <p>回答区域下方会同步展示来源片段和图谱实体，适合解释“系统为什么这么回答”。</p>
       </section>
+
+      <el-button type="primary" plain @click="startFreshSession">开始新会话</el-button>
     </aside>
 
     <section class="chat-main">
@@ -40,6 +42,10 @@
             <div :class="['message-card', msg.role]">
               <div class="message-role">{{ msg.role === 'user' ? '提问' : '系统回答' }}</div>
               <div class="message-content">{{ msg.content }}</div>
+
+              <div v-if="msg.role === 'assistant'" class="speech-actions">
+                <el-button link type="primary" @click="speakMessage(msg.content)">朗读回答</el-button>
+              </div>
 
               <div v-if="msg.sources?.length" class="source-list">
                 <div
@@ -88,8 +94,11 @@
           @keydown.enter.prevent="handleEnter"
         />
         <div class="composer-actions">
-          <span class="composer-hint">Enter 发送，Shift + Enter 换行</span>
+          <span class="composer-hint">当前会话：{{ chatStore.currentSessionId }}</span>
           <div class="composer-buttons">
+            <el-button :type="isListening ? 'danger' : 'default'" @click="toggleVoiceInput">
+              {{ isListening ? '停止语音' : '语音输入' }}
+            </el-button>
             <el-button @click="chatStore.clearMessages()">清空对话</el-button>
             <el-button type="primary" :loading="chatStore.isLoading" @click="sendMessage">
               发送问题
@@ -116,6 +125,8 @@ const chatStore = useChatStore()
 
 const inputMessage = ref('')
 const messagesListRef = ref<HTMLElement | null>(null)
+const isListening = ref(false)
+let speechRecognition: any = null
 const suggestedQuestions = ref<string[]>([
   '荔枝炭疽病在雨季怎么防治？',
   '霜疫霉病和炭疽病有什么区别？',
@@ -175,10 +186,15 @@ const sendMessage = async () => {
   chatStore.setLoading(true)
 
   try {
-    const response = await chatAPI.send({ question })
+    const response = await chatAPI.send({
+      question,
+      sessionId: chatStore.currentSessionId,
+      useKnowledgeGraph: true,
+      useVectorSearch: true
+    })
     appendAssistantMessage(response.data.answer, response.data.sources, response.data.knowledgeGraph)
   } catch (error) {
-    ElMessage.error('发送失败，请检查后端服务是否启动。')
+    ElMessage.error((error as any)?.response?.data?.message ?? '发送失败，请检查后端服务是否启动。')
   } finally {
     chatStore.setLoading(false)
   }
@@ -208,6 +224,83 @@ const maybeSendRouteQuestion = async () => {
   router.replace({ path: route.path, query: {} })
 }
 
+const maybeLoadRouteSession = async () => {
+  const sessionId = typeof route.query.session === 'string' ? route.query.session.trim() : ''
+  if (!sessionId) {
+    return
+  }
+
+  try {
+    const response = await chatAPI.history(sessionId, 1, 100)
+    chatStore.currentSessionId = sessionId
+    chatStore.loadHistory(response.data.items)
+  } catch (error) {
+    ElMessage.error('加载历史会话失败。')
+  }
+}
+
+const startFreshSession = () => {
+  chatStore.startNewSession()
+  inputMessage.value = ''
+}
+
+const createSpeechRecognition = () => {
+  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+  if (!SpeechRecognition) {
+    return null
+  }
+
+  const recognition = new SpeechRecognition()
+  recognition.lang = 'zh-CN'
+  recognition.interimResults = false
+  recognition.maxAlternatives = 1
+  recognition.onstart = () => {
+    isListening.value = true
+  }
+  recognition.onend = () => {
+    isListening.value = false
+  }
+  recognition.onresult = (event: any) => {
+    const transcript = event.results?.[0]?.[0]?.transcript
+    if (transcript) {
+      inputMessage.value = transcript
+      ElMessage.success('语音转文字完成。')
+    }
+  }
+  recognition.onerror = () => {
+    isListening.value = false
+    ElMessage.error('语音识别失败，请检查浏览器权限。')
+  }
+  return recognition
+}
+
+const toggleVoiceInput = () => {
+  if (isListening.value && speechRecognition) {
+    speechRecognition.stop()
+    return
+  }
+
+  speechRecognition = speechRecognition || createSpeechRecognition()
+  if (!speechRecognition) {
+    ElMessage.warning('当前浏览器不支持语音识别。')
+    return
+  }
+  speechRecognition.start()
+}
+
+const speakMessage = (content: string) => {
+  if (!('speechSynthesis' in window)) {
+    ElMessage.warning('当前浏览器不支持语音播报。')
+    return
+  }
+
+  window.speechSynthesis.cancel()
+  const utterance = new SpeechSynthesisUtterance(content)
+  utterance.lang = 'zh-CN'
+  utterance.rate = 1
+  window.speechSynthesis.speak(utterance)
+}
+
 watch(
   () => chatStore.messages.length,
   () => {
@@ -229,8 +322,16 @@ watch(
   }
 )
 
+watch(
+  () => route.query.session,
+  () => {
+    maybeLoadRouteSession()
+  }
+)
+
 onMounted(() => {
   loadSuggestions()
+  maybeLoadRouteSession()
   maybeSendRouteQuestion()
   scrollToBottom()
 })
@@ -378,6 +479,10 @@ onMounted(() => {
   display: grid;
   gap: 10px;
   margin-top: 16px;
+}
+
+.speech-actions {
+  margin-top: 8px;
 }
 
 .source-card {

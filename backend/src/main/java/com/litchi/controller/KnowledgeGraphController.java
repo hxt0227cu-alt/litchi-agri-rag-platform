@@ -19,4 +19,17 @@ public class KnowledgeGraphController {
         Map<String, Object> data = knowledgeGraphService.getVisualizationData(keyword);
         return ResponseEntity.ok(data);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> search(
+            @RequestParam String keyword,
+            @RequestParam(required = false) String type
+    ) {
+        return ResponseEntity.ok(knowledgeGraphService.searchEntities(keyword, type));
+    }
+
+    @GetMapping("/entity/{id}")
+    public ResponseEntity<Map<String, Object>> detail(@PathVariable String id) {
+        return ResponseEntity.ok(knowledgeGraphService.getEntityDetail(id));
+    }
 }

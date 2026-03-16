@@ -4,12 +4,13 @@
       <div>
         <h3 class="section-title">知识文档准备区</h3>
         <p class="section-copy">
-          这里负责管理答辩样例文档与现场补充资料。文档上传后会自动切块，并写入本地或 Milvus 检索链路。
+          这里负责管理平台样例文档与补充资料。文档上传后会自动切块，并写入本地或 Milvus 检索链路。
         </p>
       </div>
 
       <div class="hero-actions">
-        <el-button type="primary" :loading="bootstrapping" @click="bootstrapDemo">一键准备答辩样例</el-button>
+        <el-input v-model="keyword" clearable placeholder="按标题或上传用户过滤" class="keyword-input" />
+        <el-button v-if="canManageSystem" type="primary" :loading="bootstrapping" @click="bootstrapDemo">初始化平台样例</el-button>
         <el-button :loading="loading" @click="loadAll">刷新列表</el-button>
       </div>
     </section>
@@ -31,7 +32,7 @@
         <div class="metric-note">Milvus 不在线时，系统仍会使用本地向量和切片兜底。</div>
       </article>
       <article class="metric-card">
-        <div class="metric-label">答辩样例</div>
+        <div class="metric-label">平台样例</div>
         <div class="metric-value">{{ overview?.documents.samples.length ?? 0 }}</div>
         <div class="metric-note">可直接支撑图谱、问答和识别讲解的样例资料。</div>
       </article>
@@ -43,7 +44,7 @@
           <header class="block-header">
             <div>
               <h3 class="section-title">系统状态</h3>
-              <p class="section-copy">这里能快速判断当前问答、图谱和识别是在线增强还是本地演示模式。</p>
+              <p class="section-copy">这里能快速判断当前问答、图谱和识别是在线增强还是本地保障模式。</p>
             </div>
           </header>
 
@@ -61,13 +62,22 @@
           <header class="block-header">
             <div>
               <h3 class="section-title">上传补充材料</h3>
-              <p class="section-copy">支持 txt、md、csv、json、pdf、docx。答辩现场最稳妥的是 md 或 txt。</p>
+              <p class="section-copy">支持 txt、md、csv、json、pdf、docx。当前最稳妥的文本格式是 md 或 txt。</p>
             </div>
           </header>
+
+          <el-alert
+            v-if="!canManageDocuments"
+            type="info"
+            show-icon
+            :closable="false"
+            title="当前角色对知识文档为只读权限，可浏览文档与索引状态，但不能上传或删除。"
+          />
 
           <el-upload
             drag
             action="#"
+            :disabled="!canManageDocuments"
             :auto-upload="false"
             :file-list="fileList"
             :limit="1"
@@ -93,7 +103,7 @@
           />
 
           <div class="upload-actions">
-            <el-button type="primary" :loading="uploading" @click="handleUpload">上传并建立索引</el-button>
+            <el-button type="primary" :disabled="!canManageDocuments" :loading="uploading" @click="handleUpload">上传并建立索引</el-button>
           </div>
         </article>
       </div>
@@ -102,12 +112,17 @@
         <header class="block-header">
           <div>
             <h3 class="section-title">当前文档列表</h3>
-            <p class="section-copy">这里既能展示样例文档已经入库，也方便现场删除或替换材料。</p>
+            <p class="section-copy">这里既能展示样例文档是否已入库，也方便后续删除或替换材料。</p>
           </div>
         </header>
 
-        <el-table :data="documents" empty-text="暂无文档，可先准备答辩样例。">
-          <el-table-column prop="name" label="文档名称" min-width="220" />
+          <el-table :data="documents" empty-text="暂无文档，可先初始化平台样例。">
+          <el-table-column label="文档名称" min-width="220">
+            <template #default="{ row }">
+              {{ row.title || row.name }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="ownerUsername" label="上传用户" width="120" />
           <el-table-column label="大小" width="120">
             <template #default="{ row }">
               {{ formatFileSize(row.size) }}
@@ -133,7 +148,8 @@
           </el-table-column>
           <el-table-column label="操作" width="90" fixed="right">
             <template #default="{ row }">
-              <el-button type="danger" link @click="handleDelete(row.id)">删除</el-button>
+              <el-button v-if="canManageDocuments" type="danger" link @click="handleDelete(row.id)">删除</el-button>
+              <span v-else>-</span>
             </template>
           </el-table-column>
         </el-table>
@@ -148,6 +164,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
 import type { UploadFile, UploadFiles, UploadUserFile } from 'element-plus'
 
+import { hasPermission } from '@/auth/access'
 import {
   documentAPI,
   systemAPI,
@@ -155,17 +172,22 @@ import {
   type SystemHealthResponse,
   type SystemOverviewResponse
 } from '@/api'
+import { useAuthStore } from '@/stores/auth'
 
 type AlertType = 'success' | 'warning' | 'error'
 
 const fileList = ref<UploadUserFile[]>([])
 const documents = ref<DocumentRecord[]>([])
+const keyword = ref('')
 const uploading = ref(false)
 const loading = ref(false)
 const bootstrapping = ref(false)
 const resultAlert = ref<{ type: AlertType; message: string } | null>(null)
 const health = ref<SystemHealthResponse | null>(null)
 const overview = ref<SystemOverviewResponse | null>(null)
+const authStore = useAuthStore()
+const canManageDocuments = computed(() => hasPermission(authStore.user?.role, 'documents.manage'))
+const canManageSystem = computed(() => hasPermission(authStore.user?.role, 'system.manage'))
 
 const serviceStatuses = computed(() => [
   {
@@ -194,7 +216,7 @@ const serviceStatuses = computed(() => [
     label: '识别服务',
     connected: health.value?.services.diagnosis === 'connected',
     onlineText: 'YOLO 在线',
-    offlineText: '演示回退'
+    offlineText: '本地回退'
   }
 ])
 
@@ -204,6 +226,10 @@ const handleFileChange = (_file: UploadFile, uploadFiles: UploadFiles) => {
 }
 
 const handleUpload = async () => {
+  if (!canManageDocuments.value) {
+    ElMessage.warning('当前账号没有上传知识文档的权限。')
+    return
+  }
   const rawFile = fileList.value[0]?.raw as File | undefined
   if (!rawFile) {
     ElMessage.warning('请先选择要上传的文档。')
@@ -215,6 +241,7 @@ const handleUpload = async () => {
 
   const formData = new FormData()
   formData.append('file', rawFile)
+  formData.append('title', rawFile.name.replace(/\.[^.]+$/, ''))
 
   try {
     const response = await documentAPI.upload(formData)
@@ -238,8 +265,12 @@ const handleUpload = async () => {
 }
 
 const loadDocuments = async () => {
-  const response = await documentAPI.list()
-  documents.value = response.data
+  const response = await documentAPI.list({
+    page: 1,
+    size: 100,
+    keyword: keyword.value || undefined
+  })
+  documents.value = response.data.items
 }
 
 const loadSystemState = async () => {
@@ -260,19 +291,27 @@ const loadAll = async () => {
 }
 
 const bootstrapDemo = async () => {
+  if (!canManageSystem.value) {
+    ElMessage.warning('当前账号没有重建平台样例数据的权限。')
+    return
+  }
   bootstrapping.value = true
   try {
     const response = await systemAPI.bootstrapDemo()
     ElMessage.success(response.data.message)
     await loadAll()
   } catch (error) {
-    ElMessage.error('准备答辩样例失败，请检查依赖服务。')
+    ElMessage.error('初始化平台样例失败，请检查依赖服务。')
   } finally {
     bootstrapping.value = false
   }
 }
 
 const handleDelete = async (id: string) => {
+  if (!canManageDocuments.value) {
+    ElMessage.warning('当前账号没有删除知识文档的权限。')
+    return
+  }
   try {
     await ElMessageBox.confirm('删除后该文档将不会继续参与问答检索，是否继续？', '删除确认', {
       confirmButtonText: '删除',
@@ -323,6 +362,10 @@ onMounted(() => {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.keyword-input {
+  width: 240px;
 }
 
 .content-grid {
@@ -398,6 +441,10 @@ onMounted(() => {
   .hero {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .keyword-input {
+    width: 100%;
   }
 }
 </style>
