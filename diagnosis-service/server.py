@@ -13,6 +13,7 @@ from pathlib import Path
 HOST = os.getenv("DIAGNOSIS_HOST", "0.0.0.0")
 PORT = int(os.getenv("DIAGNOSIS_PORT", "8090"))
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+os.environ.setdefault("YOLO_CONFIG_DIR", str(PROJECT_ROOT / ".yolo"))
 MODEL_PATH = Path(os.getenv("DIAGNOSIS_MODEL_PATH", str(PROJECT_ROOT / "models" / "yolov8-litchi.pt")))
 DATASET_ROOT = Path(
     os.getenv(
@@ -322,7 +323,31 @@ def yolo_predict(filename: str, content: bytes) -> dict | None:
 
         result = YOLO_MODEL(str(temp_path), verbose=False)[0]
         names_map = getattr(result, "names", {}) or {}
+        probs = getattr(result, "probs", None)
         boxes = getattr(result, "boxes", None)
+
+        if probs is not None and hasattr(probs, "top1"):
+            top_indexes = list(getattr(probs, "top5", []) or [])
+            top_scores = list(getattr(probs, "top5conf", []) or [])
+            ranking = []
+            for index, score in zip(top_indexes, top_scores):
+                raw_name = str(names_map.get(int(index), f"class-{index}"))
+                ranking.append((normalize_label(raw_name), float(score)))
+
+            if not ranking:
+                top1 = int(getattr(probs, "top1"))
+                top1_conf = float(getattr(probs, "top1conf", 0.0))
+                ranking = [(normalize_label(str(names_map.get(top1, f"class-{top1}"))), top1_conf)]
+
+            ranking.sort(key=lambda item: item[1], reverse=True)
+            return make_response(
+                ranking[0][0],
+                ranking,
+                "ultralytics-yolo",
+                False,
+                f"使用模型文件 {MODEL_PATH.name} 完成分类推理。",
+            )
+
         if boxes is None or len(boxes) == 0:
             return make_response(
                 "健康叶片",
