@@ -1,6 +1,6 @@
 import 'vue-router'
 
-import type { PlatformRole } from '@/auth/access'
+import type { PlatformRole } from '@/types/platform'
 
 declare module 'vue-router' {
   interface RouteMeta {

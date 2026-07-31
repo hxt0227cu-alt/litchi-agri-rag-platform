@@ -1,0 +1,315 @@
+﻿{
+    "generatedAt":  "2026-07-31T16:09:16.8840858+08:00",
+    "baseUrl":  "http://127.0.0.1:8080/api",
+    "username":  "technician",
+    "sampleImage":  "frontend/public/demo/anthracnose-demo.jpg",
+    "health":  {
+                   "services":  {
+                                    "neo4j":  "unavailable",
+                                    "milvus":  "unavailable",
+                                    "ollama":  "unavailable",
+                                    "diagnosis":  "unavailable"
+                                },
+                   "status":  "degraded",
+                   "documents":  {
+                                     "total":  13,
+                                     "indexed":  13
+                                 },
+                   "diagnosisDetails":  {
+                                            "modelLoaded":  false,
+                                            "demoMode":  true,
+                                            "engine":  "unavailable"
+                                        },
+                   "timestamp":  "2026-07-31T16:09:11.827476+08:00"
+               },
+    "login":  {
+                  "durationMs":  465.04
+              },
+    "chat":  {
+                 "warmupQuestion":  "Summarize the key points of litchi disease management.",
+                 "warmupCount":  1,
+                 "summary":  {
+                                 "count":  20,
+                                 "avgMs":  159.88,
+                                 "minMs":  13.49,
+                                 "maxMs":  331.88,
+                                 "thresholdMs":  5000,
+                                 "passed":  true
+                             },
+                 "samples":  [
+                                 {
+                                     "iteration":  1,
+                                     "question":  "How to control litchi anthracnose during the rainy season?",
+                                     "durationMs":  127.91,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  2,
+                                     "question":  "How to distinguish downy blight from anthracnose?",
+                                     "durationMs":  141.2,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to distinguish downy blight from anthracnose?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  3,
+                                     "question":  "What should Guiwei litchi pay attention to during flowering and fruiting?",
+                                     "durationMs":  150.82,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What should Guiwei litchi pay attention to during flowering and fruiting?\n\n文档依据：\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  4,
+                                     "question":  "How should fruit borer be monitored during peak periods?",
+                                     "durationMs":  19.04,
+                                     "answerPreview":  "这个问题不在当前平台的问答范围内。这里主要回答荔枝病害、虫害、花果期管理、雨季巡园和安全用药等问题。你可以换成果园现象类问法再提问，例如“荔枝叶片有褐色病斑怎么办”或“雨季炭疽病怎么防治”。"
+                                 },
+                                 {
+                                     "iteration":  5,
+                                     "question":  "What is the management priority after continuous rainfall?",
+                                     "durationMs":  173.48,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《08_华南农业大学_荔枝炭疽病发生与防治研究进展.md》提到：# 荔枝炭疽病发生与防治研究进展 来源机构：华南农业大学学报 发布日期：2025 年第 46 卷第 1 期 原始链接： - https://journal.scau.edu.cn/article/doi/10.7671/j.issn.100...\n- 《07_海南省农业农村厅_荔枝开花坐果现状及近期管理建议.md》提到：# 荔枝开花坐果现状及近期管理建议 来源机构：海南省农业农村厅 发布日期：2024-03-05 原始链接：https://agri.hainan.gov.cn/hnsnytzt/kjqn/202403/t20240305_3609933.h...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  6,
+                                     "question":  "How to control litchi anthracnose during the rainy season?",
+                                     "durationMs":  187.98,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  7,
+                                     "question":  "How to distinguish downy blight from anthracnose?",
+                                     "durationMs":  175.09,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to distinguish downy blight from anthracnose?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  8,
+                                     "question":  "What should Guiwei litchi pay attention to during flowering and fruiting?",
+                                     "durationMs":  174.4,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What should Guiwei litchi pay attention to during flowering and fruiting?\n\n文档依据：\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  9,
+                                     "question":  "How should fruit borer be monitored during peak periods?",
+                                     "durationMs":  13.49,
+                                     "answerPreview":  "这个问题不在当前平台的问答范围内。这里主要回答荔枝病害、虫害、花果期管理、雨季巡园和安全用药等问题。你可以换成果园现象类问法再提问，例如“荔枝叶片有褐色病斑怎么办”或“雨季炭疽病怎么防治”。"
+                                 },
+                                 {
+                                     "iteration":  10,
+                                     "question":  "What is the management priority after continuous rainfall?",
+                                     "durationMs":  183.83,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《08_华南农业大学_荔枝炭疽病发生与防治研究进展.md》提到：# 荔枝炭疽病发生与防治研究进展 来源机构：华南农业大学学报 发布日期：2025 年第 46 卷第 1 期 原始链接： - https://journal.scau.edu.cn/article/doi/10.7671/j.issn.100...\n- 《07_海南省农业农村厅_荔枝开花坐果现状及近期管理建议.md》提到：# 荔枝开花坐果现状及近期管理建议 来源机构：海南省农业农村厅 发布日期：2024-03-05 原始链接：https://agri.hainan.gov.cn/hnsnytzt/kjqn/202403/t20240305_3609933.h...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  11,
+                                     "question":  "How to control litchi anthracnose during the rainy season?",
+                                     "durationMs":  186.52,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  12,
+                                     "question":  "How to distinguish downy blight from anthracnose?",
+                                     "durationMs":  199.13,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to distinguish downy blight from anthracnose?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  13,
+                                     "question":  "What should Guiwei litchi pay attention to during flowering and fruiting?",
+                                     "durationMs":  209.87,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What should Guiwei litchi pay attention to during flowering and fruiting?\n\n文档依据：\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  14,
+                                     "question":  "How should fruit borer be monitored during peak periods?",
+                                     "durationMs":  15.72,
+                                     "answerPreview":  "这个问题不在当前平台的问答范围内。这里主要回答荔枝病害、虫害、花果期管理、雨季巡园和安全用药等问题。你可以换成果园现象类问法再提问，例如“荔枝叶片有褐色病斑怎么办”或“雨季炭疽病怎么防治”。"
+                                 },
+                                 {
+                                     "iteration":  15,
+                                     "question":  "What is the management priority after continuous rainfall?",
+                                     "durationMs":  203.2,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《08_华南农业大学_荔枝炭疽病发生与防治研究进展.md》提到：# 荔枝炭疽病发生与防治研究进展 来源机构：华南农业大学学报 发布日期：2025 年第 46 卷第 1 期 原始链接： - https://journal.scau.edu.cn/article/doi/10.7671/j.issn.100...\n- 《07_海南省农业农村厅_荔枝开花坐果现状及近期管理建议.md》提到：# 荔枝开花坐果现状及近期管理建议 来源机构：海南省农业农村厅 发布日期：2024-03-05 原始链接：https://agri.hainan.gov.cn/hnsnytzt/kjqn/202403/t20240305_3609933.h...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  16,
+                                     "question":  "How to control litchi anthracnose during the rainy season?",
+                                     "durationMs":  217.15,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  17,
+                                     "question":  "How to distinguish downy blight from anthracnose?",
+                                     "durationMs":  215.94,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to distinguish downy blight from anthracnose?\n\n文档依据：\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  18,
+                                     "question":  "What should Guiwei litchi pay attention to during flowering and fruiting?",
+                                     "durationMs":  256.73,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What should Guiwei litchi pay attention to during flowering and fruiting?\n\n文档依据：\n- 《09_农业农村部_荔枝花穗期荔枝蝽防控要点.md》提到：# 荔枝花穗期荔枝蝽防控要点 来源机构：农业农村部热带作物病虫害监测与防控项目 发布日期：2022-03-31 原始链接：https://nkj.moa.gov.cn/rzny/202203/t20220331_6394862.htm ##...\n- 《06_广东省农业农村厅_荔枝绿色生产管理方案月历.md》提到：# 荔枝绿色生产管理方案月历 来源机构：广东省农业农村厅 发布日期：2023-02-01 原始链接：https://dara.gd.gov.cn/ywdt/nstt/content/post_4542110.html ## 适用标签 - 绿...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 },
+                                 {
+                                     "iteration":  19,
+                                     "question":  "How should fruit borer be monitored during peak periods?",
+                                     "durationMs":  14.23,
+                                     "answerPreview":  "这个问题不在当前平台的问答范围内。这里主要回答荔枝病害、虫害、花果期管理、雨季巡园和安全用药等问题。你可以换成果园现象类问法再提问，例如“荔枝叶片有褐色病斑怎么办”或“雨季炭疽病怎么防治”。"
+                                 },
+                                 {
+                                     "iteration":  20,
+                                     "question":  "What is the management priority after continuous rainfall?",
+                                     "durationMs":  331.88,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《08_华南农业大学_荔枝炭疽病发生与防治研究进展.md》提到：# 荔枝炭疽病发生与防治研究进展 来源机构：华南农业大学学报 发布日期：2025 年第 46 卷第 1 期 原始链接： - https://journal.scau.edu.cn/article/doi/10.7671/j.issn.100...\n- 《07_海南省农业农村厅_荔枝开花坐果现状及近期管理建议.md》提到：# 荔枝开花坐果现状及近期管理建议 来源机构：海南省农业农村厅 发布日期：2024-03-05 原始链接：https://agri.hainan.gov.cn/hnsnytzt/kjqn/202403/t20240305_3609933.h...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。"
+                                 }
+                             ]
+             },
+    "diagnosis":  {
+                      "warmupCount":  1,
+                      "summary":  {
+                                      "count":  20,
+                                      "avgMs":  47.43,
+                                      "minMs":  36.64,
+                                      "maxMs":  68.24,
+                                      "thresholdMs":  3000,
+                                      "passed":  true
+                                  },
+                      "samples":  [
+                                      {
+                                          "iteration":  1,
+                                          "durationMs":  44.17,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  2,
+                                          "durationMs":  38.46,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  3,
+                                          "durationMs":  36.64,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  4,
+                                          "durationMs":  43.21,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  5,
+                                          "durationMs":  42.24,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  6,
+                                          "durationMs":  68.24,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  7,
+                                          "durationMs":  55.04,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  8,
+                                          "durationMs":  57.43,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  9,
+                                          "durationMs":  44.42,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  10,
+                                          "durationMs":  54.44,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  11,
+                                          "durationMs":  41.46,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  12,
+                                          "durationMs":  44.22,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  13,
+                                          "durationMs":  44.08,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  14,
+                                          "durationMs":  42.3,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  15,
+                                          "durationMs":  39.28,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  16,
+                                          "durationMs":  38.68,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  17,
+                                          "durationMs":  46.64,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  18,
+                                          "durationMs":  49.07,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  19,
+                                          "durationMs":  51.41,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      },
+                                      {
+                                          "iteration":  20,
+                                          "durationMs":  67.08,
+                                          "disease":  "炭疽病",
+                                          "confidence":  0.68,
+                                          "engine":  "backend-fallback"
+                                      }
+                                  ]
+                  }
+}

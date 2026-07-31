@@ -1,10 +1,12 @@
 <template>
   <div class="diagnosis-page page-shell">
     <section class="hero glass-card">
-      <div>
-        <h3 class="section-title">病害识别工作台</h3>
+      <div class="hero-copy">
+        <span class="hero-kicker">Diagnosis Flow</span>
+        <h3 class="section-title">病害识别</h3>
         <p class="section-copy">
-          当前识别服务支持两种模式：有权重时走 YOLO 推理，没有权重时自动切换为数据集特征匹配或规则兜底。你可以直接使用内置样图快速体验识别流程。
+          当前识别服务优先走 YOLO 推理，模型不可用时自动回退到数据集特征匹配或规则模式。
+          识别结果会直接生成病症标签，并作为进入解决方案页的第一跳依据。
         </p>
       </div>
 
@@ -15,22 +17,39 @@
       </div>
     </section>
 
+    <section class="metric-grid">
+      <article class="metric-card">
+        <div class="metric-label">样图数量</div>
+        <div class="metric-value">{{ samples.length }}</div>
+        <div class="metric-note">可直接使用内置样图快速完成演示，不依赖现场临时准备图片。</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">识别模式</div>
+        <div class="metric-value compact">{{ health?.diagnosisDetails.modelLoaded ? '模型推理' : '回退保障' }}</div>
+        <div class="metric-note">用来说明系统在服务波动时仍能维持“可讲、可演示、可落地”的能力。</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">结果出口</div>
+        <div class="metric-value">解决方案</div>
+        <div class="metric-note">识别完成后可直接带病症标签进入方案推荐页继续协同。</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">结果状态</div>
+        <div class="metric-value">{{ result ? '已生成' : '待识别' }}</div>
+        <div class="metric-note">结果区会展示主预测、候选类别、建议和引擎模式。</div>
+      </article>
+    </section>
+
     <section class="sample-section soft-card">
-      <header class="sample-header">
+      <header class="panel-header">
         <div>
           <h3 class="section-title">内置样图</h3>
-          <p class="section-copy">点击任意样图会自动填充预览和待识别文件，方便快速完成识别验证。</p>
+          <p class="section-copy">点击任意样图会自动填入预览和待识别文件，便于快速验证识别流程。</p>
         </div>
       </header>
 
       <div class="sample-grid">
-        <button
-          v-for="sample in samples"
-          :key="sample.title"
-          type="button"
-          class="sample-card"
-          @click="selectSample(sample)"
-        >
+        <button v-for="sample in samples" :key="sample.title" type="button" class="sample-card" @click="selectSample(sample)">
           <img :src="sample.url" :alt="sample.title" />
           <div>
             <strong>{{ sample.title }}</strong>
@@ -45,7 +64,7 @@
         <header class="panel-header">
           <div>
             <h3 class="section-title">上传或选择图片</h3>
-            <p class="section-copy">建议选择叶片或果实病斑清晰的图片，以便更稳定地展示识别结果。</p>
+            <p class="section-copy">建议选择病斑清晰、光线均匀的叶片或果实图片，结果会更稳定。</p>
           </div>
         </header>
 
@@ -62,7 +81,7 @@
             拖拽病叶或果实图片到这里，或 <em>点击选择</em>
           </div>
           <template #tip>
-            <div class="el-upload__tip">如果网络或模型不稳定，也可以直接使用上方内置样图完成识别验证。</div>
+            <div class="el-upload__tip">如果现场不方便上传图片，也可以直接使用上方样图进行演示。</div>
           </template>
         </el-upload>
 
@@ -71,9 +90,8 @@
         </div>
 
         <div class="action-row">
-          <el-button type="primary" :disabled="!file" :loading="isLoading" @click="handleDiagnosis">
-            开始识别
-          </el-button>
+          <el-button type="primary" :disabled="!file" :loading="isLoading" @click="handleDiagnosis">开始识别</el-button>
+          <el-button v-if="result" @click="openSolutions">查看解决方案</el-button>
         </div>
       </article>
 
@@ -81,7 +99,7 @@
         <header class="panel-header">
           <div>
             <h3 class="section-title">识别结果</h3>
-            <p class="section-copy">结果区域会展示主预测、候选类别以及对应处理建议，方便你现场讲解。</p>
+            <p class="section-copy">结果区会展示主预测、候选类别、引擎模式以及可继续进入方案页的出口。</p>
           </div>
         </header>
 
@@ -99,16 +117,10 @@
             </div>
           </div>
 
-          <el-alert
-            v-if="result.note"
-            type="info"
-            show-icon
-            :closable="false"
-            :title="result.note"
-          />
+          <el-alert v-if="result.note" type="info" show-icon :closable="false" :title="result.note" />
 
           <section class="result-section">
-            <h4>防治建议</h4>
+            <h4>识别建议</h4>
             <ul>
               <li v-for="suggestion in result.suggestions" :key="suggestion">{{ suggestion }}</li>
             </ul>
@@ -139,6 +151,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
 
@@ -154,25 +167,25 @@ type SampleCard = {
 const samples: SampleCard[] = [
   {
     title: '健康叶片',
-    description: '用于验证系统对正常样本的基础识别能力。',
+    description: '用于验证系统对正常样本的基础识别与说明能力。',
     url: '/demo/healthy-demo.jpg',
     fileName: 'healthy-demo.jpg'
   },
   {
     title: '炭疽病样图',
-    description: '适合验证疑似真菌病害的识别与防治建议输出。',
+    description: '适合演示真菌性病害识别和结果带标签进入方案页的过程。',
     url: '/demo/anthracnose-demo.jpg',
     fileName: 'anthracnose-demo.jpg'
   },
   {
     title: '霜疫霉病样图',
-    description: '用于验证雨季病害场景下的识别与建议。',
+    description: '适合演示雨季高湿场景下的病害识别与建议说明。',
     url: '/demo/blight-demo.jpg',
     fileName: 'blight-demo.jpg'
   },
   {
     title: '红锈病样图',
-    description: '可作为补充样本展示多类别候选结果。',
+    description: '用于补充展示候选类别和多病症样本识别表现。',
     url: '/demo/rust-demo.jpg',
     fileName: 'rust-demo.jpg'
   }
@@ -183,11 +196,12 @@ const isLoading = ref(false)
 const file = ref<File | null>(null)
 const result = ref<DiagnosisResult | null>(null)
 const health = ref<SystemHealthResponse | null>(null)
+const router = useRouter()
 
 const diagnosisEngine = computed(() => health.value?.diagnosisDetails.engine ?? 'loading...')
 const diagnosisModeText = computed(() =>
   health.value?.diagnosisDetails.modelLoaded
-    ? '当前已加载 YOLO 模型，可以展示真实推理链路。'
+    ? '当前已加载 YOLO 模型，展示真实推理链路。'
     : '当前未加载 YOLO 权重，系统会自动回退到数据集特征匹配或规则模式。'
 )
 
@@ -199,10 +213,22 @@ const updatePreview = (rawFile: File) => {
   reader.readAsDataURL(rawFile)
 }
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp']
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+
 const handleFileChange = (fileObj: { raw?: File }) => {
   const rawFile = fileObj.raw
   if (!rawFile) {
     return
+  }
+
+  if (!ALLOWED_IMAGE_TYPES.includes(rawFile.type)) {
+    ElMessage.warning('仅支持 JPG、PNG、WebP、BMP 格式的图片。')
+    return false
+  }
+  if (rawFile.size > MAX_IMAGE_SIZE) {
+    ElMessage.warning('图片大小不能超过 10MB。')
+    return false
   }
 
   file.value = rawFile
@@ -219,7 +245,7 @@ const selectSample = async (sample: SampleCard) => {
     result.value = null
     imageUrl.value = sample.url
     ElMessage.success(`已选择样图：${sample.title}`)
-  } catch (error) {
+  } catch {
     ElMessage.error('加载内置样图失败。')
   }
 }
@@ -237,8 +263,8 @@ const handleDiagnosis = async () => {
     const response = await diagnosisAPI.upload(formData)
     result.value = response.data
     ElMessage.success('识别完成。')
-  } catch (error) {
-    ElMessage.error('识别失败，请检查后端识别接口。')
+  } catch {
+    ElMessage.error('识别失败，请检查后端识别服务。')
   } finally {
     isLoading.value = false
   }
@@ -248,9 +274,23 @@ const loadHealth = async () => {
   try {
     const response = await systemAPI.health()
     health.value = response.data
-  } catch (error) {
+  } catch {
     ElMessage.error('获取识别服务状态失败。')
   }
+}
+
+const openSolutions = () => {
+  if (!result.value) {
+    return
+  }
+
+  router.push({
+    path: '/solutions',
+    query: {
+      diseaseTag: result.value.disease,
+      question: `我在病害识别中识别到了 ${result.value.disease}，请给我推荐适合的门店方案。`
+    }
+  })
 }
 
 onMounted(() => {
@@ -263,11 +303,36 @@ onMounted(() => {
   gap: 18px;
 }
 
+.hero,
+.sample-section,
+.upload-panel,
+.result-panel {
+  padding: 24px;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 18px;
-  padding: 24px 26px;
+  align-items: center;
+}
+
+.hero-copy {
+  display: grid;
+  gap: 14px;
+}
+
+.hero-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(242, 140, 40, 0.14);
+  color: #9c4e0c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .engine-card {
@@ -295,14 +360,13 @@ onMounted(() => {
   line-height: 1.8;
 }
 
-.sample-section,
-.upload-panel {
-  padding: 22px;
-}
-
-.sample-header,
 .panel-header {
   margin-bottom: 18px;
+}
+
+.compact {
+  font-size: 20px;
+  line-height: 1.45;
 }
 
 .sample-grid {
@@ -354,10 +418,6 @@ onMounted(() => {
   gap: 18px;
 }
 
-.result-panel {
-  padding: 22px;
-}
-
 .upload-icon {
   font-size: 30px;
   color: var(--primary-main);
@@ -379,6 +439,7 @@ onMounted(() => {
 .action-row {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
   margin-top: 18px;
 }
 
@@ -461,8 +522,9 @@ onMounted(() => {
 
 @media (max-width: 1180px) {
   .hero,
+  .sample-grid,
   .content-grid,
-  .sample-grid {
+  .result-summary {
     grid-template-columns: 1fr;
   }
 }

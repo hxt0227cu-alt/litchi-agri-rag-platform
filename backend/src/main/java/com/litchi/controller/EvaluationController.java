@@ -10,6 +10,7 @@ import com.litchi.dto.SubmitHumanScoreRequest;
 import com.litchi.service.EvaluationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/evaluation")
+@RequestMapping("/evaluations")
 @RequiredArgsConstructor
 @AuthRequired
 @RoleAllowed("technician")
@@ -35,14 +36,16 @@ public class EvaluationController {
         return ResponseEntity.ok(evaluationService.listQuestions(type, evaluated, page, size));
     }
 
-    @PostMapping("/answer")
-    public ResponseEntity<EvaluationRecordDto> submitAnswer(@RequestBody SubmitEvaluationAnswerRequest request) {
+    @PostMapping({"/answer", "/answers"})
+    public ResponseEntity<EvaluationRecordDto> submitAnswer(@Valid @RequestBody SubmitEvaluationAnswerRequest request) {
         return ResponseEntity.ok(evaluationService.submitSystemAnswer(request.getId(), request.getSystemAnswer()));
     }
 
-    @PostMapping("/score")
-    public ResponseEntity<EvaluationRecordDto> submitScore(@RequestBody SubmitHumanScoreRequest request) {
-        return ResponseEntity.ok(evaluationService.submitHumanScore(request.getId(), request.getHumanScore()));
+    @PostMapping({"/score", "/scores"})
+    public ResponseEntity<EvaluationRecordDto> submitScore(@Valid @RequestBody SubmitHumanScoreRequest request) {
+        return ResponseEntity.ok(
+                evaluationService.submitHumanScore(request.getId(), request.getHumanScore(), request.getReviewNote())
+        );
     }
 
     @GetMapping("/stats")

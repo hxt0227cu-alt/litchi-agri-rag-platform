@@ -3,6 +3,7 @@ param(
     [switch]$RequireRealDiagnosisModel
 )
 
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
@@ -22,15 +23,46 @@ function Add-Warning([string]$message) {
     $script:warnings.Add($message)
 }
 
+function Invoke-SmokeMultipart {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Uri,
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+        [string]$ContentType = "application/octet-stream"
+    )
+
+    Add-Type -AssemblyName System.Net.Http
+    $handler = New-Object System.Net.Http.HttpClientHandler
+    $client = New-Object System.Net.Http.HttpClient($handler)
+    try {
+        $content = New-Object System.Net.Http.MultipartFormDataContent
+        $fileBytes = [System.IO.File]::ReadAllBytes($FilePath)
+        $fileContent = New-Object System.Net.Http.ByteArrayContent -ArgumentList (, $fileBytes)
+        $fileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse($ContentType)
+        $content.Add($fileContent, "file", [System.IO.Path]::GetFileName($FilePath))
+
+        $response = $client.PostAsync($Uri, $content).GetAwaiter().GetResult()
+        $raw = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+        if (-not $response.IsSuccessStatusCode) {
+            throw "Request failed with status $([int]$response.StatusCode): $raw"
+        }
+        return $raw | ConvertFrom-Json
+    } finally {
+        $client.Dispose()
+        $handler.Dispose()
+    }
+}
+
 try {
     $health = Invoke-RestMethod -Method Get -Uri "$BaseUrl/health"
     $init = Invoke-RestMethod -Method Post -Uri "$BaseUrl/system/init?scope=all"
-    $upload = (& curl.exe -s -X POST -F "file=@$docPath;type=text/markdown" "$BaseUrl/document") | ConvertFrom-Json
+    $upload = Invoke-SmokeMultipart -Uri "$BaseUrl/document" -FilePath $docPath -ContentType "text/markdown"
     $cleanupTarget = $upload.id
     $documents = Invoke-RestMethod -Method Get -Uri "$BaseUrl/document"
-    $chat = (& curl.exe -s -X POST -H "Content-Type: application/json; charset=utf-8" --data-binary "@$chatRequestPath" "$BaseUrl/chat") | ConvertFrom-Json
+    $chat = Invoke-RestMethod -Method Post -Uri "$BaseUrl/chat" -ContentType "application/json; charset=utf-8" -InFile $chatRequestPath
     $kg = Invoke-RestMethod -Method Get -Uri "$BaseUrl/kg/visualize?keyword=%E7%82%AD%E7%96%BD%E7%97%85"
-    $diagnosis = (& curl.exe -s -X POST -F "file=@$imagePath;type=image/png" "$BaseUrl/diagnosis") | ConvertFrom-Json
+    $diagnosis = Invoke-SmokeMultipart -Uri "$BaseUrl/diagnosis" -FilePath $imagePath -ContentType "image/png"
 
     $serviceMap = @{}
     if ($health.services) {

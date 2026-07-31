@@ -1,12 +1,14 @@
 .git
 .smoke
-backend
 docker
 docs
-frontend
 datasets
 README.md
 *.md
+!backend/
+!backend/**
+!frontend/
+!frontend/**
 !diagnosis-service/
 !diagnosis-service/**
 !models/

@@ -1,25 +1,27 @@
-export type PlatformRole = 'farmer' | 'technician' | 'shopkeeper'
+import { DEFAULT_ROUTE_BY_ROLE } from '../config/platform.js'
+import type { PlatformRole } from '../types/platform.js'
+
 export type PlatformPermission =
   | 'diagnosis.access'
   | 'evaluation.access'
   | 'documents.manage'
   | 'training.access'
-  | 'guide.access'
   | 'feedback.access'
+  | 'knowledge.access'
   | 'system.manage'
 
 const permissionMatrix: Record<PlatformRole, PlatformPermission[]> = {
-  farmer: ['diagnosis.access', 'feedback.access'],
+  farmer: ['diagnosis.access', 'training.access', 'feedback.access', 'knowledge.access'],
   technician: [
     'diagnosis.access',
     'evaluation.access',
     'documents.manage',
     'training.access',
-    'guide.access',
     'feedback.access',
+    'knowledge.access',
     'system.manage'
   ],
-  shopkeeper: ['documents.manage', 'guide.access', 'feedback.access']
+  shopkeeper: []
 }
 
 export const isPlatformRole = (role: string | null | undefined): role is PlatformRole =>
@@ -45,22 +47,39 @@ export const isRoleAllowed = (
   return isPlatformRole(role) && allowedRoles.includes(role)
 }
 
-export const defaultRouteForRole = (_role: string | null | undefined) => '/overview'
+export const defaultRouteForRole = (role: string | null | undefined) => {
+  if (!isPlatformRole(role)) {
+    return '/login'
+  }
+  return DEFAULT_ROUTE_BY_ROLE[role]
+}
 
 export const blockedRouteMessage = (path: string): string => {
   switch (path) {
     case '/evaluation':
-      return '当前账号仅技术员可进入评测中心。'
+      return '当前页面仅管理员可以访问评测中心。'
     case '/diagnosis':
-      return '当前账号仅农户和技术员可使用病害识别。'
+      return '当前页面仅农户和管理员可以访问病害识别。'
     case '/training':
-      return '当前账号仅技术员可进入培训课堂。'
-    case '/guide':
-      return '当前账号仅农资店和技术员可访问快配药与用药指南。'
-    case '/feedback':
-      return '请先登录后再填写满意度问卷。'
+      return '当前页面仅农户和管理员可以访问学习课堂。'
+    case '/knowledge':
+      return '当前页面仅农户和管理员可以访问研判图谱。'
+    case '/document':
+      return '当前页面仅管理员可以访问知识文档。'
     case '/system':
-      return '当前账号仅技术员可访问系统设置与运维页。'
+    case '/technician/workbench':
+      return '当前页面仅管理员可以访问管理员工作台与系统状态。'
+    case '/shop/workbench':
+    case '/shop/profile':
+    case '/shop/plans':
+    case '/shop/inbox':
+    case '/shop/trends':
+      return '当前页面仅农资店可以访问门店协同模块。'
+    case '/consultations/my':
+    case '/solutions':
+      return '当前页面仅农户可以发起方案选择和求助。'
+    case '/feedback':
+      return '请先登录后再提交满意度反馈。'
     default:
       return '当前账号没有访问该页面的权限。'
   }

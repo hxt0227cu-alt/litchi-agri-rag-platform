@@ -11,12 +11,13 @@ import com.litchi.dto.PageResponse;
 import com.litchi.service.ChatService;
 import com.litchi.service.ChatHistoryService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/chat")
+@RequestMapping("/chats")
 @RequiredArgsConstructor
 public class ChatController {
 
@@ -25,7 +26,7 @@ public class ChatController {
 
     @AuthRequired
     @PostMapping
-    public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request, HttpServletRequest servletRequest) {
+    public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request, HttpServletRequest servletRequest) {
         AuthenticatedUser user = AuthContext.requireCurrentUser(servletRequest);
         ChatResponse response = chatService.processChat(request);
         chatHistoryService.save(user.id(), request.getSessionId(), request.getQuestion(), response);

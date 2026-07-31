@@ -2,6 +2,7 @@ package com.litchi.controller;
 
 import com.litchi.auth.AuthRequired;
 import com.litchi.auth.RoleAllowed;
+import com.litchi.dto.UpdateStorageSettingsRequest;
 import com.litchi.service.DataInitializer;
 import com.litchi.service.DemoContentService;
 import com.litchi.service.DiagnosisService;
@@ -9,11 +10,13 @@ import com.litchi.service.DocumentService;
 import com.litchi.service.KnowledgeGraphService;
 import com.litchi.service.LLMService;
 import com.litchi.service.VectorSearchService;
+import com.litchi.service.CollaborationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -72,6 +75,7 @@ public class SystemController {
     private final DiagnosisService diagnosisService;
     private final DocumentService documentService;
     private final DemoContentService demoContentService;
+    private final CollaborationService collaborationService;
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
@@ -97,6 +101,7 @@ public class SystemController {
         List<?> nodes = (List<?>) graph.getOrDefault("nodes", List.of());
         List<?> edges = (List<?>) graph.getOrDefault("edges", List.of());
         DiagnosisService.HealthStatus diagnosisHealth = diagnosisService.getHealth();
+        CollaborationService.CollaborationSummary collaborationSummary = collaborationService.getSummary();
 
         return ResponseEntity.ok(Map.of(
                 "services", buildHealthPayload(),
@@ -114,6 +119,13 @@ public class SystemController {
                         "demoMode", diagnosisHealth.demoMode(),
                         "modelLoaded", diagnosisHealth.modelLoaded()
                 ),
+                "collaboration", Map.of(
+                        "activePlans", collaborationSummary.activePlans(),
+                        "consultationCount", collaborationSummary.consultationCount(),
+                        "pendingConsultations", collaborationSummary.pendingConsultations(),
+                        "topDisease", collaborationSummary.topDisease(),
+                        "avgShopRating", collaborationSummary.avgShopRating()
+                ),
                 "demoReady", documentService.countDocuments() > 0,
                 "suggestedQuestions", demoContentService.getSuggestedQuestions(),
                 "demoFlow", demoContentService.getDemoFlow()
@@ -124,24 +136,42 @@ public class SystemController {
     @AuthRequired
     @RoleAllowed("technician")
     public ResponseEntity<Map<String, Object>> settings() {
+        return ResponseEntity.ok(buildSettingsResponse());
+    }
+
+    @PostMapping("/system/storage")
+    @AuthRequired
+    @RoleAllowed("technician")
+    public ResponseEntity<Map<String, Object>> updateStorage(@RequestBody UpdateStorageSettingsRequest request) {
+        documentService.updateStorageSettings(request.getDocumentStorageDir(), request.getDocumentStateFile());
+        return ResponseEntity.ok(Map.of(
+                "message", "文档存储路径已更新。",
+                "settings", buildSettingsResponse()
+        ));
+    }
+
+    private Map<String, Object> buildSettingsResponse() {
         Map<String, Object> environment = new LinkedHashMap<>();
         environment.put("profile", valueOrBlank(activeProfile));
         environment.put("autoBootstrap", startupAutoBootstrap);
         environment.put("startupMaxAttempts", startupMaxAttempts);
         environment.put("startupRetryDelayMs", startupRetryDelayMs);
 
+        DocumentService.StorageSettings storageSettings = documentService.getStorageSettings();
         Map<String, Object> storage = new LinkedHashMap<>();
         storage.put("mysqlEnabled", mysqlEnabled);
-        storage.put("mysqlUrl", sanitizeUrl(mysqlUrl));
+        storage.put("mysqlUrl", valueOrBlank(mysqlUrl));
         storage.put("neo4jUri", valueOrBlank(neo4jUri));
         storage.put("milvusCollectionName", valueOrBlank(milvusCollectionName));
-        storage.put("documentStorageDir", valueOrBlank(documentStorageDir));
-        storage.put("documentStateFile", valueOrBlank(documentStateFile));
+        storage.put("documentStorageDir", valueOrBlank(storageSettings.documentStorageDir()));
+        storage.put("documentStateFile", valueOrBlank(storageSettings.documentStateFile()));
 
         Map<String, Object> services = new LinkedHashMap<>();
         services.put("ollamaBaseUrl", valueOrBlank(ollamaBaseUrl));
         services.put("ollamaModel", valueOrBlank(ollamaModel));
         services.put("diagnosisServiceUrl", valueOrBlank(diagnosisServiceUrl));
+        services.put("ollamaConnected", llmService.isAvailable());
+        services.put("diagnosisConnected", diagnosisService.isAvailable());
 
         Map<String, Object> platform = new LinkedHashMap<>();
         platform.put("documentsTotal", documentService.countDocuments());
@@ -154,7 +184,7 @@ public class SystemController {
         response.put("storage", storage);
         response.put("services", services);
         response.put("platform", platform);
-        return ResponseEntity.ok(response);
+        return response;
     }
 
     @PostMapping("/system/demo/bootstrap")
@@ -207,13 +237,6 @@ public class SystemController {
                 ),
                 "timestamp", OffsetDateTime.now().toString()
         );
-    }
-
-    private String sanitizeUrl(String value) {
-        if (value == null || value.isBlank()) {
-            return "";
-        }
-        return value.replaceAll("(?i)(password=)[^&]+", "$1******");
     }
 
     private String valueOrBlank(String value) {

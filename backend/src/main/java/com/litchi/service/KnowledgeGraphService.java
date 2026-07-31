@@ -6,6 +6,7 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -22,6 +24,10 @@ public class KnowledgeGraphService {
 
     private final Driver neo4jDriver;
     private final DemoContentService demoContentService;
+    private volatile long retryAfterEpochMs;
+
+    @Value("${app.resilience.dependency-retry-delay-ms:300000}")
+    private long dependencyRetryDelayMs;
 
     public Map<String, Object> getVisualizationData(String keyword) {
         if (!isNeo4jAvailable()) {
@@ -40,11 +46,16 @@ public class KnowledgeGraphService {
         return Map.of("entities", searchEntities(text, null));
     }
 
-    public boolean isNeo4jAvailable() {
+    public synchronized boolean isNeo4jAvailable() {
+        if (System.currentTimeMillis() < retryAfterEpochMs) {
+            return false;
+        }
         try (Session session = neo4jDriver.session()) {
             session.run("RETURN 1").consume();
+            retryAfterEpochMs = 0L;
             return true;
         } catch (Exception e) {
+            retryAfterEpochMs = System.currentTimeMillis() + dependencyRetryDelayMs;
             return false;
         }
     }
@@ -112,7 +123,7 @@ public class KnowledgeGraphService {
                 if (nodeIds.add(id)) {
                     Map<String, Object> nodeMap = new LinkedHashMap<>();
                     nodeMap.put("id", id);
-                    nodeMap.put("label", node.labels().iterator().next());
+                    nodeMap.put("label", StreamSupport.stream(node.labels().spliterator(), false).findFirst().orElse("Unknown"));
                     nodeMap.put("properties", node.asMap());
                     nodes.add(nodeMap);
                 }
@@ -171,7 +182,7 @@ public class KnowledgeGraphService {
             var node = record.get("n").asNode();
             entities.add(Map.of(
                     "id", record.get("id").asString(),
-                    "label", node.labels().iterator().next(),
+                    "label", StreamSupport.stream(node.labels().spliterator(), false).findFirst().orElse("Unknown"),
                     "properties", node.asMap()
             ));
         }
@@ -207,7 +218,7 @@ public class KnowledgeGraphService {
         var node = record.get("n").asNode();
         return Map.of(
                 "id", node.elementId(),
-                "label", node.labels().iterator().next(),
+                "label", StreamSupport.stream(node.labels().spliterator(), false).findFirst().orElse("Unknown"),
                 "name", node.asMap().get("name"),
                 "properties", node.asMap(),
                 "relations", record.get("relations").asList()

@@ -58,6 +58,10 @@ export const useChatStore = defineStore('chat', () => {
     isLoading.value = loading
   }
 
+  const setSessionId = (id: string) => {
+    currentSessionId.value = id
+  }
+
   return {
     messages,
     isLoading,
@@ -66,6 +70,7 @@ export const useChatStore = defineStore('chat', () => {
     clearMessages,
     startNewSession,
     loadHistory,
-    setLoading
+    setLoading,
+    setSessionId
   }
 })

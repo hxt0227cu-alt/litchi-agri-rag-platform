@@ -70,6 +70,7 @@ public class ChatHistoryService {
                 .createdAt(OffsetDateTime.now().toString())
                 .build());
         persistState();
+        log.info("Chat history saved userId={} sessionId={}", userId, sessionId);
     }
 
     public synchronized PageResponse<ChatHistoryItem> getHistory(String userId, String sessionId, int page, int size) {
@@ -128,6 +129,13 @@ public class ChatHistoryService {
                 .size(safeSize)
                 .items(sessions.subList(fromIndex, toIndex))
                 .build();
+    }
+
+    public synchronized List<ChatHistoryItem> getAllHistoryForEvaluation() {
+        return records.stream()
+                .sorted(Comparator.comparing(ChatRecord::getCreatedAt).reversed())
+                .map(this::toHistoryItem)
+                .toList();
     }
 
     private ChatHistoryItem toHistoryItem(ChatRecord record) {

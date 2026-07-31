@@ -1,5 +1,5 @@
 :root {
-  font-family: 'Avenir Next', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  font-family: 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color: #25352f;
@@ -12,12 +12,14 @@
   --primary-main: #2f6a59;
   --accent-main: #f28c28;
   --accent-soft: #ffd26f;
+  --accent-rose: #df6b59;
   --ink-strong: #22352f;
   --ink-soft: #5f736c;
   --line-soft: rgba(34, 53, 47, 0.08);
   --panel-bg: rgba(255, 250, 242, 0.82);
-  --panel-solid: #fffaf2;
-  --panel-shadow: 0 22px 48px rgba(40, 58, 47, 0.08);
+  --panel-solid: rgba(255, 250, 242, 0.94);
+  --panel-shadow: 0 24px 56px rgba(40, 58, 47, 0.09);
+  --lift-shadow: 0 24px 42px rgba(31, 74, 63, 0.12);
 }
 
 * {
@@ -33,10 +35,40 @@ body,
 }
 
 body {
+  position: relative;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(255, 210, 111, 0.24), transparent 22%),
     radial-gradient(circle at top right, rgba(69, 128, 102, 0.16), transparent 24%),
-    linear-gradient(180deg, #f8f1df 0%, #f6efe3 42%, #eef2ea 100%);
+    linear-gradient(180deg, #f7edda 0%, #f8f0e4 36%, #edf2e8 100%);
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: auto;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(36px);
+}
+
+body::before {
+  top: 80px;
+  right: -80px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255, 211, 122, 0.22);
+}
+
+body::after {
+  left: -80px;
+  bottom: 80px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: rgba(71, 132, 104, 0.14);
 }
 
 a {
@@ -55,12 +87,31 @@ textarea {
   gap: 18px;
 }
 
+.page-shell > * {
+  animation: section-rise 0.6s ease both;
+}
+
+.page-shell > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.page-shell > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.page-shell > *:nth-child(4) {
+  animation-delay: 0.18s;
+}
+
 .glass-card {
   border-radius: 28px;
   background: var(--panel-bg);
   border: 1px solid rgba(255, 255, 255, 0.56);
   box-shadow: var(--panel-shadow);
   backdrop-filter: blur(12px);
+  transition:
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
 }
 
 .soft-card {
@@ -68,6 +119,17 @@ textarea {
   background: var(--panel-solid);
   border: 1px solid var(--line-soft);
   box-shadow: 0 16px 36px rgba(35, 54, 45, 0.06);
+  transition:
+    transform 0.24s ease,
+    box-shadow 0.24s ease,
+    border-color 0.24s ease;
+}
+
+.soft-card:hover,
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--lift-shadow);
+  border-color: rgba(242, 140, 40, 0.18);
 }
 
 .section-title {
@@ -80,7 +142,7 @@ textarea {
 .section-copy {
   margin: 8px 0 0;
   color: var(--ink-soft);
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .metric-grid {
@@ -92,13 +154,18 @@ textarea {
 .metric-card {
   padding: 20px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(34, 53, 47, 0.06);
+  transition:
+    transform 0.24s ease,
+    box-shadow 0.24s ease,
+    border-color 0.24s ease;
 }
 
 .metric-label {
   color: var(--ink-soft);
   font-size: 13px;
+  letter-spacing: 0.04em;
 }
 
 .metric-value {
@@ -112,7 +179,7 @@ textarea {
   margin-top: 8px;
   color: var(--ink-soft);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .pill-row {
@@ -130,12 +197,43 @@ textarea {
   cursor: pointer;
   transition:
     transform 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .chip-button:hover {
   transform: translateY(-1px);
   background: rgba(47, 106, 89, 0.14);
+  box-shadow: 0 10px 20px rgba(31, 74, 63, 0.08);
+}
+
+.el-button {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.el-button:not(.is-disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(31, 74, 63, 0.12);
+}
+
+.el-button:not(.is-disabled):active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 6px 14px rgba(31, 74, 63, 0.1);
+}
+
+@keyframes section-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 1180px) {

@@ -23,15 +23,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/document")
+@RequestMapping("/documents")
 @RequiredArgsConstructor
 @AuthRequired
+@RoleAllowed("technician")
 public class DocumentController {
 
     private final DocumentService documentService;
 
     @PostMapping
-    @RoleAllowed({"technician", "shopkeeper"})
     public ResponseEntity<DocumentRecord> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String title,
@@ -52,7 +52,6 @@ public class DocumentController {
     }
 
     @DeleteMapping("/{id}")
-    @RoleAllowed({"technician", "shopkeeper"})
     public ResponseEntity<Map<String, Object>> delete(@PathVariable String id) {
         boolean deleted = documentService.delete(id);
         if (!deleted) {

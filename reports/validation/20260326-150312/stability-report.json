@@ -1,0 +1,2917 @@
+﻿{
+    "generatedAt":  "2026-03-26T15:33:14.0592105+08:00",
+    "baseUrl":  "http://127.0.0.1:8080/api",
+    "username":  "technician",
+    "durationMinutes":  30,
+    "intervalSeconds":  15,
+    "availabilityTargetPct":  99,
+    "healthSnapshot":  {
+                           "documents":  {
+                                             "total":  5,
+                                             "indexed":  5
+                                         },
+                           "status":  "healthy",
+                           "services":  {
+                                            "neo4j":  "connected",
+                                            "milvus":  "connected",
+                                            "ollama":  "connected",
+                                            "diagnosis":  "connected"
+                                        },
+                           "timestamp":  "2026-03-26T07:03:12.766838893Z",
+                           "diagnosisDetails":  {
+                                                    "modelLoaded":  true,
+                                                    "engine":  "ultralytics-yolo",
+                                                    "demoMode":  false
+                                                }
+                       },
+    "login":  {
+                  "durationMs":  92.12
+              },
+    "summary":  {
+                    "cycleCount":  119,
+                    "cycleSuccessCount":  119,
+                    "cycleAvailabilityPct":  100,
+                    "healthSuccessRatePct":  100,
+                    "chatSuccessRatePct":  100,
+                    "diagnosisSuccessRatePct":  100,
+                    "passed":  true,
+                    "healthLatency":  {
+                                          "avgMs":  38.69,
+                                          "minMs":  22.09,
+                                          "maxMs":  222.54
+                                      },
+                    "chatLatency":  {
+                                        "avgMs":  1207.79,
+                                        "minMs":  11.18,
+                                        "maxMs":  4439.82
+                                    },
+                    "diagnosisLatency":  {
+                                             "avgMs":  106.07,
+                                             "minMs":  37.5,
+                                             "maxMs":  1508.53
+                                         }
+                },
+    "failures":  {
+                     "firstFive":  [
+
+                                   ]
+                 },
+    "samples":  [
+                    {
+                        "cycle":  1,
+                        "startedAt":  "2026-03-26T15:03:12.9675255+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  42.32,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4297.92,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  804.59,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  2,
+                        "startedAt":  "2026-03-26T15:03:28.2033079+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  49.21,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2771.33,
+                                     "answerPreview":  "管理优先级：炭疽病和霜疫霉病。在连续降雨时，炭疽病和霜疫霉病的防治尤为重要。建议在雨季和雾天加强果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  191.94,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  3,
+                        "startedAt":  "2026-03-26T15:03:43.2352107+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  42.28,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2426.26,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实转色期的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  70.96,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  4,
+                        "startedAt":  "2026-03-26T15:03:57.7861587+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.83,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4116.4,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  50.07,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  5,
+                        "startedAt":  "2026-03-26T15:04:13.0066325+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.27,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.32,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  193.84,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  6,
+                        "startedAt":  "2026-03-26T15:04:28.2997240+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  42.14,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  76.58,
+                                     "answerPreview":  "管理优先级：炭疽病和霜疫霉病。在连续降雨时，炭疽病和霜疫霉病的防治尤为重要。建议在雨季和雾天加强果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  57.38,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  7,
+                        "startedAt":  "2026-03-26T15:04:43.4854605+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.44,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.35,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实转色期的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  127.56,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  8,
+                        "startedAt":  "2026-03-26T15:04:58.7096864+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.22,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  57.77,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  83.17,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  9,
+                        "startedAt":  "2026-03-26T15:05:13.8898934+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  78.04,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  13.13,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  65.89,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  10,
+                        "startedAt":  "2026-03-26T15:05:29.0542280+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  30.07,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  56.25,
+                                     "answerPreview":  "管理优先级：炭疽病和霜疫霉病。在连续降雨时，炭疽病和霜疫霉病的防治尤为重要。建议在雨季和雾天加强果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  52.11,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  11,
+                        "startedAt":  "2026-03-26T15:05:44.2117319+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  29.9,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.72,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实转色期的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  73.76,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  12,
+                        "startedAt":  "2026-03-26T15:05:59.3735608+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  28.56,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.85,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  59.51,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  13,
+                        "startedAt":  "2026-03-26T15:06:14.5272701+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  29.87,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4116.92,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  110.29,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  14,
+                        "startedAt":  "2026-03-26T15:06:29.7986663+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  41.5,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4439.82,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  99.19,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  15,
+                        "startedAt":  "2026-03-26T15:06:44.3882274+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  34.45,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4114.36,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How should fruit borer be monitored during peak periods?\n\n文档依据：\n- 《demo-anthracnose-guide.md》提到：# 荔枝炭疽病防治手册 ## 典型症状 炭疽病多发生在高温高湿环境，叶片会出现圆形或近圆形褐色病斑，果实转色期容易出现腐烂、落果和商品性下降。 ## 易发条件 连续阴雨、果园郁闭、枝叶通风差、采后清园不到位时，病原更容易在花果期和果实膨大期...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  84.95,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  16,
+                        "startedAt":  "2026-03-26T15:06:59.6291015+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  31.85,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4111.17,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  234.63,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  17,
+                        "startedAt":  "2026-03-26T15:07:15.0175485+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  27.04,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.88,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  116.22,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  18,
+                        "startedAt":  "2026-03-26T15:07:30.2279645+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.53,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.2,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  53.87,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  19,
+                        "startedAt":  "2026-03-26T15:07:45.3815686+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  28.82,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.78,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How should fruit borer be monitored during peak periods?\n\n文档依据：\n- 《demo-anthracnose-guide.md》提到：# 荔枝炭疽病防治手册 ## 典型症状 炭疽病多发生在高温高湿环境，叶片会出现圆形或近圆形褐色病斑，果实转色期容易出现腐烂、落果和商品性下降。 ## 易发条件 连续阴雨、果园郁闭、枝叶通风差、采后清园不到位时，病原更容易在花果期和果实膨大期...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  72.75,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  20,
+                        "startedAt":  "2026-03-26T15:08:00.5548613+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  40.94,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  62.76,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  70.8,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  21,
+                        "startedAt":  "2026-03-26T15:08:15.7396771+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  48.59,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  11.84,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  163.76,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  22,
+                        "startedAt":  "2026-03-26T15:08:30.9740393+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.27,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  60.14,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  96.31,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  23,
+                        "startedAt":  "2026-03-26T15:08:46.1884956+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.88,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  55.84,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How should fruit borer be monitored during peak periods?\n\n文档依据：\n- 《demo-anthracnose-guide.md》提到：# 荔枝炭疽病防治手册 ## 典型症状 炭疽病多发生在高温高湿环境，叶片会出现圆形或近圆形褐色病斑，果实转色期容易出现腐烂、落果和商品性下降。 ## 易发条件 连续阴雨、果园郁闭、枝叶通风差、采后清园不到位时，病原更容易在花果期和果实膨大期...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  50.84,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  24,
+                        "startedAt":  "2026-03-26T15:09:01.3464492+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.31,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.54,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  64.85,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  25,
+                        "startedAt":  "2026-03-26T15:09:16.5130851+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  31.78,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3304.87,
+                                     "answerPreview":  "控制litchi anthracnose在雨季期间，可以采取以下措施：\n\n1. 清理虫果和落果，降低虫源基数；\n2. 与修剪、清园和合理用药相结合，确保果园健康；\n3. 与霜疫霉病和炭疽病相结合，加强果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  78.87,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  26,
+                        "startedAt":  "2026-03-26T15:09:31.9359373+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  42.09,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2656.17,
+                                     "answerPreview":  "在荔枝栽培管理要点中，连续降雨是管理重点之一，需要重点关注炭疽病和霜疫霉病。因此，管理优先级应放在连续降雨的应对上。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  59.9,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  27,
+                        "startedAt":  "2026-03-26T15:09:46.6999710+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  27.01,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4117.63,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How should fruit borer be monitored during peak periods?\n\n文档依据：\n- 《demo-anthracnose-guide.md》提到：# 荔枝炭疽病防治手册 ## 典型症状 炭疽病多发生在高温高湿环境，叶片会出现圆形或近圆形褐色病斑，果实转色期容易出现腐烂、落果和商品性下降。 ## 易发条件 连续阴雨、果园郁闭、枝叶通风差、采后清园不到位时，病原更容易在花果期和果实膨大期...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  99.1,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  28,
+                        "startedAt":  "2026-03-26T15:10:01.9511827+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  29.87,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4141.87,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  95.51,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  29,
+                        "startedAt":  "2026-03-26T15:10:17.2310542+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  37.25,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  56.33,
+                                     "answerPreview":  "控制litchi anthracnose在雨季期间，可以采取以下措施：\n\n1. 清理虫果和落果，降低虫源基数；\n2. 与修剪、清园和合理用药相结合，确保果园健康；\n3. 与霜疫霉病和炭疽病相结合，加强果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  58.94,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  30,
+                        "startedAt":  "2026-03-26T15:10:32.3971978+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  38.62,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  62.97,
+                                     "answerPreview":  "在荔枝栽培管理要点中，连续降雨是管理重点之一，需要重点关注炭疽病和霜疫霉病。因此，管理优先级应放在连续降雨的应对上。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  83.75,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  31,
+                        "startedAt":  "2026-03-26T15:10:47.6000265+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  40.71,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  57.75,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How should fruit borer be monitored during peak periods?\n\n文档依据：\n- 《demo-anthracnose-guide.md》提到：# 荔枝炭疽病防治手册 ## 典型症状 炭疽病多发生在高温高湿环境，叶片会出现圆形或近圆形褐色病斑，果实转色期容易出现腐烂、落果和商品性下降。 ## 易发条件 连续阴雨、果园郁闭、枝叶通风差、采后清园不到位时，病原更容易在花果期和果实膨大期...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  89.64,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  32,
+                        "startedAt":  "2026-03-26T15:11:02.8060743+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.74,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.28,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  61.57,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  33,
+                        "startedAt":  "2026-03-26T15:11:17.9691778+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.34,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.57,
+                                     "answerPreview":  "控制litchi anthracnose在雨季期间，可以采取以下措施：\n\n1. 清理虫果和落果，降低虫源基数；\n2. 与修剪、清园和合理用药相结合，确保果园健康；\n3. 与霜疫霉病和炭疽病相结合，加强果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  80.88,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  34,
+                        "startedAt":  "2026-03-26T15:11:33.1561219+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.19,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  58.59,
+                                     "answerPreview":  "在荔枝栽培管理要点中，连续降雨是管理重点之一，需要重点关注炭疽病和霜疫霉病。因此，管理优先级应放在连续降雨的应对上。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  65.57,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  35,
+                        "startedAt":  "2026-03-26T15:11:48.3244009+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.04,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.19,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How should fruit borer be monitored during peak periods?\n\n文档依据：\n- 《demo-anthracnose-guide.md》提到：# 荔枝炭疽病防治手册 ## 典型症状 炭疽病多发生在高温高湿环境，叶片会出现圆形或近圆形褐色病斑，果实转色期容易出现腐烂、落果和商品性下降。 ## 易发条件 连续阴雨、果园郁闭、枝叶通风差、采后清园不到位时，病原更容易在花果期和果实膨大期...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  98.31,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  36,
+                        "startedAt":  "2026-03-26T15:12:03.5282603+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  50.02,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  14.73,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  71.32,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  37,
+                        "startedAt":  "2026-03-26T15:12:18.6777692+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.73,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3211.54,
+                                     "answerPreview":  "控制Litchi anthracnose的最佳方法是保持花果期的控梢和疏枝，以保持树冠的透光性。此外，要特别注意炭疽病和霜疫霉病的防治，特别是在连续降雨期间。在荔枝栽培管理中，应重点关注果实膨大期的果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  46.29,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  38,
+                        "startedAt":  "2026-03-26T15:12:33.9850601+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3798.96,
+                                     "answerPreview":  "在荔枝种植管理中，管理优先级应以病虫害防治为主。在连续降雨的情况下，应重点关注炭疽病和霜疫霉病。此外，果园巡查和及时清理病果和虫果也是必要的。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  171.17,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  39,
+                        "startedAt":  "2026-03-26T15:12:49.0095122+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  80.59,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3735.07,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降。 Fruit borer should be monitored during the fruiting period.",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  107.2,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  40,
+                        "startedAt":  "2026-03-26T15:13:03.9404978+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.21,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4132.16,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  101.86,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  41,
+                        "startedAt":  "2026-03-26T15:13:19.2269782+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.32,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.88,
+                                     "answerPreview":  "控制Litchi anthracnose的最佳方法是保持花果期的控梢和疏枝，以保持树冠的透光性。此外，要特别注意炭疽病和霜疫霉病的防治，特别是在连续降雨期间。在荔枝栽培管理中，应重点关注果实膨大期的果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  65.28,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  42,
+                        "startedAt":  "2026-03-26T15:13:34.4012985+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  46.82,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  21.89,
+                                     "answerPreview":  "在荔枝种植管理中，管理优先级应以病虫害防治为主。在连续降雨的情况下，应重点关注炭疽病和霜疫霉病。此外，果园巡查和及时清理病果和虫果也是必要的。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  108.7,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  43,
+                        "startedAt":  "2026-03-26T15:13:49.5943756+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  34.68,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  55.29,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降。 Fruit borer should be monitored during the fruiting period.",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  102.83,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  44,
+                        "startedAt":  "2026-03-26T15:14:04.7977692+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  37.4,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  58.5,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  64.69,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  45,
+                        "startedAt":  "2026-03-26T15:14:19.9778584+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  85.54,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  48.2,
+                                     "answerPreview":  "控制Litchi anthracnose的最佳方法是保持花果期的控梢和疏枝，以保持树冠的透光性。此外，要特别注意炭疽病和霜疫霉病的防治，特别是在连续降雨期间。在荔枝栽培管理中，应重点关注果实膨大期的果园巡查，发现病果和虫果后及时清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  303.75,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  46,
+                        "startedAt":  "2026-03-26T15:14:35.4368010+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  42.76,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  56.57,
+                                     "answerPreview":  "在荔枝种植管理中，管理优先级应以病虫害防治为主。在连续降雨的情况下，应重点关注炭疽病和霜疫霉病。此外，果园巡查和及时清理病果和虫果也是必要的。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  82.31,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  47,
+                        "startedAt":  "2026-03-26T15:14:50.6329403+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  38.62,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  58.02,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降。 Fruit borer should be monitored during the fruiting period.",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  60.07,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  48,
+                        "startedAt":  "2026-03-26T15:15:05.8030040+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  118.81,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  44.9,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  457.33,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  49,
+                        "startedAt":  "2026-03-26T15:15:20.4637198+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  48.59,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4405.9,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  1508.53,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  50,
+                        "startedAt":  "2026-03-26T15:15:35.5140233+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  57.12,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4098.04,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  489.46,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  51,
+                        "startedAt":  "2026-03-26T15:15:50.1721963+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  34.18,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2203.85,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，应加强果园的通风和修剪，减少病虫害的发生。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  50.86,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  52,
+                        "startedAt":  "2026-03-26T15:16:05.4757942+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.35,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4123.79,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  83.89,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  53,
+                        "startedAt":  "2026-03-26T15:16:20.7257897+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  30.82,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  57.41,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  64.57,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  54,
+                        "startedAt":  "2026-03-26T15:16:35.9291935+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  222.54,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  12.31,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  79.5,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  55,
+                        "startedAt":  "2026-03-26T15:16:51.2501883+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  34.31,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.86,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，应加强果园的通风和修剪，减少病虫害的发生。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  73.54,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  56,
+                        "startedAt":  "2026-03-26T15:17:06.4237871+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.65,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.68,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  60.08,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  57,
+                        "startedAt":  "2026-03-26T15:17:21.5796323+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.52,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.57,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How to control litchi anthracnose during the rainy season?\n\n文档依据：\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  60.35,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  58,
+                        "startedAt":  "2026-03-26T15:17:36.7472531+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  30.98,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  56.77,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  95.87,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  59,
+                        "startedAt":  "2026-03-26T15:17:51.9395252+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  34.78,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.95,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，应加强果园的通风和修剪，减少病虫害的发生。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  80.56,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  60,
+                        "startedAt":  "2026-03-26T15:18:07.1317501+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.38,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  57.46,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  91.41,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  61,
+                        "startedAt":  "2026-03-26T15:18:22.3330087+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  29.26,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2797.25,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：1. 增加巡园频次，重点检查花穗和果梗部位；2. 早发现虫口高峰，结合诱捕和人工检查。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  124.31,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  62,
+                        "startedAt":  "2026-03-26T15:18:37.3058703+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  47.49,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3416.16,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理要点包括花果期注意控梢和疏枝，保持树冠透光，遇到连续降雨时，要重点关注炭疽病和霜疫霉病。此外，果实膨大期加强果园巡查，发现病果和虫果后及时清理。在管理要点中，炭疽病和霜疫霉病是桂味荔枝的管理重点。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  39.97,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  63,
+                        "startedAt":  "2026-03-26T15:18:51.8240624+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.84,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2797.74,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  71.89,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  64,
+                        "startedAt":  "2026-03-26T15:19:06.7462421+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  58.64,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4090.94,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  94.7,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  65,
+                        "startedAt":  "2026-03-26T15:19:22.0081466+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.03,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  50.95,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：1. 增加巡园频次，重点检查花穗和果梗部位；2. 早发现虫口高峰，结合诱捕和人工检查。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  58.99,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  66,
+                        "startedAt":  "2026-03-26T15:19:37.1590346+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.63,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.52,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理要点包括花果期注意控梢和疏枝，保持树冠透光，遇到连续降雨时，要重点关注炭疽病和霜疫霉病。此外，果实膨大期加强果园巡查，发现病果和虫果后及时清理。在管理要点中，炭疽病和霜疫霉病是桂味荔枝的管理重点。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  70.79,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  67,
+                        "startedAt":  "2026-03-26T15:19:52.3362940+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  38.22,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.84,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  58.95,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  68,
+                        "startedAt":  "2026-03-26T15:20:07.5038197+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  25.72,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.06,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  49.79,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  69,
+                        "startedAt":  "2026-03-26T15:20:22.6495769+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.45,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.6,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：1. 增加巡园频次，重点检查花穗和果梗部位；2. 早发现虫口高峰，结合诱捕和人工检查。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  70.9,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  70,
+                        "startedAt":  "2026-03-26T15:20:37.8235365+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.77,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  58.73,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理要点包括花果期注意控梢和疏枝，保持树冠透光，遇到连续降雨时，要重点关注炭疽病和霜疫霉病。此外，果实膨大期加强果园巡查，发现病果和虫果后及时清理。在管理要点中，炭疽病和霜疫霉病是桂味荔枝的管理重点。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  87.89,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  71,
+                        "startedAt":  "2026-03-26T15:20:53.0209213+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  46.34,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  11.79,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  59.56,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  72,
+                        "startedAt":  "2026-03-26T15:21:08.1441727+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  41.41,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  50.3,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  59.19,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  73,
+                        "startedAt":  "2026-03-26T15:21:23.3082011+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  38.41,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3462.53,
+                                     "answerPreview":  "控制Litchi anthracnose（橘子灰霉病）的最佳方法是在雨季进行。雨季是橘子灰霉病的高发季节，因此在雨季进行橘子灰霉病的防控尤为重要。建议在雨季时，对果园进行清洁，减少灰霉病的传播。同时，可以结合修剪、清园和合理用药，提高橘子灰霉病的防控效果。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  99.96,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  74,
+                        "startedAt":  "2026-03-26T15:21:37.9173361+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  57.03,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3246.36,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理重点包括花果期的控梢和疏枝、连续降雨时的炭疽病和霜疫霉病、果实膨大期的果园巡查和病果和虫果的清理。在管理过程中，应重点关注病虫害的防治，如炭疽病和霜疫霉病，以及及时清理病果和虫果，以减少病虫害的发生。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  97.57,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  75,
+                        "startedAt":  "2026-03-26T15:21:53.3301787+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  47.88,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2635.5,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实转色期的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  55.99,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  76,
+                        "startedAt":  "2026-03-26T15:22:08.0910233+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  24.67,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4085.81,
+                                     "answerPreview":  "技术人员可以利用以下方法来辨别桂味荔枝的叶病害：\n1. 检查花果期的控梢和疏枝情况，保持树冠的透光性。\n2. 遇到连续降雨时，重点关注炭疽病和霜疫霉病。\n3. 果实膨大期加强果园巡查，发现病果和虫果后及时清理。\n\n操作建议：技术人员在果园巡查时，应特别注意观察花果期的控梢和疏枝情况，保持树冠的透光性，同时注意炭疽病和霜疫霉病的防治。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  88.89,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  77,
+                        "startedAt":  "2026-03-26T15:22:23.2969378+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.63,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  60.04,
+                                     "answerPreview":  "控制Litchi anthracnose（橘子灰霉病）的最佳方法是在雨季进行。雨季是橘子灰霉病的高发季节，因此在雨季进行橘子灰霉病的防控尤为重要。建议在雨季时，对果园进行清洁，减少灰霉病的传播。同时，可以结合修剪、清园和合理用药，提高橘子灰霉病的防控效果。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  125.6,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  78,
+                        "startedAt":  "2026-03-26T15:22:38.5237401+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  39.79,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.05,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理重点包括花果期的控梢和疏枝、连续降雨时的炭疽病和霜疫霉病、果实膨大期的果园巡查和病果和虫果的清理。在管理过程中，应重点关注病虫害的防治，如炭疽病和霜疫霉病，以及及时清理病果和虫果，以减少病虫害的发生。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  85.54,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  79,
+                        "startedAt":  "2026-03-26T15:22:53.7142513+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  32.28,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  57.91,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实转色期的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  91.01,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  80,
+                        "startedAt":  "2026-03-26T15:23:08.9120977+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  31.6,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  56.12,
+                                     "answerPreview":  "技术人员可以利用以下方法来辨别桂味荔枝的叶病害：\n1. 检查花果期的控梢和疏枝情况，保持树冠的透光性。\n2. 遇到连续降雨时，重点关注炭疽病和霜疫霉病。\n3. 果实膨大期加强果园巡查，发现病果和虫果后及时清理。\n\n操作建议：技术人员在果园巡查时，应特别注意观察花果期的控梢和疏枝情况，保持树冠的透光性，同时注意炭疽病和霜疫霉病的防治。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  69.01,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  81,
+                        "startedAt":  "2026-03-26T15:23:24.0886598+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  24.27,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.02,
+                                     "answerPreview":  "控制Litchi anthracnose（橘子灰霉病）的最佳方法是在雨季进行。雨季是橘子灰霉病的高发季节，因此在雨季进行橘子灰霉病的防控尤为重要。建议在雨季时，对果园进行清洁，减少灰霉病的传播。同时，可以结合修剪、清园和合理用药，提高橘子灰霉病的防控效果。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  94.65,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  82,
+                        "startedAt":  "2026-03-26T15:23:39.2720894+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  28.68,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  56.83,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理重点包括花果期的控梢和疏枝、连续降雨时的炭疽病和霜疫霉病、果实膨大期的果园巡查和病果和虫果的清理。在管理过程中，应重点关注病虫害的防治，如炭疽病和霜疫霉病，以及及时清理病果和虫果，以减少病虫害的发生。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  58.81,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  83,
+                        "startedAt":  "2026-03-26T15:23:54.4322208+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  29.64,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.2,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实转色期的监控。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  73.23,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  84,
+                        "startedAt":  "2026-03-26T15:24:09.5973521+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  30.27,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.05,
+                                     "answerPreview":  "技术人员可以利用以下方法来辨别桂味荔枝的叶病害：\n1. 检查花果期的控梢和疏枝情况，保持树冠的透光性。\n2. 遇到连续降雨时，重点关注炭疽病和霜疫霉病。\n3. 果实膨大期加强果园巡查，发现病果和虫果后及时清理。\n\n操作建议：技术人员在果园巡查时，应特别注意观察花果期的控梢和疏枝情况，保持树冠的透光性，同时注意炭疽病和霜疫霉病的防治。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  100.94,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  85,
+                        "startedAt":  "2026-03-26T15:24:24.8054243+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  30.87,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2538.54,
+                                     "answerPreview":  "控制litchi anthracnose期间，应增加巡园频次，重点检查花穗和果梗部位，结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  63.32,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  86,
+                        "startedAt":  "2026-03-26T15:24:39.4447798+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.96,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4130.35,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  90.23,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  87,
+                        "startedAt":  "2026-03-26T15:24:54.7204055+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  29.14,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2068.52,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此，果实转色期应加强监控。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  62.9,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  88,
+                        "startedAt":  "2026-03-26T15:25:09.8950648+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  40.71,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3591.63,
+                                     "answerPreview":  "技术员可以通过以下方法来辨别桂味荔枝的叶病害：\n1. 通过花果期的控梢和疏枝，保持树冠透光，以避免病害的发生。\n2. 遇到连续降雨时，应重点关注炭疽病和霜疫霉病，及时清理病果和虫果。\n3. 果实膨大期加强果园巡查，发现病果和虫果后应及时清理。\n\n操作建议：在知识图谱中，桂味荔枝的管理要点包括花果期的控梢和疏枝，以及果实膨大期的果园巡查。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  61.43,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  89,
+                        "startedAt":  "2026-03-26T15:25:24.6076401+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.43,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.13,
+                                     "answerPreview":  "控制litchi anthracnose期间，应增加巡园频次，重点检查花穗和果梗部位，结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  51.68,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  90,
+                        "startedAt":  "2026-03-26T15:25:39.7625186+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  24.46,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.12,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  82.45,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  91,
+                        "startedAt":  "2026-03-26T15:25:54.9338892+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  22.95,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.45,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此，果实转色期应加强监控。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  55.76,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  92,
+                        "startedAt":  "2026-03-26T15:26:10.0859737+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  26.48,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  59.26,
+                                     "answerPreview":  "技术员可以通过以下方法来辨别桂味荔枝的叶病害：\n1. 通过花果期的控梢和疏枝，保持树冠透光，以避免病害的发生。\n2. 遇到连续降雨时，应重点关注炭疽病和霜疫霉病，及时清理病果和虫果。\n3. 果实膨大期加强果园巡查，发现病果和虫果后应及时清理。\n\n操作建议：在知识图谱中，桂味荔枝的管理要点包括花果期的控梢和疏枝，以及果实膨大期的果园巡查。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  70.81,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  93,
+                        "startedAt":  "2026-03-26T15:26:25.2533007+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  31.86,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.35,
+                                     "answerPreview":  "控制litchi anthracnose期间，应增加巡园频次，重点检查花穗和果梗部位，结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  60.86,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  94,
+                        "startedAt":  "2026-03-26T15:26:40.4084911+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  28.87,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.83,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：What is the management priority after continuous rainfall?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：炭疽病、霜疫霉病。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  73.12,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  95,
+                        "startedAt":  "2026-03-26T15:26:55.5736231+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  31.42,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.77,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此，果实转色期应加强监控。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  100.52,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  96,
+                        "startedAt":  "2026-03-26T15:27:10.7804610+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.05,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  54.79,
+                                     "answerPreview":  "技术员可以通过以下方法来辨别桂味荔枝的叶病害：\n1. 通过花果期的控梢和疏枝，保持树冠透光，以避免病害的发生。\n2. 遇到连续降雨时，应重点关注炭疽病和霜疫霉病，及时清理病果和虫果。\n3. 果实膨大期加强果园巡查，发现病果和虫果后应及时清理。\n\n操作建议：在知识图谱中，桂味荔枝的管理要点包括花果期的控梢和疏枝，以及果实膨大期的果园巡查。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  69.87,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  97,
+                        "startedAt":  "2026-03-26T15:27:25.9635212+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  28.37,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2983.24,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：1. 清理虫果和落果，压低虫源基数；2. 结合物候期和虫情监测结果安排防治窗口；3. 与修剪、清园和合理用药配合作为防治措施。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  69.93,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  98,
+                        "startedAt":  "2026-03-26T15:27:41.0510247+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  25.96,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2614.13,
+                                     "answerPreview":  "在荔枝栽培管理要点中，连续降雨是管理重点之一。因此，管理优先级应放在荔枝花果期和果实转色期，以控制炭疽病和霜疫霉病。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  37.5,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  99,
+                        "startedAt":  "2026-03-26T15:27:55.7419305+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.99,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3320.41,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降。果实转色期是荔枝果实成熟期，是果实膨大期，也是果实生长发育的高峰期，是果实病虫害的高发期。因此，果实转色期是荔枝果实病虫害的高发期，应加强果园的病虫害监测，及时发现和防治病虫害。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  42.11,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  100,
+                        "startedAt":  "2026-03-26T15:28:11.1455269+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.4,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4113.44,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  39.73,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  101,
+                        "startedAt":  "2026-03-26T15:28:26.3462783+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  37.91,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.65,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：1. 清理虫果和落果，压低虫源基数；2. 结合物候期和虫情监测结果安排防治窗口；3. 与修剪、清园和合理用药配合作为防治措施。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  92.19,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  102,
+                        "startedAt":  "2026-03-26T15:28:41.5380833+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  46.85,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  11.18,
+                                     "answerPreview":  "在荔枝栽培管理要点中，连续降雨是管理重点之一。因此，管理优先级应放在荔枝花果期和果实转色期，以控制炭疽病和霜疫霉病。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  91.45,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  103,
+                        "startedAt":  "2026-03-26T15:28:56.7030709+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  31.75,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  51.88,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降。果实转色期是荔枝果实成熟期，是果实膨大期，也是果实生长发育的高峰期，是果实病虫害的高发期。因此，果实转色期是荔枝果实病虫害的高发期，应加强果园的病虫害监测，及时发现和防治病虫害。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  54.5,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  104,
+                        "startedAt":  "2026-03-26T15:29:11.8607502+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  44.76,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  13.28,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  64.93,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  105,
+                        "startedAt":  "2026-03-26T15:29:26.9987732+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  27.91,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.94,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：1. 清理虫果和落果，压低虫源基数；2. 结合物候期和虫情监测结果安排防治窗口；3. 与修剪、清园和合理用药配合作为防治措施。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  69.92,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  106,
+                        "startedAt":  "2026-03-26T15:29:42.1660037+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  27.68,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  55.45,
+                                     "answerPreview":  "在荔枝栽培管理要点中，连续降雨是管理重点之一。因此，管理优先级应放在荔枝花果期和果实转色期，以控制炭疽病和霜疫霉病。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  90.22,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  107,
+                        "startedAt":  "2026-03-26T15:29:57.3492725+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  28.59,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  59.76,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降。果实转色期是荔枝果实成熟期，是果实膨大期，也是果实生长发育的高峰期，是果实病虫害的高发期。因此，果实转色期是荔枝果实病虫害的高发期，应加强果园的病虫害监测，及时发现和防治病虫害。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  65.09,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  108,
+                        "startedAt":  "2026-03-26T15:30:12.5172799+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  36.63,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  53.82,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  118.91,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  109,
+                        "startedAt":  "2026-03-26T15:30:27.7382172+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  27.18,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3533.43,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：\n1. 增加巡园频次，重点检查花穗和果梗部位。\n2. 识别虫源高峰，结合诱捕和人工检查。\n3. 与修剪、清园和合理用药相结合，确保防治效果。\n\n操作建议：增加巡园频次，重点检查花穗和果梗部位，识别虫源高峰，结合诱捕和人工检查，与修剪、清园和合理用药相结合，确保防治效果。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  64.08,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  110,
+                        "startedAt":  "2026-03-26T15:30:42.3761972+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  22.09,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  3239.42,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理重点包括花果期的控梢和疏枝，连续降雨时的炭疽病和霜疫霉病的注意，果实膨大期的果园巡查和发现病果和虫果的清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  100.31,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  111,
+                        "startedAt":  "2026-03-26T15:30:57.7590147+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  41.87,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  2652.95,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实的监控，及时发现并处理病虫害。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  41.12,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  112,
+                        "startedAt":  "2026-03-26T15:31:12.5090460+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.36,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  4113.25,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  38.82,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  113,
+                        "startedAt":  "2026-03-26T15:31:27.7052594+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  40.06,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  11.35,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：\n1. 增加巡园频次，重点检查花穗和果梗部位。\n2. 识别虫源高峰，结合诱捕和人工检查。\n3. 与修剪、清园和合理用药相结合，确保防治效果。\n\n操作建议：增加巡园频次，重点检查花穗和果梗部位，识别虫源高峰，结合诱捕和人工检查，与修剪、清园和合理用药相结合，确保防治效果。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  45.8,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  114,
+                        "startedAt":  "2026-03-26T15:31:42.8154455+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  26.08,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  50.51,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理重点包括花果期的控梢和疏枝，连续降雨时的炭疽病和霜疫霉病的注意，果实膨大期的果园巡查和发现病果和虫果的清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  60.2,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  115,
+                        "startedAt":  "2026-03-26T15:31:57.9707766+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.68,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.25,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实的监控，及时发现并处理病虫害。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  50.44,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  116,
+                        "startedAt":  "2026-03-26T15:32:13.1153071+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  26.93,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  55.84,
+                                     "answerPreview":  "当前使用本地保障模式生成回答。\n问题：How can technicians distinguish major litchi leaf diseases?\n\n文档依据：\n- 《demo-guiwei-management.md》提到：# 桂味荔枝栽培管理要点 ## 品种特点 桂味属于优质中熟荔枝品种，果香明显、果肉细嫩，对树体营养和通风条件要求较高。 ## 管理重点 1. 花果期注意控梢和疏枝，保持树冠透光。 2. 遇到连续降雨时，要重点关注炭疽病和霜疫霉病。 3. 果...\n- 《demo-fruit-borer-guide.md》提到：# 荔枝蒂蛀虫监测与防控 ## 主要危害 蒂蛀虫会危害花穗、幼果和近成熟果，造成虫果、落果和商品性下降。 ## 监测建议 1. 花期到幼果期增加巡园频次，重点检查花穗和果梗部位。 2. 果期结合诱捕和人工检查，尽早发现虫口高峰。 ## 防控...\n图谱命中：桂味、妃子笑。\n\n建议结论：先依据文档和图谱命中的信息完成田间复核，再结合物候期安排修剪、巡园和针对性防治。 你可以同时打开来源卡片，查看结论如何由知识库和图谱共同支持。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  56.6,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  117,
+                        "startedAt":  "2026-03-26T15:32:28.2730222+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  33.84,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  52.55,
+                                     "answerPreview":  "控制litchi anthracnose在雨季的措施包括：\n1. 增加巡园频次，重点检查花穗和果梗部位。\n2. 识别虫源高峰，结合诱捕和人工检查。\n3. 与修剪、清园和合理用药相结合，确保防治效果。\n\n操作建议：增加巡园频次，重点检查花穗和果梗部位，识别虫源高峰，结合诱捕和人工检查，与修剪、清园和合理用药相结合，确保防治效果。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  47.84,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  118,
+                        "startedAt":  "2026-03-26T15:32:43.4167273+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  35.97,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  61.16,
+                                     "answerPreview":  "在知识图谱中，桂味荔枝的管理重点包括花果期的控梢和疏枝，连续降雨时的炭疽病和霜疫霉病的注意，果实膨大期的果园巡查和发现病果和虫果的清理。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  75.54,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    },
+                    {
+                        "cycle":  119,
+                        "startedAt":  "2026-03-26T15:32:58.5993397+08:00",
+                        "health":  {
+                                       "success":  true,
+                                       "durationMs":  39.5,
+                                       "status":  "healthy",
+                                       "error":  null
+                                   },
+                        "chat":  {
+                                     "success":  true,
+                                     "durationMs":  55.89,
+                                     "answerPreview":  "果实转色期容易出现腐烂、落果和商品性下降，因此应加强对果实的监控，及时发现并处理病虫害。建议在果实转色期增加巡园频次，重点检查花穗和果梗部位，同时结合诱捕和人工检查，尽早发现虫口高峰。",
+                                     "error":  null
+                                 },
+                        "diagnosis":  {
+                                          "success":  true,
+                                          "durationMs":  70.73,
+                                          "engine":  "ultralytics-yolo",
+                                          "disease":  "炭疽病",
+                                          "error":  null
+                                      },
+                        "cyclePassed":  true
+                    }
+                ]
+}

@@ -62,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
       return response.data
     } catch {
       clearSession()
+      localStorage.setItem('auth_failed_at', Date.now().toString())
       return null
     }
   }

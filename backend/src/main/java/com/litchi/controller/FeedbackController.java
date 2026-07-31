@@ -9,6 +9,7 @@ import com.litchi.dto.FeedbackStatsResponse;
 import com.litchi.dto.SubmitFeedbackRequest;
 import com.litchi.service.FeedbackService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/feedback")
+@RequestMapping("/feedbacks")
 @RequiredArgsConstructor
 @AuthRequired
 public class FeedbackController {
@@ -28,7 +29,7 @@ public class FeedbackController {
     @PostMapping
     public ResponseEntity<FeedbackRecordDto> submit(
             HttpServletRequest request,
-            @RequestBody SubmitFeedbackRequest feedbackRequest
+            @Valid @RequestBody SubmitFeedbackRequest feedbackRequest
     ) {
         AuthenticatedUser user = AuthContext.requireCurrentUser(request);
         return ResponseEntity.ok(feedbackService.submit(user, feedbackRequest));

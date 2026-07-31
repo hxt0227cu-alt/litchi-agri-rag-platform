@@ -1,8 +1,16 @@
 package com.litchi.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,10 +19,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class DemoContentService {
+    private static final String AUTHORITY_DEMO_RESOURCE_PATTERN = "classpath*:demo-documents/*.md";
 
     public List<DemoDocument> getDemoDocuments() {
+        List<DemoDocument> documents = new ArrayList<>(getInlineDemoDocuments());
+        documents.addAll(loadAuthorityDemoDocuments());
+        return List.copyOf(documents);
+    }
+
+    private List<DemoDocument> getInlineDemoDocuments() {
         return List.of(
                 new DemoDocument(
                         "demo-anthracnose-guide.md",
@@ -102,6 +118,90 @@ public class DemoContentService {
                         """
                 )
         );
+    }
+
+    private List<DemoDocument> loadAuthorityDemoDocuments() {
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        List<DemoDocument> documents = new ArrayList<>();
+        try {
+            List<Resource> resources = new ArrayList<>(List.of(resolver.getResources(AUTHORITY_DEMO_RESOURCE_PATTERN)));
+            resources.sort(Comparator.comparing(resource -> String.valueOf(resource.getFilename())));
+            for (Resource resource : resources) {
+                String fileName = resource.getFilename();
+                if (fileName == null || fileName.isBlank()) {
+                    continue;
+                }
+                String content = readResourceText(resource);
+                if (content.isBlank()) {
+                    continue;
+                }
+                documents.add(new DemoDocument(
+                        fileName,
+                        extractMarkdownTitle(content, stripExtension(fileName)),
+                        extractMarkdownSummary(content, "权威资料摘要。"),
+                        content
+                ));
+            }
+        } catch (IOException e) {
+            log.warn("Failed to load authority demo documents from {}", AUTHORITY_DEMO_RESOURCE_PATTERN, e);
+        }
+        return documents;
+    }
+
+    private String readResourceText(Resource resource) throws IOException {
+        try (InputStream inputStream = resource.getInputStream()) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private String extractMarkdownTitle(String content, String fallback) {
+        return content.lines()
+                .map(String::trim)
+                .filter(line -> line.startsWith("# "))
+                .map(line -> line.substring(2).trim())
+                .filter(title -> !title.isBlank())
+                .findFirst()
+                .orElse(fallback);
+    }
+
+    private String extractMarkdownSummary(String content, String fallback) {
+        String summarySection = extractMarkdownSection(content, "## 摘要");
+        if (summarySection.isBlank()) {
+            summarySection = content.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isBlank())
+                    .filter(line -> !line.startsWith("#"))
+                    .filter(line -> !line.startsWith("来源机构"))
+                    .filter(line -> !line.startsWith("发布日期"))
+                    .filter(line -> !line.startsWith("原始链接"))
+                    .findFirst()
+                    .orElse("");
+        }
+
+        String compact = summarySection.replaceAll("\\s+", " ").trim();
+        if (compact.isBlank()) {
+            return fallback;
+        }
+        return compact.length() > 96 ? compact.substring(0, 96) + "..." : compact;
+    }
+
+    private String extractMarkdownSection(String content, String heading) {
+        int start = content.indexOf(heading);
+        if (start < 0) {
+            return "";
+        }
+
+        start += heading.length();
+        int end = content.indexOf("\n## ", start);
+        if (end < 0) {
+            end = content.length();
+        }
+        return content.substring(start, end).trim();
+    }
+
+    private String stripExtension(String fileName) {
+        int index = fileName.lastIndexOf('.');
+        return index > 0 ? fileName.substring(0, index) : fileName;
     }
 
     public Set<String> getManagedDemoFileNames() {

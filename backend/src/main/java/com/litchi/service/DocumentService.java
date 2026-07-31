@@ -21,10 +21,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -33,8 +35,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
@@ -54,21 +58,27 @@ public class DocumentService {
     @Value("${app.document.state-file:data/document-state.json}")
     private String stateFile;
 
-    private final Map<String, StoredDocument> documents = new LinkedHashMap<>();
-    private final List<StoredChunk> chunks = new ArrayList<>();
+    @Value("${app.document.config-file:data/document-config.json}")
+    private String configFile;
 
+    private final Map<String, StoredDocument> documents = new LinkedHashMap<>();
+    private final List<StoredChunk> chunks = new CopyOnWriteArrayList<>();
+
+    private Path configPath;
     private Path storagePath;
     private Path statePath;
 
     @PostConstruct
     public void init() {
+        configPath = resolvePath(configFile);
+        applyConfiguredStorageOverrides();
         storagePath = resolvePath(storageDir);
         statePath = resolvePath(stateFile);
 
         try {
-            Files.createDirectories(storagePath);
-            if (statePath.getParent() != null) {
-                Files.createDirectories(statePath.getParent());
+            ensureStorageDirectories(storagePath, statePath);
+            if (configPath.getParent() != null) {
+                Files.createDirectories(configPath.getParent());
             }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to create document storage directories", e);
@@ -151,6 +161,38 @@ public class DocumentService {
                 .count();
     }
 
+    public synchronized StorageSettings getStorageSettings() {
+        return new StorageSettings(storagePath.toString(), statePath.toString());
+    }
+
+    public synchronized StorageSettings updateStorageSettings(String requestedStorageDir, String requestedStateFile) {
+        String nextStorageDir = requestedStorageDir == null || requestedStorageDir.isBlank()
+                ? storagePath.toString()
+                : requestedStorageDir.trim();
+        String nextStateFile = requestedStateFile == null || requestedStateFile.isBlank()
+                ? statePath.toString()
+                : requestedStateFile.trim();
+
+        Path nextStoragePath = resolvePath(nextStorageDir);
+        Path nextStatePath = resolvePath(nextStateFile);
+
+        try {
+            ensureStorageDirectories(nextStoragePath, nextStatePath);
+            moveManagedDocuments(nextStoragePath);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to update document storage paths", e);
+        }
+
+        storageDir = nextStoragePath.toString();
+        stateFile = nextStatePath.toString();
+        storagePath = nextStoragePath;
+        statePath = nextStatePath;
+
+        persistStorageConfig();
+        persistState();
+        return getStorageSettings();
+    }
+
     public synchronized DemoImportResult bootstrapDemoDocuments(boolean replaceManagedDemoDocuments) {
         Set<String> managedFileNames = demoContentService.getManagedDemoFileNames();
         if (replaceManagedDemoDocuments) {
@@ -219,18 +261,24 @@ public class DocumentService {
         return upsertVectorDocuments(vectorDocuments) ? vectorDocuments.size() : 0;
     }
 
-    public synchronized List<ChunkMatch> search(String question, int topK) {
+    public List<ChunkMatch> search(String question, int topK) {
         if (question == null || question.isBlank() || chunks.isEmpty()) {
             return List.of();
         }
 
+        int candidateLimit = Math.max(topK * 3, 8);
         float[] queryVector = simpleEmbeddingService.embed(question);
-        List<ChunkMatch> vectorMatches = searchFromVectorStore(queryVector, topK);
-        if (!vectorMatches.isEmpty()) {
-            return vectorMatches;
+        List<ChunkMatch> vectorMatches = searchFromVectorStore(queryVector, candidateLimit);
+        if (vectorMatches.isEmpty()) {
+            return rerankMatches(question, searchFromLocalChunks(question, queryVector, candidateLimit), topK);
         }
 
-        return searchFromLocalChunks(queryVector, topK);
+        List<ChunkMatch> merged = mergeCleanMatches(
+                vectorMatches,
+                searchFromLocalChunks(question, queryVector, candidateLimit),
+                candidateLimit
+        );
+        return rerankMatches(question, merged, topK);
     }
 
     private Path resolvePath(String configuredPath) {
@@ -241,6 +289,60 @@ public class DocumentService {
 
         Path applicationDir = new ApplicationHome(DocumentService.class).getDir().toPath().toAbsolutePath();
         return applicationDir.resolve(path).normalize();
+    }
+
+    private void applyConfiguredStorageOverrides() {
+        if (!Files.exists(configPath)) {
+            return;
+        }
+
+        try {
+            DocumentStorageConfig config = objectMapper.readValue(configPath.toFile(), DocumentStorageConfig.class);
+            if (config.getStorageDir() != null && !config.getStorageDir().isBlank()) {
+                storageDir = config.getStorageDir().trim();
+            }
+            if (config.getStateFile() != null && !config.getStateFile().isBlank()) {
+                stateFile = config.getStateFile().trim();
+            }
+        } catch (IOException e) {
+            log.warn("Failed to load persisted document storage config, using application defaults", e);
+        }
+    }
+
+    private void ensureStorageDirectories(Path nextStoragePath, Path nextStatePath) throws IOException {
+        Files.createDirectories(nextStoragePath);
+        if (nextStatePath.getParent() != null) {
+            Files.createDirectories(nextStatePath.getParent());
+        }
+    }
+
+    private void moveManagedDocuments(Path nextStoragePath) throws IOException {
+        for (StoredDocument document : documents.values()) {
+            String extension = getExtension(document.getName());
+            Path currentPath = Paths.get(document.getStoragePath()).normalize();
+            Path nextPath = nextStoragePath.resolve(buildStoredFileName(document.getId(), extension)).normalize();
+            if (currentPath.equals(nextPath)) {
+                continue;
+            }
+
+            if (Files.exists(currentPath)) {
+                Files.move(currentPath, nextPath, StandardCopyOption.REPLACE_EXISTING);
+            } else if (!Files.exists(nextPath)) {
+                log.warn("Document file {} does not exist while migrating storage path", currentPath);
+            }
+            document.setStoragePath(nextPath.toString());
+        }
+    }
+
+    private void persistStorageConfig() {
+        try {
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(
+                    configPath.toFile(),
+                    new DocumentStorageConfig(storagePath.toString(), statePath.toString())
+            );
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to persist document storage config", e);
+        }
     }
 
     private StoredDocument createTextDocument(String originalName, String title, String content, String contentType) {
@@ -332,18 +434,181 @@ public class DocumentService {
         }
 
         return results.stream()
-                .map(result -> ChunkMatch.builder()
-                        .documentId(extractDocumentId(result.getId()))
-                        .title(result.getTitle())
-                        .content(result.getContent())
-                        .source(result.getSource())
-                        .page(result.getPage())
-                        .score(result.getScore())
-                        .build())
+                .map(this::toChunkMatch)
+                .filter(Objects::nonNull)
+                .filter(match -> !isUnusableMatch(match))
                 .toList();
     }
 
-    private List<ChunkMatch> searchFromLocalChunks(float[] queryVector, int topK) {
+    private ChunkMatch toChunkMatch(VectorSearchService.SearchResult result) {
+        ChunkMatch match = ChunkMatch.builder()
+                .documentId(extractDocumentId(result.getId()))
+                .title(result.getTitle())
+                .content(result.getContent())
+                .source(result.getSource())
+                .page(result.getPage())
+                .score(result.getScore())
+                .build();
+
+        if (!looksGarbled(match.getContent()) && !looksGarbled(match.getTitle())) {
+            return match;
+        }
+
+        StoredChunk localChunk = findLocalChunk(match);
+        if (localChunk != null) {
+            return ChunkMatch.builder()
+                    .documentId(localChunk.getDocumentId())
+                    .title(localChunk.getTitle())
+                    .content(localChunk.getContent())
+                    .source(localChunk.getSource())
+                    .page(localChunk.getPage())
+                    .score(match.getScore())
+                    .build();
+        }
+
+        String repairedTitle = repairMojibake(match.getTitle());
+        String repairedContent = repairMojibake(match.getContent());
+        if (looksGarbled(repairedTitle) || looksGarbled(repairedContent)) {
+            log.warn("Discarding garbled vector result from source={}, page={}", match.getSource(), match.getPage());
+            return null;
+        }
+
+        return ChunkMatch.builder()
+                .documentId(match.getDocumentId())
+                .title(repairedTitle)
+                .content(repairedContent)
+                .source(match.getSource())
+                .page(match.getPage())
+                .score(match.getScore())
+                .build();
+    }
+
+    private List<ChunkMatch> mergeCleanMatches(List<ChunkMatch> primary, List<ChunkMatch> fallback, int topK) {
+        List<ChunkMatch> merged = new ArrayList<>();
+        Set<String> seenKeys = new java.util.LinkedHashSet<>();
+        addCleanMatches(merged, seenKeys, primary, topK);
+        addCleanMatches(merged, seenKeys, fallback, topK);
+        return merged;
+    }
+
+    private void addCleanMatches(List<ChunkMatch> target, Set<String> seenKeys, List<ChunkMatch> candidates, int topK) {
+        for (ChunkMatch match : candidates) {
+            if (target.size() >= topK) {
+                return;
+            }
+            if (isUnusableMatch(match)) {
+                continue;
+            }
+
+            String key = matchKey(match);
+            if (seenKeys.add(key)) {
+                target.add(match);
+            }
+        }
+    }
+
+    private boolean isUnusableMatch(ChunkMatch match) {
+        return match == null
+                || match.getContent() == null
+                || match.getContent().isBlank()
+                || looksGarbled(match.getTitle())
+                || looksGarbled(match.getContent());
+    }
+
+    private String matchKey(ChunkMatch match) {
+        String content = match.getContent() == null
+                ? ""
+                : match.getContent().substring(0, Math.min(64, match.getContent().length()));
+        return String.join("|",
+                normalizeComparable(match.getDocumentId()),
+                normalizeComparable(match.getSource()),
+                normalizeComparable(match.getTitle()),
+                String.valueOf(match.getPage()),
+                content);
+    }
+
+    private StoredChunk findLocalChunk(ChunkMatch match) {
+        if (match == null) {
+            return null;
+        }
+
+        String documentId = match.getDocumentId();
+        Integer page = match.getPage();
+        if (documentId != null && !documentId.isBlank()) {
+            java.util.Optional<StoredChunk> byDocumentId = chunks.stream()
+                    .filter(chunk -> documentId.equals(chunk.getDocumentId()))
+                    .filter(chunk -> page == null || page.equals(chunk.getPage()))
+                    .findFirst();
+            if (byDocumentId.isPresent()) {
+                return byDocumentId.get();
+            }
+        }
+
+        String source = normalizeComparable(match.getSource());
+        if (!source.isBlank()) {
+            java.util.Optional<StoredChunk> bySource = chunks.stream()
+                    .filter(chunk -> source.equals(normalizeComparable(chunk.getSource())))
+                    .filter(chunk -> page == null || page.equals(chunk.getPage()))
+                    .findFirst();
+            if (bySource.isPresent()) {
+                return bySource.get();
+            }
+        }
+
+        String title = normalizeComparable(match.getTitle());
+        if (!title.isBlank()) {
+            return chunks.stream()
+                    .filter(chunk -> title.equals(normalizeComparable(chunk.getTitle())))
+                    .filter(chunk -> page == null || page.equals(chunk.getPage()))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return null;
+    }
+
+    private boolean looksGarbled(String text) {
+        return mojibakeScore(text) >= 3;
+    }
+
+    private int mojibakeScore(String text) {
+        if (text == null || text.isBlank()) {
+            return 0;
+        }
+
+        int score = 0;
+        if (text.contains("�")) {
+            score += 3;
+        }
+        String[] markers = {
+                "鑽", "灊", "鐐", "柦", "鐥", "槻", "娌", "銆", "锛", "濡", "鍥", "鏂", "闂", "鍙", "鍦", "骞"
+        };
+        for (String marker : markers) {
+            if (text.contains(marker)) {
+                score++;
+            }
+        }
+        return score;
+    }
+
+    private String repairMojibake(String text) {
+        if (!looksGarbled(text)) {
+            return text;
+        }
+
+        try {
+            String repaired = new String(text.getBytes(Charset.forName("GB18030")), StandardCharsets.UTF_8);
+            return mojibakeScore(repaired) < mojibakeScore(text) ? repaired : text;
+        } catch (Exception e) {
+            return text;
+        }
+    }
+
+    private String normalizeComparable(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private List<ChunkMatch> searchFromLocalChunks(String question, float[] queryVector, int topK) {
         return chunks.stream()
                 .map(chunk -> ChunkMatch.builder()
                         .documentId(chunk.getDocumentId())
@@ -351,12 +616,103 @@ public class DocumentService {
                         .content(chunk.getContent())
                         .source(chunk.getSource())
                         .page(chunk.getPage())
-                        .score(similarity(queryVector, chunk.getVector()))
+                        .score(similarity(queryVector, chunk.getVector()) + lexicalBoost(question, chunk))
                         .build())
+                .filter(match -> !isUnusableMatch(match))
                 .filter(match -> match.getScore() > 0)
                 .sorted(Comparator.comparing(ChunkMatch::getScore).reversed())
                 .limit(topK)
                 .toList();
+    }
+
+    private List<ChunkMatch> rerankMatches(String question, List<ChunkMatch> matches, int topK) {
+        List<ChunkMatch> ranked = matches.stream()
+                .filter(match -> !isUnusableMatch(match))
+                .sorted(Comparator.comparingDouble((ChunkMatch match) -> rerankScore(question, match)).reversed())
+                .toList();
+
+        List<ChunkMatch> selected = new ArrayList<>();
+        Set<String> selectedKeys = new java.util.LinkedHashSet<>();
+        Set<String> selectedSources = new java.util.LinkedHashSet<>();
+
+        for (ChunkMatch match : ranked) {
+            if (selected.size() >= topK) {
+                break;
+            }
+            String source = normalizeComparable(match.getSource());
+            if (!source.isBlank() && selectedSources.add(source) && selectedKeys.add(matchKey(match))) {
+                selected.add(match);
+            }
+        }
+
+        for (ChunkMatch match : ranked) {
+            if (selected.size() >= topK) {
+                break;
+            }
+            if (selectedKeys.add(matchKey(match))) {
+                selected.add(match);
+            }
+        }
+
+        return selected;
+    }
+
+    private double rerankScore(String question, ChunkMatch match) {
+        double baseScore = match.getScore() == null ? 0 : match.getScore();
+        String title = normalizeComparable(match.getTitle());
+        String source = normalizeComparable(match.getSource());
+        double titleBoost = 0;
+        for (String term : extractSearchTerms(question)) {
+            if (title.contains(normalizeComparable(term)) || source.contains(normalizeComparable(term))) {
+                titleBoost += 0.55;
+            }
+        }
+        return baseScore + titleBoost;
+    }
+
+    private float lexicalBoost(String question, StoredChunk chunk) {
+        List<String> terms = extractSearchTerms(question);
+        if (terms.isEmpty()) {
+            return 0F;
+        }
+
+        String title = normalizeComparable(chunk.getTitle());
+        String source = normalizeComparable(chunk.getSource());
+        String content = normalizeComparable(chunk.getContent());
+
+        float boost = 0F;
+        for (String term : terms) {
+            String normalizedTerm = normalizeComparable(term);
+            if (normalizedTerm.isBlank()) {
+                continue;
+            }
+            if (title.contains(normalizedTerm) || source.contains(normalizedTerm)) {
+                boost += 0.45F;
+            }
+            if (content.contains(normalizedTerm)) {
+                boost += 0.22F;
+            }
+        }
+        return boost;
+    }
+
+    private List<String> extractSearchTerms(String question) {
+        if (question == null || question.isBlank()) {
+            return List.of();
+        }
+
+        List<String> keywords = new ArrayList<>();
+        String normalized = question.trim();
+        String[] domainTerms = {
+                "炭疽病", "炭疽", "霜疫霉病", "霜疫病", "霜疫", "桂味", "妃子笑", "花果期", "花穗期",
+                "幼果期", "雨季", "阴雨", "蒂蛀虫", "荔枝蝽", "冬季清园", "清园", "保果", "巡园"
+        };
+        for (String domainTerm : domainTerms) {
+            if (normalized.contains(domainTerm)) {
+                keywords.add(domainTerm);
+            }
+        }
+        return keywords.stream().distinct().toList();
     }
 
     private String extractDocumentId(Object chunkId) {
@@ -795,6 +1151,17 @@ public class DocumentService {
         private String content;
         private Integer page;
         private float[] vector;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class DocumentStorageConfig {
+        private String storageDir;
+        private String stateFile;
+    }
+
+    public record StorageSettings(String documentStorageDir, String documentStateFile) {
     }
 
     @Data

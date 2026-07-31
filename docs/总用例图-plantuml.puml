@@ -1,0 +1,149 @@
+@startuml
+left to right direction
+
+' ======================
+' 样式定义（专业视觉，适配论文插图）
+' ======================
+skinparam usecase {
+  BackgroundColor #f8f9fa
+  BorderColor #2c3e50
+  BorderThickness 2
+  RoundCorner 20
+  FontColor #2c3e50
+  FontSize 12
+}
+skinparam actor {
+  BackgroundColor #ffffff
+  BorderColor #2c3e50
+  BorderThickness 2
+  FontColor #2c3e50
+  FontSize 12
+}
+skinparam arrow {
+  Color #2c3e50
+  Thickness 1.5
+}
+skinparam package {
+  BackgroundColor #ffffff
+  BorderColor #7f8c8d
+  BorderThickness 1.5
+  FontColor #2c3e50
+  FontSize 13
+}
+skinparam {
+  shadowing false
+  defaultFontName "Microsoft YaHei"
+}
+
+' ======================
+' 1. 主参与者
+' ======================
+actor "果农用户" as Farmer
+actor "门店专家" as StoreExpert
+actor "系统管理员" as Admin
+
+' ======================
+' 2. 公共基础用例
+' ======================
+usecase "注册账号" as Register
+usecase "登录系统" as Login
+usecase "修改密码" as ChangePwd
+usecase "个人信息维护" as Profile
+
+Farmer --> Register
+Farmer --> Login
+Farmer --> ChangePwd
+Farmer --> Profile
+
+StoreExpert --> Register
+StoreExpert --> Login
+StoreExpert --> ChangePwd
+StoreExpert --> Profile
+
+Admin --> Register
+Admin --> Login
+Admin --> ChangePwd
+Admin --> Profile
+
+' ======================
+' 3. 果农用户专属用例
+' ======================
+package "果农业务模块" as FarmerPkg {
+  usecase "智能问答" as QnA
+  usecase "病害图像识别" as DiseaseRecog
+  usecase "专家求助" as ExpertHelp
+  usecase "方案推荐查询" as PlanQuery
+  usecase "学习课堂" as Training
+}
+
+Farmer --> QnA
+Farmer --> DiseaseRecog
+Farmer --> ExpertHelp
+Farmer --> PlanQuery
+Farmer --> Training
+
+' ======================
+' 4. 门店专家专属用例
+' ======================
+package "门店协同模块" as StorePkg {
+  usecase "处理求助工单" as HandleTicket
+  usecase "门店方案库管理" as ManagePlan
+  usecase "门店资料维护" as StoreInfo
+  usecase "病症趋势分析" as DiseaseTrend
+}
+
+StoreExpert --> HandleTicket
+StoreExpert --> ManagePlan
+StoreExpert --> StoreInfo
+StoreExpert --> DiseaseTrend
+
+' ======================
+' 5. 系统管理员专属用例
+' ======================
+package "系统管理模块" as AdminPkg {
+  usecase "知识文档管理" as DocManage
+  usecase "知识图谱研判" as KgAnalysis
+  usecase "系统运维监控" as SystemMonitor
+  usecase "问答效果评测" as Evaluation
+  usecase "平台总览" as Overview
+}
+
+Admin --> DocManage
+Admin --> KgAnalysis
+Admin --> SystemMonitor
+Admin --> Evaluation
+Admin --> Overview
+
+' ======================
+' 6. 跨角色共享用例
+' ======================
+usecase "历史记录查询" as HistoryQuery
+usecase "满意度反馈" as Feedback
+
+Farmer --> HistoryQuery
+Admin --> HistoryQuery
+
+Farmer --> Feedback
+Admin --> Feedback
+
+Admin --> QnA
+Admin --> DiseaseRecog
+Admin --> Training
+
+' ======================
+' 7. 用例间关系（UML规范 <<include>> / <<extend>>）
+' ======================
+QnA ..> PlanQuery : <<extend>>
+ExpertHelp ..> PlanQuery : <<include>>
+DiseaseRecog ..> PlanQuery : <<extend>>
+
+' ======================
+' 8. 外部系统参与者（次要参与者）
+' ======================
+actor "Ollama大模型服务" as Ollama
+actor "YOLOv8病害识别服务" as YOLO
+
+QnA ..> Ollama : <<include>>
+DiseaseRecog ..> YOLO : <<include>>
+
+@enduml

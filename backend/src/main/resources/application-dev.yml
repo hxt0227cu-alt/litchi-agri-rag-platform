@@ -3,14 +3,14 @@ spring:
     uri: bolt://127.0.0.1:7687
     authentication:
       username: neo4j
-      password: litchi123456
+      password: ${NEO4J_PASSWORD:}
 
   ai:
     ollama:
-      base-url: http://127.0.0.1:11434
+      base-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
       chat:
         options:
-          model: qwen2.5:0.5b
+          model: ${OLLAMA_CHAT_MODEL:qwen2.5:0.5b}
           temperature: 0.7
 
 milvus:
@@ -24,10 +24,17 @@ app:
     url: ${APP_MYSQL_URL:}
     username: ${APP_MYSQL_USERNAME:}
     password: ${APP_MYSQL_PASSWORD:}
+  cors:
+    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost,http://127.0.0.1,http://localhost:5173,http://127.0.0.1:5173}
   startup:
     auto-bootstrap: ${APP_STARTUP_AUTO_BOOTSTRAP:false}
     max-attempts: ${APP_STARTUP_MAX_ATTEMPTS:8}
     retry-delay-ms: ${APP_STARTUP_RETRY_DELAY_MS:5000}
   diagnosis:
-    service-url: http://127.0.0.1:8090/predict
+    service-url: ${DIAGNOSIS_SERVICE_URL:http://127.0.0.1:8090/predict}
     timeout-ms: 5000
+  llm:
+    timeout-ms: 60000
+    temperature: 0.2
+    num-predict: 220
+    keep-alive: 30m

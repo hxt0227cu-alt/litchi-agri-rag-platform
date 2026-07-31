@@ -27,6 +27,7 @@ import java.util.UUID;
 public class DiagnosisService {
 
     private final ObjectMapper objectMapper;
+    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
 
     @Value("${app.diagnosis.service-url:http://localhost:8090/predict}")
     private String diagnosisServiceUrl;
@@ -40,17 +41,13 @@ public class DiagnosisService {
 
     public HealthStatus getHealth() {
         try {
-            HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofMillis(timeoutMs))
-                    .build();
-
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(resolveHealthUrl()))
                     .timeout(Duration.ofMillis(timeoutMs))
                     .GET()
                     .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return HealthStatus.unavailable();
             }
@@ -80,10 +77,6 @@ public class DiagnosisService {
     private DiagnosisResult callInferenceService(MultipartFile image) throws IOException, InterruptedException {
         MultipartPayload payload = buildMultipartPayload(image);
 
-        HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofMillis(timeoutMs))
-                .build();
-
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(diagnosisServiceUrl))
                 .timeout(Duration.ofMillis(timeoutMs))
@@ -91,7 +84,7 @@ public class DiagnosisService {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(payload.body()))
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         if (response.statusCode() >= 400) {
             throw new IllegalStateException("Diagnosis service returned status " + response.statusCode());
         }

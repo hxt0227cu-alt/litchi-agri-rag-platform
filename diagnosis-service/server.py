@@ -1,14 +1,40 @@
 import hashlib
 import io
 import json
+import logging
 import os
 import re
 import tempfile
+import threading
+import traceback
+import concurrent.futures
+import time
 from collections import defaultdict
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+try:
+    from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+except ImportError:  # pragma: no cover - local fallback before dependency installation
+    CONTENT_TYPE_LATEST = "text/plain; version=0.0.4"
+
+    class _NoopMetric:
+        def labels(self, **kwargs):
+            return self
+
+        def inc(self):
+            return None
+
+        def observe(self, value):
+            return None
+
+    Counter = lambda *args, **kwargs: _NoopMetric()
+    Histogram = lambda *args, **kwargs: _NoopMetric()
+    generate_latest = lambda: b""
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("diagnosis")
 
 HOST = os.getenv("DIAGNOSIS_HOST", "0.0.0.0")
 PORT = int(os.getenv("DIAGNOSIS_PORT", "8090"))
@@ -32,6 +58,9 @@ DATASET_ROOT = Path(
 )
 STRICT_MODEL = os.getenv("DIAGNOSIS_STRICT_MODEL", "false").strip().lower() in {"1", "true", "yes", "on"}
 
+MAX_FILE_SIZE = 10 * 1024 * 1024
+MODEL_LOCK = threading.Lock()
+
 YOLO = None
 YOLO_MODEL = None
 YOLO_ERROR = None
@@ -42,8 +71,19 @@ PIL_ERROR = None
 DATASET_INDEX: dict[str, dict] = {}
 DATASET_ERROR = None
 DATASET_CLASS_COUNTS: dict[str, int] = {}
+DATASET_INDEX_LOADED = False
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+PREDICTION_COUNTER = Counter(
+    "diagnosis_requests_total",
+    "Diagnosis prediction requests",
+    ["status", "engine"],
+)
+PREDICTION_LATENCY = Histogram(
+    "diagnosis_request_duration_seconds",
+    "Diagnosis request duration",
+    ["engine"],
+)
 
 
 def try_load_optional_dependencies():
@@ -162,7 +202,8 @@ def build_feature_from_bytes(content: bytes) -> dict | None:
                 "mean": color_mean,
                 "hist": compact_hist,
             }
-    except Exception:
+    except Exception as exc:
+        logger.warning("build_feature_from_bytes failed: %s", exc)
         return None
 
 
@@ -173,14 +214,16 @@ def feature_distance(left: dict, right: dict) -> float:
 
 
 def build_dataset_index():
-    global DATASET_INDEX, DATASET_ERROR, DATASET_CLASS_COUNTS
+    global DATASET_INDEX, DATASET_ERROR, DATASET_CLASS_COUNTS, DATASET_INDEX_LOADED
 
     if Image is None:
         DATASET_ERROR = PIL_ERROR or "Pillow is unavailable"
+        DATASET_INDEX_LOADED = True
         return
 
     if not DATASET_ROOT.exists():
         DATASET_ERROR = f"Dataset directory not found: {DATASET_ROOT}"
+        DATASET_INDEX_LOADED = True
         return
 
     grouped_features: dict[str, list[dict]] = defaultdict(list)
@@ -220,6 +263,8 @@ def build_dataset_index():
         DATASET_CLASS_COUNTS = dict(class_counts)
     except Exception as exc:  # pragma: no cover
         DATASET_ERROR = str(exc)
+    finally:
+        DATASET_INDEX_LOADED = True
 
 
 def make_response(label: str, ranking: list[tuple[str, float]], engine: str, demo_mode: bool, note: str) -> dict:
@@ -262,6 +307,10 @@ def fallback_predict(filename: str, content: bytes) -> dict:
 
 
 def dataset_predict(filename: str, content: bytes) -> dict | None:
+    global DATASET_INDEX_LOADED
+    if not DATASET_INDEX_LOADED:
+        build_dataset_index()
+
     if not DATASET_INDEX:
         return None
 
@@ -314,6 +363,14 @@ def yolo_predict(filename: str, content: bytes) -> dict | None:
     if YOLO_MODEL is None:  # pragma: no cover
         return None
 
+    try:
+        with Image.open(io.BytesIO(content)) as img:
+            img.verify()
+            if img.format not in {"JPEG", "PNG", "WEBP", "BMP"}:
+                raise ValueError("Unsupported image format")
+    except Exception as exc:
+        raise ValueError(f"Invalid image: {exc}") from exc
+
     suffix = Path(filename).suffix or ".jpg"
     temp_path = None
     try:
@@ -321,14 +378,32 @@ def yolo_predict(filename: str, content: bytes) -> dict | None:
             temp_file.write(content)
             temp_path = Path(temp_file.name)
 
-        result = YOLO_MODEL(str(temp_path), verbose=False)[0]
+        def _infer():
+            with MODEL_LOCK:
+                return YOLO_MODEL(str(temp_path), verbose=False)[0]
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_infer)
+            try:
+                result = future.result(timeout=30)
+            except concurrent.futures.TimeoutError:
+                return make_response(
+                    "未知病害",
+                    [("未知病害", 0.0)],
+                    "ultralytics-yolo",
+                    False,
+                    "推理超时",
+                )
+
         names_map = getattr(result, "names", {}) or {}
         probs = getattr(result, "probs", None)
         boxes = getattr(result, "boxes", None)
 
         if probs is not None and hasattr(probs, "top1"):
-            top_indexes = list(getattr(probs, "top5", []) or [])
-            top_scores = list(getattr(probs, "top5conf", []) or [])
+            raw_top_indexes = getattr(probs, "top5", None)
+            raw_top_scores = getattr(probs, "top5conf", None)
+            top_indexes = raw_top_indexes.tolist() if hasattr(raw_top_indexes, "tolist") else list(raw_top_indexes or [])
+            top_scores = raw_top_scores.tolist() if hasattr(raw_top_scores, "tolist") else list(raw_top_scores or [])
             ranking = []
             for index, score in zip(top_indexes, top_scores):
                 raw_name = str(names_map.get(int(index), f"class-{index}"))
@@ -375,7 +450,10 @@ def yolo_predict(filename: str, content: bytes) -> dict | None:
         )
     finally:  # pragma: no cover
         if temp_path and temp_path.exists():
-            temp_path.unlink(missing_ok=True)
+            try:
+                temp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def parse_multipart(headers, body: bytes) -> tuple[str, bytes]:
@@ -420,14 +498,24 @@ class DiagnosisHandler(BaseHTTPRequestHandler):
         self.wfile.write(raw)
 
     def do_GET(self):
+        if self.path == "/metrics":
+            raw = generate_latest()
+            self.send_response(200)
+            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+            return
         if self.path != "/health":
             self._send_json(404, {"message": "Not found"})
             return
 
         engine = "ultralytics-yolo" if YOLO_MODEL else "dataset-vision" if DATASET_INDEX else "demo-rule"
         status = "healthy" if YOLO_MODEL else "degraded"
+        dataset_healthy = bool(DATASET_INDEX) if not YOLO_MODEL else True
+        health_status = 200 if (YOLO_MODEL is not None or not STRICT_MODEL) else 503
         self._send_json(
-            200,
+            health_status,
             {
                 "status": status,
                 "engine": engine,
@@ -451,14 +539,41 @@ class DiagnosisHandler(BaseHTTPRequestHandler):
             self._send_json(404, {"message": "Not found"})
             return
 
+        content_length = self.headers.get("Content-Length")
+        if content_length is None:
+            logger.warning("Missing Content-Length header")
+            self._send_json(400, {"message": "Missing Content-Length header"})
+            return
+
         try:
-            length = int(self.headers.get("Content-Length", "0"))
+            length = int(content_length)
+        except ValueError:
+            logger.warning("Invalid Content-Length: %s", content_length)
+            self._send_json(400, {"message": "Invalid Content-Length"})
+            return
+
+        if length <= 0 or length > MAX_FILE_SIZE:
+            logger.warning("Content-Length out of range: %d", length)
+            self._send_json(413, {"message": f"Content-Length must be between 1 and {MAX_FILE_SIZE}"})
+            return
+
+        try:
+            started_at = time.perf_counter()
             payload = self.rfile.read(length)
             filename, content = parse_multipart(self.headers, payload)
             result = yolo_predict(filename, content) or dataset_predict(filename, content) or fallback_predict(filename, content)
+            engine = str(result.get("engine", "unknown"))
+            PREDICTION_COUNTER.labels(status="success", engine=engine).inc()
+            PREDICTION_LATENCY.labels(engine=engine).observe(time.perf_counter() - started_at)
             self._send_json(200, result)
-        except Exception as exc:
+        except ValueError as exc:
+            PREDICTION_COUNTER.labels(status="client_error", engine="unknown").inc()
+            logger.warning("Client error: %s", exc)
             self._send_json(400, {"message": str(exc)})
+        except Exception:
+            PREDICTION_COUNTER.labels(status="server_error", engine="unknown").inc()
+            logger.error(traceback.format_exc())
+            self._send_json(500, {"message": "Internal server error"})
 
     def log_message(self, fmt, *args):
         print(f"[diagnosis-service] {self.address_string()} - {fmt % args}")
@@ -466,10 +581,10 @@ class DiagnosisHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     try_load_optional_dependencies()
-    build_dataset_index()
     if STRICT_MODEL and YOLO_MODEL is None:
         raise SystemExit(f"Diagnosis model unavailable: {YOLO_ERROR or f'model file not found: {MODEL_PATH}'}")
     httpd = ThreadingHTTPServer((HOST, PORT), DiagnosisHandler)
+    httpd.socket.settimeout(30)
     print(f"Diagnosis service listening on http://{HOST}:{PORT}")
     print(f"Model path: {MODEL_PATH}")
     print(f"Dataset root: {DATASET_ROOT}")

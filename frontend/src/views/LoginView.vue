@@ -1,17 +1,29 @@
 <template>
   <div class="login-page">
     <section class="login-hero">
-      <span class="hero-kicker">Full Platform</span>
-      <h1>荔枝智能问答平台</h1>
+      <span class="hero-kicker">Three Roles Collaboration</span>
+      <h1>基于大模型RAG的荔枝智能问答平台设计与实现</h1>
       <p>
-        现在不是单纯的演示壳，而是带登录、对话历史、评测中心和完整业务页的可运行平台。
+        把农户提问、门店方案和技术复核放进同一条荔枝协同链路
       </p>
+
+      <div class="hero-metrics">
+        <article v-for="item in heroMetrics" :key="item.label" class="hero-metric-card">
+          <strong>{{ item.value }}</strong>
+          <span>{{ item.label }}</span>
+          <small>{{ item.copy }}</small>
+        </article>
+      </div>
+
+      <LitchiHero3D class="hero-visual" />
 
       <div class="demo-accounts">
         <article v-for="account in demoAccounts" :key="account.username" class="account-card">
-          <strong>{{ account.label }}</strong>
-          <span>{{ account.username }} / {{ account.password }}</span>
-          <button type="button" @click="useDemoAccount(account.username, account.password)">一键填充</button>
+          <div>
+            <strong>{{ account.label }}</strong>
+            <span>{{ account.username }} / {{ account.password }}</span>
+          </div>
+          <button type="button" @click="useDemoAccount(account.username, account.password)">一键填入</button>
         </article>
       </div>
     </section>
@@ -19,7 +31,13 @@
     <section class="login-panel soft-card">
       <header>
         <h2>{{ mode === 'login' ? '登录平台' : '注册账号' }}</h2>
-        <p>{{ mode === 'login' ? '登录后即可访问问答、图谱、文档与评测模块。' : '支持农户、农技员和农资店三种角色。' }}</p>
+        <p>
+          {{
+            mode === 'login'
+              ? '登录后即可进入农户、门店或管理员工作台。'
+              : '支持农户、管理员和门店三类角色注册体验。'
+          }}
+        </p>
       </header>
 
       <div class="mode-switch">
@@ -37,8 +55,8 @@
         <el-form-item v-if="mode === 'register'" label="角色">
           <el-select v-model="form.role" placeholder="请选择角色">
             <el-option label="农户" value="farmer" />
-            <el-option label="农技员" value="technician" />
-            <el-option label="农资店" value="shopkeeper" />
+            <el-option label="管理员" value="technician" />
+            <el-option label="门店" value="shopkeeper" />
           </el-select>
         </el-form-item>
 
@@ -55,6 +73,8 @@ import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
+import { defaultRouteForRole } from '@/auth/access'
+import LitchiHero3D from '@/components/LitchiHero3D.vue'
 import { useAuthStore } from '@/stores/auth'
 
 type Mode = 'login' | 'register'
@@ -71,10 +91,16 @@ const form = reactive({
   role: 'farmer' as 'farmer' | 'technician' | 'shopkeeper'
 })
 
+const heroMetrics = [
+  { value: '3', label: '角色工作台', copy: '农户、门店和管理员都有独立首页。' },
+  { value: '4', label: '核心入口', copy: '识别、问答、学习和方案推荐都挂在 Hero 上。' },
+  { value: '1', label: '协同闭环', copy: '从病症判断到门店求助再到技术复核一条线讲清楚。' }
+]
+
 const demoAccounts = [
   { label: '农户演示账号', username: 'farmer', password: 'demo123' },
-  { label: '农技员演示账号', username: 'technician', password: 'demo123' },
-  { label: '农资店演示账号', username: 'shopkeeper', password: 'demo123' }
+  { label: '管理员演示账号', username: 'technician', password: 'demo123' },
+  { label: '门店演示账号', username: 'shopkeeper', password: 'demo123' }
 ]
 
 const useDemoAccount = (username: string, password: string) => {
@@ -106,7 +132,10 @@ const submit = async () => {
       ElMessage.success('注册成功，已自动登录。')
     }
 
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/overview'
+    const redirect =
+      typeof route.query.redirect === 'string'
+        ? route.query.redirect
+        : defaultRouteForRole(authStore.user?.role)
     router.replace(redirect)
   } catch (error: any) {
     ElMessage.error(error?.response?.data?.message ?? '登录失败，请检查账号信息。')
@@ -123,6 +152,7 @@ const submit = async () => {
   grid-template-columns: minmax(0, 1.15fr) 440px;
   background:
     radial-gradient(circle at top left, rgba(255, 210, 111, 0.24), transparent 26%),
+    radial-gradient(circle at 70% 30%, rgba(223, 107, 89, 0.16), transparent 22%),
     linear-gradient(135deg, #183f35, #0d221d 58%, #142d27);
 }
 
@@ -146,24 +176,64 @@ const submit = async () => {
 }
 
 .login-hero h1 {
+  max-width: 760px;
   margin: 20px 0 0;
-  font-size: 48px;
+  font-size: 52px;
   line-height: 1.08;
 }
 
 .login-hero p {
-  max-width: 640px;
+  max-width: 680px;
   margin: 18px 0 0;
   color: rgba(255, 246, 231, 0.8);
   line-height: 1.9;
   font-size: 16px;
 }
 
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 760px;
+  margin-top: 24px;
+}
+
+.hero-metric-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(255, 248, 235, 0.08);
+  border: 1px solid rgba(255, 244, 212, 0.12);
+  box-shadow: 0 18px 36px rgba(6, 19, 15, 0.16);
+}
+
+.hero-metric-card strong {
+  font-size: 28px;
+  color: #fff4d4;
+}
+
+.hero-metric-card span {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 246, 231, 0.9);
+}
+
+.hero-metric-card small {
+  color: rgba(255, 246, 231, 0.72);
+  line-height: 1.6;
+}
+
+.hero-visual {
+  max-width: 780px;
+  margin-top: 28px;
+}
+
 .demo-accounts {
   display: grid;
   gap: 14px;
-  max-width: 620px;
-  margin-top: 34px;
+  max-width: 680px;
+  margin-top: 32px;
 }
 
 .account-card {
@@ -175,16 +245,33 @@ const submit = async () => {
   border-radius: 22px;
   background: rgba(255, 248, 235, 0.08);
   border: 1px solid rgba(255, 244, 212, 0.12);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.account-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(6, 19, 15, 0.18);
+  border-color: rgba(255, 210, 111, 0.22);
+}
+
+.account-card strong {
+  display: block;
+  color: #fff4d4;
 }
 
 .account-card span {
+  display: block;
+  margin-top: 6px;
   color: rgba(255, 246, 231, 0.72);
 }
 
 .account-card button {
   border: none;
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 10px 16px;
   cursor: pointer;
   color: #173b31;
   background: #ffd26f;
@@ -193,7 +280,7 @@ const submit = async () => {
 
 .login-panel {
   margin: 28px;
-  padding: 28px;
+  padding: 30px;
   align-self: center;
 }
 
@@ -239,6 +326,12 @@ const submit = async () => {
   margin-top: 10px;
 }
 
+@media (max-width: 1180px) {
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1080px) {
   .login-page {
     grid-template-columns: 1fr;
@@ -248,8 +341,17 @@ const submit = async () => {
     padding: 40px 22px 10px;
   }
 
+  .login-hero h1 {
+    font-size: 40px;
+  }
+
   .login-panel {
     margin: 18px;
+  }
+
+  .account-card {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

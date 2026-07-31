@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_agent_runs
+    columns:
+      - name: tenant_id
+        tests: [not_null]
+      - name: day
+        tests: [not_null]
+  - name: agent_run_daily
+    columns:
+      - name: day
+        tests: [not_null]
+      - name: tenant_id
+        tests: [not_null]

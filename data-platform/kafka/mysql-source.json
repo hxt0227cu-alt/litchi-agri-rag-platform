@@ -1,0 +1,18 @@
+{
+  "name": "litchi-mysql-cdc",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "${MYSQL_CDC_USER}",
+    "database.password": "${MYSQL_CDC_PASSWORD}",
+    "database.server.id": "184054",
+    "topic.prefix": "litchi",
+    "database.include.list": "litchi_platform",
+    "table.include.list": "litchi_platform.platform_outbox_events,litchi_platform.platform_agent_runs,litchi_platform.platform_orchards,litchi_platform.platform_consultations,litchi_platform.platform_feedback_records",
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+    "schema.history.internal.kafka.topic": "litchi.schema.history.internal",
+    "include.schema.changes": "false",
+    "snapshot.mode": "initial"
+  }
+}

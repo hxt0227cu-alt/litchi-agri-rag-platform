@@ -1,52 +1,58 @@
 <template>
-  <div class="knowledge-page page-shell">
-    <section class="toolbar soft-card">
-      <div>
-        <h3 class="section-title">关系检索</h3>
-        <p class="section-copy">可按品种、病害、虫害或药剂名称搜索，并直接查看实体关系链路与关联节点。</p>
+  <div class="page-shell knowledge-page">
+    <section class="hero glass-card">
+      <div class="hero-copy">
+        <span class="hero-kicker">Graph Insight</span>
+        <h3 class="section-title">研判图谱</h3>
+        <p class="section-copy">
+          管理员可以在这里核对实体关系，农户也可以把它当作课堂学习视图来使用。
+          你可以沿着“品种 - 病虫害 - 管理动作”的链路查看节点，理解系统回答为什么会命中某些实体。
+        </p>
       </div>
 
-      <div class="toolbar-actions">
-        <el-input
-          v-model="searchKeyword"
-          clearable
-          placeholder="输入关键词，例如：桂味、炭疽病、咪鲜胺"
-          @keyup.enter="handleSearch"
-        >
-          <template #append>
-            <el-button :icon="Search" @click="handleSearch" />
-          </template>
-        </el-input>
-        <el-button :icon="Refresh" :loading="loading" @click="refreshGraph">刷新</el-button>
-      </div>
+      <div class="hero-actions">
+        <div class="search-row">
+          <el-input
+            v-model="searchKeyword"
+            clearable
+            placeholder="输入关键词，例如：桂味、炭疽病、咪鲜胺"
+            @keyup.enter="handleSearch"
+          >
+            <template #append>
+              <el-button :icon="Search" @click="handleSearch" />
+            </template>
+          </el-input>
+          <el-button :icon="Refresh" :loading="loading" @click="refreshGraph">刷新图谱</el-button>
+        </div>
 
-      <div class="pill-row">
-        <button v-for="keyword in hotKeywords" :key="keyword" class="chip-button" type="button" @click="applyKeyword(keyword)">
-          {{ keyword }}
-        </button>
+        <div class="pill-row">
+          <button v-for="keyword in hotKeywords" :key="keyword" class="chip-button" type="button" @click="applyKeyword(keyword)">
+            {{ keyword }}
+          </button>
+        </div>
       </div>
     </section>
 
     <section class="metric-grid">
       <article class="metric-card">
-        <div class="metric-label">节点数量</div>
+        <div class="metric-label">图谱节点</div>
         <div class="metric-value">{{ graphData.nodes.length }}</div>
-        <div class="metric-note">用于展示图谱规模和搜索结果范围。</div>
+        <div class="metric-note">用于展示当前可视化图谱范围内的全部实体节点数量。</div>
       </article>
       <article class="metric-card">
-        <div class="metric-label">关系数量</div>
+        <div class="metric-label">关系边数</div>
         <div class="metric-value">{{ graphData.edges.length }}</div>
-        <div class="metric-note">图谱会保留与当前查询节点相关的主要关系链路。</div>
+        <div class="metric-note">保留与当前查询节点相关的主要关联链路，便于演示知识关系。</div>
       </article>
       <article class="metric-card">
-        <div class="metric-label">实体命中</div>
+        <div class="metric-label">命中实体</div>
         <div class="metric-value">{{ entityResults.length }}</div>
-        <div class="metric-note">支持从命中实体直接切换到关系详情。</div>
+        <div class="metric-note">搜索结果中的实体数，可从右侧直接切换到详情视图。</div>
       </article>
       <article class="metric-card">
         <div class="metric-label">当前焦点</div>
-        <div class="metric-value focus-value">{{ currentFocusName }}</div>
-        <div class="metric-note">右侧会展示属性和可跳转的关联节点。</div>
+        <div class="metric-value compact">{{ currentFocusName }}</div>
+        <div class="metric-note">右侧会同步展示实体属性和可继续追踪的关联节点。</div>
       </article>
     </section>
 
@@ -54,8 +60,8 @@
       <article class="graph-panel glass-card">
         <header class="panel-header">
           <div>
-            <h3 class="section-title">可视化关系图</h3>
-            <p class="section-copy">颜色区分节点类型，线条标签表示关系类型。</p>
+            <h3 class="section-title">关系可视化</h3>
+            <p class="section-copy">颜色区分实体类型，边标签用于说明关系含义，适合讲解图谱如何支撑研判。</p>
           </div>
           <div class="legend">
             <span v-for="item in legends" :key="item.label">
@@ -66,7 +72,7 @@
         </header>
 
         <div v-if="!positionedNodes.length" class="empty-wrapper">
-          <el-empty description="当前没有可展示的图谱结果，试试更换关键词。" />
+          <el-empty description="当前没有可展示的图谱结果，试试更换关键词或刷新图谱。" />
         </div>
 
         <svg v-else :viewBox="`0 0 ${canvasWidth} ${canvasHeight}`" class="graph-svg">
@@ -75,12 +81,7 @@
             <text :x="edge.labelX" :y="edge.labelY" class="edge-label">{{ formatRelationLabel(edge.label) }}</text>
           </g>
 
-          <g
-            v-for="node in positionedNodes"
-            :key="node.id"
-            class="node"
-            @click="selectNode(node)"
-          >
+          <g v-for="node in positionedNodes" :key="node.id" class="node" @click="selectNode(node)">
             <circle
               :cx="node.x"
               :cy="node.y"
@@ -97,17 +98,17 @@
       </article>
 
       <div class="side-stack">
-        <article class="search-panel soft-card">
-          <header class="panel-header compact">
+        <article class="soft-card search-panel">
+          <header class="panel-header compact-header">
             <div>
               <h3 class="section-title">实体命中</h3>
-              <p class="section-copy">点击实体可加载属性与关联关系。</p>
+              <p class="section-copy">点击命中实体，可同步加载属性和关联关系。</p>
             </div>
             <span class="result-count">{{ entityResults.length }} 个结果</span>
           </header>
 
           <div v-if="!entityResults.length" class="compact-empty">
-            <el-empty description="暂无命中实体。" />
+            <el-empty description="暂时没有命中实体。" />
           </div>
 
           <div v-else class="entity-list">
@@ -124,11 +125,11 @@
           </div>
         </article>
 
-        <article class="detail-panel soft-card">
-          <header class="panel-header compact">
+        <article class="soft-card detail-panel">
+          <header class="panel-header compact-header">
             <div>
-              <h3 class="section-title">关系详情</h3>
-              <p class="section-copy">适合聚焦查看某个实体的属性信息与关联节点。</p>
+              <h3 class="section-title">实体详情</h3>
+              <p class="section-copy">适合聚焦查看某个实体的属性信息与可继续跳转的关联节点。</p>
             </div>
           </header>
 
@@ -136,7 +137,7 @@
             <el-skeleton :rows="6" animated />
           </div>
 
-          <el-empty v-else-if="!selectedDetail" description="点击左侧任意节点查看详情。" />
+          <el-empty v-else-if="!selectedDetail" description="点击左侧图谱节点或右侧命中实体查看详情。" />
 
           <div v-else class="detail-content">
             <div class="detail-heading">
@@ -145,11 +146,7 @@
             </div>
 
             <div class="property-list">
-              <div
-                v-for="[key, value] in detailEntries"
-                :key="key"
-                class="property-item"
-              >
+              <div v-for="[key, value] in detailEntries" :key="key" class="property-item">
                 <span class="property-key">{{ key }}</span>
                 <span class="property-value">{{ formatValue(value) }}</span>
               </div>
@@ -162,7 +159,7 @@
               </div>
 
               <div v-if="!selectedDetail.relations.length" class="relation-empty">
-                当前实体暂无可展示的关联关系。
+                当前实体暂时没有可展示的关联关系。
               </div>
 
               <div v-else class="relation-list">
@@ -230,7 +227,7 @@ const legends = [
   { label: 'Disease', text: '病害', color: '#c65d1a' },
   { label: 'Pest', text: '虫害', color: '#d97706' },
   { label: 'Pesticide', text: '药剂', color: '#2f855a' },
-  { label: 'CultivationTechnique', text: '技术', color: '#6b7280' }
+  { label: 'CultivationTechnique', text: '管理技术', color: '#6b7280' }
 ]
 
 const relationLabelMap: Record<string, string> = {
@@ -246,9 +243,11 @@ const currentFocusName = computed(() => {
   if (selectedDetail.value?.name) {
     return selectedDetail.value.name
   }
+
   if (selectedNode.value) {
     return displayName(selectedNode.value)
   }
+
   return '未选择'
 })
 
@@ -352,7 +351,7 @@ const loadDetail = async (id?: string | null) => {
   try {
     const response = await knowledgeGraphAPI.detail(id)
     selectedDetail.value = response.data
-  } catch (error) {
+  } catch {
     selectedDetail.value = null
     ElMessage.error('加载实体详情失败，请稍后重试。')
   } finally {
@@ -365,6 +364,7 @@ const syncSelection = async (preferredId?: string) => {
     positionedNodes.value.find(node => node.id === preferredId) ??
     positionedNodes.value[0] ??
     null
+
   selectedNode.value = nextNode
   await loadDetail(nextNode?.id)
 }
@@ -388,12 +388,12 @@ const loadGraphData = async (keyword?: string, preferredId?: string) => {
         }))
 
     await syncSelection(preferredId)
-  } catch (error) {
+  } catch {
     graphData.value = { nodes: [], edges: [] }
     entityResults.value = []
     selectedNode.value = null
     selectedDetail.value = null
-    ElMessage.error('加载知识图谱失败，请检查后端服务。')
+    ElMessage.error('加载研判图谱失败，请检查后端服务。')
   } finally {
     loading.value = false
   }
@@ -421,9 +421,11 @@ const focusEntity = async (entityId: string, entityName?: string) => {
   if (!entityId) {
     return
   }
+
   if (entityName?.trim()) {
     searchKeyword.value = entityName
   }
+
   await loadGraphData(entityName || searchKeyword.value, entityId)
 }
 
@@ -437,18 +439,38 @@ onMounted(async () => {
   gap: 18px;
 }
 
-.toolbar,
+.hero,
+.graph-panel,
 .search-panel,
 .detail-panel {
-  padding: 22px;
+  padding: 24px;
 }
 
-.toolbar {
+.hero {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
-.toolbar-actions {
+.hero-copy,
+.hero-actions {
+  display: grid;
+  gap: 14px;
+}
+
+.hero-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(47, 106, 89, 0.12);
+  color: var(--primary-deep);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.search-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
@@ -458,10 +480,6 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 18px;
-}
-
-.graph-panel {
-  padding: 22px;
 }
 
 .side-stack {
@@ -476,7 +494,7 @@ onMounted(async () => {
   margin-bottom: 18px;
 }
 
-.panel-header.compact {
+.compact-header {
   margin-bottom: 14px;
 }
 
@@ -506,16 +524,23 @@ onMounted(async () => {
   font-size: 13px;
 }
 
-.empty-wrapper {
-  min-height: 640px;
+.compact {
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+.empty-wrapper,
+.compact-empty {
   display: grid;
   place-items: center;
 }
 
+.empty-wrapper {
+  min-height: 640px;
+}
+
 .compact-empty {
   min-height: 180px;
-  display: grid;
-  place-items: center;
 }
 
 .graph-svg {
@@ -550,7 +575,9 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.entity-list {
+.entity-list,
+.relation-list,
+.property-list {
   display: grid;
   gap: 12px;
 }
@@ -578,12 +605,14 @@ onMounted(async () => {
 }
 
 .entity-card strong,
-.relation-card strong {
+.relation-card strong,
+.detail-heading strong {
   color: var(--ink-strong);
 }
 
 .entity-card span,
-.relation-card small {
+.relation-card small,
+.relation-empty {
   color: var(--ink-soft);
 }
 
@@ -604,13 +633,7 @@ onMounted(async () => {
 }
 
 .detail-heading strong {
-  color: var(--ink-strong);
   font-size: 24px;
-}
-
-.property-list {
-  display: grid;
-  gap: 12px;
 }
 
 .property-item {
@@ -651,12 +674,6 @@ onMounted(async () => {
   padding: 14px 16px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
-  color: var(--ink-soft);
-}
-
-.relation-list {
-  display: grid;
-  gap: 12px;
 }
 
 .relation-type {
@@ -667,11 +684,6 @@ onMounted(async () => {
   text-transform: uppercase;
 }
 
-.focus-value {
-  font-size: 18px;
-  line-height: 1.4;
-}
-
 @media (max-width: 1180px) {
   .content-grid {
     grid-template-columns: 1fr;
@@ -679,7 +691,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 720px) {
-  .toolbar-actions {
+  .search-row {
     grid-template-columns: 1fr;
   }
 

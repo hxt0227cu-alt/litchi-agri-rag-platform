@@ -20,86 +20,162 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LLMService {
 
+
     private final ObjectMapper objectMapper;
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+    private volatile long retryAfterEpochMs;
 
     @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
     private String ollamaBaseUrl;
 
+    @Value("${app.llm.provider:ollama}")
+    private String provider;
+
+    @Value("${app.llm.base-url:}")
+    private String configuredBaseUrl;
+
+    @Value("${app.llm.api-key:}")
+    private String apiKey;
+
     @Value("${spring.ai.ollama.chat.options.model:qwen2.5:0.5b}")
     private String ollamaModel;
 
-    @Value("${app.llm.timeout-ms:180000}")
+    @Value("${app.llm.timeout-ms:30000}")
     private int llmTimeoutMs;
 
-    public boolean isAvailable() {
+    @Value("${app.llm.temperature:0.2}")
+    private double llmTemperature;
+
+    @Value("${app.llm.num-predict:96}")
+    private int llmNumPredict;
+
+    @Value("${app.llm.keep-alive:30m}")
+    private String llmKeepAlive;
+
+    @Value("${app.resilience.dependency-retry-delay-ms:300000}")
+    private long dependencyRetryDelayMs;
+
+    public synchronized boolean isAvailable() {
+        if (isCircuitOpen()) {
+            return false;
+        }
         try {
-            HttpClient client = HttpClient.newHttpClient();
+            String baseUrl = effectiveBaseUrl();
+            String availabilityPath = isOpenAiCompatible() ? "/v1/models" : "/api/tags";
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(ollamaBaseUrl + "/api/tags"))
+                    .uri(URI.create(baseUrl + availabilityPath))
                     .GET()
                     .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            return response.statusCode() >= 200
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            boolean available = response.statusCode() >= 200
                     && response.statusCode() < 300
-                    && (ollamaModel == null || ollamaModel.isBlank() || response.body().contains("\"name\":\"" + ollamaModel + "\""));
+                    && (ollamaModel == null || ollamaModel.isBlank() || response.body().contains(ollamaModel));
+            if (available) {
+                retryAfterEpochMs = 0L;
+            } else {
+                markUnavailable();
+            }
+            return available;
         } catch (Exception e) {
-            log.debug("Ollama availability check failed", e);
+            markUnavailable();
+            log.debug("LLM availability check failed provider={}", provider, e);
             return false;
         }
     }
 
     public String generate(String prompt) {
+        if (isCircuitOpen()) {
+            return "当前模型服务不可用，请稍后重试。";
+        }
         try {
             return chat(List.of(Map.of(
                     "role", "user",
                     "content", prompt
             )));
         } catch (Exception e) {
+            markUnavailable();
             log.error("Failed to generate response from LLM", e);
             return "当前模型服务不可用，请稍后重试。";
         }
     }
 
     public String generateWithContext(String systemPrompt, String userPrompt) {
+        if (isCircuitOpen()) {
+            return "当前模型服务不可用，请稍后重试。";
+        }
         try {
             return chat(List.of(
                     Map.of("role", "system", "content", systemPrompt),
                     Map.of("role", "user", "content", userPrompt)
             ));
         } catch (Exception e) {
+            markUnavailable();
             log.error("Failed to generate response with context", e);
             return "当前模型服务不可用，请稍后重试。";
         }
     }
 
     private String chat(List<Map<String, String>> messages) throws Exception {
-        HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
-
-        String requestBody = objectMapper.writeValueAsString(Map.of(
+        boolean openAiCompatible = isOpenAiCompatible();
+        Map<String, Object> requestPayload = openAiCompatible
+                ? Map.of(
                 "model", ollamaModel,
                 "messages", messages,
-                "stream", false
-        ));
+                "stream", false,
+                "temperature", llmTemperature,
+                "max_tokens", llmNumPredict
+        )
+                : Map.of(
+                "model", ollamaModel,
+                "messages", messages,
+                "stream", false,
+                "keep_alive", llmKeepAlive,
+                "options", Map.of(
+                        "temperature", llmTemperature,
+                        "num_predict", llmNumPredict
+                )
+        );
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(ollamaBaseUrl + "/api/chat"))
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(effectiveBaseUrl() + (openAiCompatible ? "/v1/chat/completions" : "/api/chat")))
                 .timeout(Duration.ofMillis(llmTimeoutMs))
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build();
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestPayload)));
+        if (openAiCompatible && apiKey != null && !apiKey.isBlank()) {
+            requestBuilder.header("Authorization", "Bearer " + apiKey);
+        }
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 400) {
-            throw new IllegalStateException("Ollama chat returned status " + response.statusCode());
+            throw new IllegalStateException("LLM chat returned status " + response.statusCode());
         }
 
         JsonNode root = objectMapper.readTree(response.body());
-        String content = root.path("message").path("content").asText("");
+        String content = openAiCompatible
+                ? root.path("choices").path(0).path("message").path("content").asText("")
+                : root.path("message").path("content").asText("");
         if (content.isBlank()) {
-            throw new IllegalStateException("Ollama chat response is empty");
+            throw new IllegalStateException("LLM chat response is empty");
         }
         return content;
+    }
+
+    private boolean isOpenAiCompatible() {
+        return "openai-compatible".equalsIgnoreCase(provider) || "vllm".equalsIgnoreCase(provider);
+    }
+
+    private String effectiveBaseUrl() {
+        String baseUrl = configuredBaseUrl == null || configuredBaseUrl.isBlank() ? ollamaBaseUrl : configuredBaseUrl;
+        return baseUrl.replaceAll("/$", "");
+    }
+
+    private boolean isCircuitOpen() {
+        return System.currentTimeMillis() < retryAfterEpochMs;
+    }
+
+    private void markUnavailable() {
+        retryAfterEpochMs = System.currentTimeMillis() + dependencyRetryDelayMs;
     }
 }

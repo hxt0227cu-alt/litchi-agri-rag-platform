@@ -19,28 +19,7 @@ export default defineConfig({
           }
 
           if (id.includes('element-plus')) {
-            const componentMatch = id.match(/element-plus\/es\/components\/([^/]+)/)
-            if (componentMatch?.[1]) {
-              return `vendor-element-plus-${componentMatch[1]}`
-            }
-
-            if (id.includes('element-plus/es/hooks')) {
-              return 'vendor-element-plus-hooks'
-            }
-
-            if (id.includes('element-plus/es/utils')) {
-              return 'vendor-element-plus-utils'
-            }
-
-            if (id.includes('element-plus/es/directives')) {
-              return 'vendor-element-plus-directives'
-            }
-
-            if (id.includes('element-plus/es/constants')) {
-              return 'vendor-element-plus-constants'
-            }
-
-            return 'vendor-element-plus-core'
+            return 'vendor-element-plus'
           }
 
           if (id.includes('@element-plus/icons-vue')) {

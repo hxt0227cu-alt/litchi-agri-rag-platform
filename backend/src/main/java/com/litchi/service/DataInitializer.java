@@ -13,11 +13,24 @@ import org.springframework.stereotype.Service;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DataInitializer {
+
+    private static final Set<String> ALLOWED_LABELS = Set.of(
+            "Disease",
+            "Symptom",
+            "Pest",
+            "Chemical",
+            "Stage",
+            "Region",
+            "LitchiVariety",
+            "Pesticide",
+            "CultivationTechnique"
+    );
 
     private final Driver neo4jDriver;
     private final VectorSearchService vectorSearchService;
@@ -75,6 +88,9 @@ public class DataInitializer {
         for (Map<String, Object> node : demoContentService.getFallbackNodes()) {
             String id = String.valueOf(node.get("id"));
             String label = String.valueOf(node.get("label"));
+            if (!ALLOWED_LABELS.contains(label)) {
+                throw new IllegalArgumentException("Invalid label: " + label);
+            }
             Map<String, Object> properties = new LinkedHashMap<>((Map<String, Object>) node.get("properties"));
             properties.put("id", id);
 

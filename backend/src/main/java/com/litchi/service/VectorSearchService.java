@@ -1,6 +1,5 @@
 package com.litchi.service;
 
-import com.alibaba.fastjson.JSONObject;
 import io.milvus.v2.client.MilvusClientV2;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
@@ -17,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,19 +36,34 @@ public class VectorSearchService {
     @Value("${milvus.collection-name:litchi_knowledge}")
     private String collectionName;
 
-    private volatile boolean collectionLoaded;
+    @Value("${app.resilience.dependency-retry-delay-ms:300000}")
+    private long dependencyRetryDelayMs;
 
-    public boolean isAvailable() {
+    private volatile boolean collectionLoaded;
+    private volatile long retryAfterEpochMs;
+
+    public synchronized boolean isAvailable() {
+        if (System.currentTimeMillis() < retryAfterEpochMs) {
+            return false;
+        }
         try {
             milvusClient.listCollections();
+            retryAfterEpochMs = 0L;
             return true;
         } catch (Exception e) {
+            markUnavailable();
             log.debug("Milvus availability check failed", e);
             return false;
         }
     }
 
-    public boolean initCollection() {
+    public synchronized boolean initCollection() {
+        if (System.currentTimeMillis() < retryAfterEpochMs) {
+            return false;
+        }
+        if (collectionLoaded) {
+            return true;
+        }
         try {
             HasCollectionReq hasCollectionReq = HasCollectionReq.builder()
                     .collectionName(collectionName)
@@ -94,7 +109,7 @@ public class VectorSearchService {
             }
             return true;
         } catch (Exception e) {
-            collectionLoaded = false;
+            markUnavailable();
             log.error("Failed to init collection", e);
             return false;
         }
@@ -136,6 +151,7 @@ public class VectorSearchService {
                 }
             }
         } catch (Exception e) {
+            markUnavailable();
             log.error("Failed to search vectors", e);
         }
         return results;
@@ -170,6 +186,7 @@ public class VectorSearchService {
                     .build();
             milvusClient.insert(insertReq);
         } catch (Exception e) {
+            markUnavailable();
             log.error("Failed to insert documents", e);
         }
     }
@@ -191,8 +208,14 @@ public class VectorSearchService {
                     .build();
             milvusClient.delete(deleteReq);
         } catch (Exception e) {
+            markUnavailable();
             log.error("Failed to delete documents from vector store", e);
         }
+    }
+
+    private void markUnavailable() {
+        collectionLoaded = false;
+        retryAfterEpochMs = System.currentTimeMillis() + dependencyRetryDelayMs;
     }
 
     public static class SearchResult {

@@ -1,9 +1,18 @@
 <template>
   <div class="chat-page">
     <aside class="chat-sidebar soft-card">
+      <section class="sidebar-intro">
+        <span class="sidebar-kicker">Q&A Flow</span>
+        <h3 class="section-title">智能问答</h3>
+        <p class="section-copy">
+          问答页会先检索知识文档，再补充图谱命中，最后生成可追溯回答。
+          对农户来说这是确认病症和理解 AI 建议的关键一步，对管理员来说也是最直观的演示页。
+        </p>
+      </section>
+
       <section>
         <h3 class="section-title">推荐提问</h3>
-        <p class="section-copy">点一下就能直接体验检索增强问答，不需要临时组织问题。</p>
+        <p class="section-copy">点击即可直接体验检索增强问答，不需要临时组织问题。</p>
       </section>
 
       <div class="question-palette">
@@ -20,10 +29,13 @@
 
       <section class="hint-card">
         <strong>讲解建议</strong>
-        <p>回答区域下方会同步展示来源片段和图谱实体，适合解释“系统为什么这么回答”。</p>
+        <p>回答区域下方会同步展示来源片段和图谱实体，适合解释“系统为什么会这样回答”。</p>
       </section>
 
-      <el-button type="primary" plain @click="startFreshSession">开始新会话</el-button>
+      <div class="sidebar-actions">
+        <el-button type="primary" plain @click="startFreshSession">开始新会话</el-button>
+        <el-button type="primary" @click="openSolutions">查看解决方案</el-button>
+      </div>
     </aside>
 
     <section class="chat-main">
@@ -31,7 +43,7 @@
         <div class="messages" ref="messagesListRef">
           <div v-if="!chatStore.messages.length && !chatStore.isLoading" class="empty-state">
             <h3>从一个推荐问题开始最稳妥</h3>
-            <p>系统会先检索文档切片，再补充图谱命中实体，最后生成一段可追溯的回答。</p>
+            <p>系统会先检索文档片段，再补充图谱命中实体，最后生成一段便于继续讲解和跳转方案页的回答。</p>
           </div>
 
           <article
@@ -40,7 +52,7 @@
             :class="['message-row', msg.role]"
           >
             <div :class="['message-card', msg.role]">
-              <div class="message-role">{{ msg.role === 'user' ? '提问' : '系统回答' }}</div>
+              <div class="message-role">{{ msg.role === 'user' ? '农户提问' : '系统回答' }}</div>
               <div class="message-content">{{ msg.content }}</div>
 
               <div v-if="msg.role === 'assistant'" class="speech-actions">
@@ -90,7 +102,7 @@
           type="textarea"
           :rows="4"
           resize="none"
-          placeholder="例如：荔枝炭疽病在雨季怎么防治？"
+          placeholder="例如：荔枝炭疽病在雨季应该如何预防和处理？"
           @keydown.enter.prevent="handleEnter"
         />
         <div class="composer-actions">
@@ -100,9 +112,7 @@
               {{ isListening ? '停止语音' : '语音输入' }}
             </el-button>
             <el-button @click="chatStore.clearMessages()">清空对话</el-button>
-            <el-button type="primary" :loading="chatStore.isLoading" @click="sendMessage">
-              发送问题
-            </el-button>
+            <el-button type="primary" :loading="chatStore.isLoading" @click="sendMessage">发送问题</el-button>
           </div>
         </div>
       </footer>
@@ -111,12 +121,13 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 
 import { chatAPI, systemAPI } from '@/api'
+import { PAGE_SIZE } from '@/config/constants'
 import { useChatStore } from '@/stores/chat'
 
 const route = useRoute()
@@ -134,6 +145,11 @@ const suggestedQuestions = ref<string[]>([
   '蒂蛀虫高发期应该怎么监测和处理？'
 ])
 const lastAutoQuestion = ref('')
+let lastRequestId = 0
+const latestQuestion = computed(() => {
+  const latestUserMessage = [...chatStore.messages].reverse().find(message => message.role === 'user')
+  return latestUserMessage?.content ?? inputMessage.value.trim()
+})
 
 const scrollToBottom = async () => {
   await nextTick()
@@ -150,11 +166,13 @@ const formatScore = (score?: number) => {
 }
 
 const loadSuggestions = async () => {
+  const requestId = ++lastRequestId
   try {
     const response = await systemAPI.overview()
+    if (requestId !== lastRequestId) return
     suggestedQuestions.value = response.data.suggestedQuestions
-  } catch (error) {
-    // Keep the local fallback list silently.
+  } catch {
+    // Keep local fallback suggestions.
   }
 }
 
@@ -194,7 +212,7 @@ const sendMessage = async () => {
     })
     appendAssistantMessage(response.data.answer, response.data.sources, response.data.knowledgeGraph)
   } catch (error) {
-    ElMessage.error((error as any)?.response?.data?.message ?? '发送失败，请检查后端服务是否启动。')
+    ElMessage.error((error as any)?.response?.data?.message ?? '发送失败，请检查后端问答服务。')
   } finally {
     chatStore.setLoading(false)
   }
@@ -218,9 +236,11 @@ const maybeSendRouteQuestion = async () => {
     return
   }
 
+  const requestId = ++lastRequestId
   lastAutoQuestion.value = question
   inputMessage.value = question
   await sendMessage()
+  if (requestId !== lastRequestId) return
   router.replace({ path: route.path, query: {} })
 }
 
@@ -230,11 +250,14 @@ const maybeLoadRouteSession = async () => {
     return
   }
 
+  const requestId = ++lastRequestId
   try {
-    const response = await chatAPI.history(sessionId, 1, 100)
-    chatStore.currentSessionId = sessionId
+    const response = await chatAPI.history(sessionId, 1, PAGE_SIZE.large)
+    if (requestId !== lastRequestId) return
+    chatStore.setSessionId(sessionId)
     chatStore.loadHistory(response.data.items)
-  } catch (error) {
+  } catch {
+    if (requestId !== lastRequestId) return
     ElMessage.error('加载历史会话失败。')
   }
 }
@@ -242,6 +265,14 @@ const maybeLoadRouteSession = async () => {
 const startFreshSession = () => {
   chatStore.startNewSession()
   inputMessage.value = ''
+}
+
+const openSolutions = () => {
+  const question = latestQuestion.value
+  router.push({
+    path: '/solutions',
+    query: question ? { question } : {}
+  })
 }
 
 const createSpeechRecognition = () => {
@@ -335,6 +366,17 @@ onMounted(() => {
   maybeSendRouteQuestion()
   scrollToBottom()
 })
+
+onBeforeUnmount(() => {
+  if (speechRecognition) {
+    speechRecognition.stop()
+    speechRecognition.onstart = null
+    speechRecognition.onend = null
+    speechRecognition.onresult = null
+    speechRecognition.onerror = null
+  }
+  window.speechSynthesis.cancel()
+})
 </script>
 
 <style scoped>
@@ -343,11 +385,12 @@ onMounted(() => {
   grid-template-columns: 320px minmax(0, 1fr);
   gap: 18px;
   min-height: calc(100vh - 210px);
+  align-items: start;
 }
 
 .chat-sidebar,
 .composer {
-  padding: 22px;
+  padding: 24px;
 }
 
 .chat-sidebar {
@@ -356,7 +399,26 @@ onMounted(() => {
   gap: 18px;
 }
 
-.question-palette {
+.sidebar-intro {
+  display: grid;
+  gap: 12px;
+}
+
+.sidebar-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(242, 140, 40, 0.14);
+  color: #9c4e0c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.question-palette,
+.sidebar-actions {
   display: grid;
   gap: 12px;
 }
@@ -369,7 +431,7 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.74);
   color: var(--ink-strong);
   cursor: pointer;
-  line-height: 1.7;
+  line-height: 1.75;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -395,32 +457,32 @@ onMounted(() => {
 .hint-card p {
   margin: 10px 0 0;
   color: var(--ink-soft);
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .chat-main {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   gap: 18px;
   min-height: 0;
+  align-self: start;
 }
 
 .conversation {
   min-height: 0;
+  overflow: hidden;
 }
 
 .messages {
-  height: 100%;
-  min-height: 520px;
-  max-height: calc(100vh - 360px);
+  max-height: calc(100vh - 300px);
   overflow-y: auto;
-  padding: 22px;
+  padding: 24px;
 }
 
 .empty-state {
   display: grid;
   place-items: center;
-  min-height: 320px;
+  min-height: 260px;
   text-align: center;
 }
 
@@ -431,7 +493,7 @@ onMounted(() => {
 
 .empty-state p {
   margin: 10px 0 0;
-  max-width: 520px;
+  max-width: 540px;
   color: var(--ink-soft);
   line-height: 1.8;
 }
@@ -439,6 +501,10 @@ onMounted(() => {
 .message-row {
   display: flex;
   margin-bottom: 18px;
+}
+
+.message-row:last-child {
+  margin-bottom: 0;
 }
 
 .message-row.user {
@@ -475,14 +541,14 @@ onMounted(() => {
   line-height: 1.9;
 }
 
+.speech-actions {
+  margin-top: 8px;
+}
+
 .source-list {
   display: grid;
   gap: 10px;
   margin-top: 16px;
-}
-
-.speech-actions {
-  margin-top: 8px;
 }
 
 .source-card {
@@ -512,7 +578,8 @@ onMounted(() => {
 .source-card p {
   margin: 10px 0 0;
   color: var(--ink-strong);
-  line-height: 1.7;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .entity-list {
@@ -573,6 +640,11 @@ onMounted(() => {
   .composer-actions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .composer-buttons {
+    width: 100%;
+    flex-wrap: wrap;
   }
 }
 </style>

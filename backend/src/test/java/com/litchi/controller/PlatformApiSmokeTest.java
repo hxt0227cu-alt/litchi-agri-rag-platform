@@ -1,16 +1,22 @@
 package com.litchi.controller;
 
+import com.litchi.audit.AuditLogInterceptor;
 import com.litchi.auth.AuthInterceptor;
 import com.litchi.auth.AuthService;
 import com.litchi.auth.AuthenticatedUser;
 import com.litchi.config.WebConfig;
 import com.litchi.dto.AuthResponse;
 import com.litchi.dto.AuthUserView;
+import com.litchi.dto.ConsultationRecordDto;
 import com.litchi.dto.DocumentRecord;
 import com.litchi.dto.EvaluationRecordDto;
 import com.litchi.dto.FeedbackRecordDto;
 import com.litchi.dto.FeedbackStatsResponse;
 import com.litchi.dto.PageResponse;
+import com.litchi.dto.RecommendedPlanDto;
+import com.litchi.dto.RemedyPlanDto;
+import com.litchi.dto.StoreProfileDto;
+import com.litchi.service.CollaborationService;
 import com.litchi.service.DataInitializer;
 import com.litchi.service.DemoContentService;
 import com.litchi.service.DiagnosisService;
@@ -35,6 +41,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,12 +52,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = {
         AuthController.class,
+        CollaborationController.class,
         EvaluationController.class,
         DocumentController.class,
         FeedbackController.class,
+        KnowledgeGraphController.class,
         SystemController.class
 })
-@Import({WebConfig.class, AuthInterceptor.class, GlobalExceptionHandler.class})
+@Import({WebConfig.class, AuditLogInterceptor.class, AuthInterceptor.class, GlobalExceptionHandler.class})
 class PlatformApiSmokeTest {
 
     @Autowired
@@ -61,6 +70,9 @@ class PlatformApiSmokeTest {
 
     @MockBean
     private EvaluationService evaluationService;
+
+    @MockBean
+    private CollaborationService collaborationService;
 
     @MockBean
     private DocumentService documentService;
@@ -88,12 +100,14 @@ class PlatformApiSmokeTest {
 
     private AuthenticatedUser technicianUser;
     private AuthenticatedUser farmerUser;
+    private AuthenticatedUser shopkeeperUser;
     private AuthUserView technicianView;
 
     @BeforeEach
     void setUp() {
         technicianUser = new AuthenticatedUser("tech-1", "technician", "technician", "2026-03-16T00:00:00Z");
         farmerUser = new AuthenticatedUser("farmer-1", "farmer", "farmer", "2026-03-16T00:00:00Z");
+        shopkeeperUser = new AuthenticatedUser("shop-1", "shopkeeper", "shopkeeper", "2026-03-16T00:00:00Z");
         technicianView = AuthUserView.builder()
                 .id("tech-1")
                 .username("technician")
@@ -103,9 +117,12 @@ class PlatformApiSmokeTest {
 
         when(authService.resolveUser("technician-token")).thenReturn(technicianUser);
         when(authService.resolveUser("farmer-token")).thenReturn(farmerUser);
+        when(authService.resolveUser("shopkeeper-token")).thenReturn(shopkeeperUser);
         when(authService.me("technician-token")).thenReturn(technicianView);
 
         when(knowledgeGraphService.isNeo4jAvailable()).thenReturn(true);
+        when(knowledgeGraphService.getVisualizationData(nullable(String.class)))
+                .thenReturn(Map.of("nodes", List.of(), "edges", List.of()));
         when(vectorSearchService.isAvailable()).thenReturn(true);
         when(llmService.isAvailable()).thenReturn(true);
         when(diagnosisService.getHealth())
@@ -117,6 +134,8 @@ class PlatformApiSmokeTest {
         ));
         when(demoContentService.getSuggestedQuestions()).thenReturn(List.of("How to control anthracnose?"));
         when(demoContentService.getDemoFlow()).thenReturn(List.of("Check status", "Start asking"));
+        when(collaborationService.getSummary())
+                .thenReturn(new CollaborationService.CollaborationSummary(3, 2, 1, "炭疽病", 4.7));
     }
 
     @Test
@@ -165,7 +184,7 @@ class PlatformApiSmokeTest {
                         .page(1)
                         .size(20)
                         .items(List.of(EvaluationRecordDto.builder()
-                                .id(1L)
+                                .id("chat-1")
                                 .type("disease")
                                 .question("How to control anthracnose?")
                                 .referenceAnswer("Clean the orchard and rotate fungicides.")
@@ -174,7 +193,7 @@ class PlatformApiSmokeTest {
                                 .build()))
                         .build());
 
-        mockMvc.perform(get("/evaluation/questions")
+        mockMvc.perform(get("/evaluations/questions")
                         .header("Authorization", "Bearer technician-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
@@ -183,7 +202,7 @@ class PlatformApiSmokeTest {
 
     @Test
     void evaluationQuestionsRejectFarmerRole() throws Exception {
-        mockMvc.perform(get("/evaluation/questions")
+        mockMvc.perform(get("/evaluations/questions")
                         .header("Authorization", "Bearer farmer-token"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.role").value("farmer"));
@@ -209,13 +228,234 @@ class PlatformApiSmokeTest {
                         .ownerUsername("technician")
                         .build());
 
-        mockMvc.perform(multipart("/document")
+        mockMvc.perform(multipart("/documents")
                         .file(file)
                         .param("title", "Platform Guide")
                         .header("Authorization", "Bearer technician-token"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value("doc-1"))
                 .andExpect(jsonPath("$.ownerUsername").value("technician"));
+    }
+
+    @Test
+    void documentUploadRejectsShopkeeperRole() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "guide.md",
+                "text/markdown",
+                "# sample".getBytes()
+        );
+
+        mockMvc.perform(multipart("/documents")
+                        .file(file)
+                        .param("title", "Platform Guide")
+                        .header("Authorization", "Bearer shopkeeper-token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.role").value("shopkeeper"));
+    }
+
+    @Test
+    void documentListRejectsFarmerRole() throws Exception {
+        mockMvc.perform(get("/documents")
+                        .header("Authorization", "Bearer farmer-token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.role").value("farmer"));
+    }
+
+    @Test
+    void knowledgeGraphVisualizationAllowsFarmerRole() throws Exception {
+        mockMvc.perform(get("/kg/visualize")
+                        .header("Authorization", "Bearer farmer-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nodes").isArray())
+                .andExpect(jsonPath("$.edges").isArray());
+    }
+
+    @Test
+    void knowledgeGraphVisualizationAllowsTechnicianRole() throws Exception {
+        mockMvc.perform(get("/kg/visualize")
+                        .header("Authorization", "Bearer technician-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nodes").isArray())
+                .andExpect(jsonPath("$.edges").isArray());
+    }
+
+    @Test
+    void shopProfileAllowsShopkeeperRole() throws Exception {
+        when(collaborationService.getProfile(shopkeeperUser))
+                .thenReturn(StoreProfileDto.builder()
+                        .shopId("shop-demo-main")
+                        .shopName("荔园农资服务站")
+                        .contactName("门店店主")
+                        .serviceArea("桂味产区")
+                        .rating(4.8)
+                        .build());
+
+        mockMvc.perform(get("/shop/profile")
+                        .header("Authorization", "Bearer shopkeeper-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.shopName").value("荔园农资服务站"))
+                .andExpect(jsonPath("$.rating").value(4.8));
+    }
+
+    @Test
+    void shopPlanCreationAllowsShopkeeperRole() throws Exception {
+        when(collaborationService.createPlan(any(), any()))
+                .thenReturn(RemedyPlanDto.builder()
+                        .id("plan-1")
+                        .shopId("shop-demo-main")
+                        .shopName("荔园农资服务站")
+                        .title("炭疽病雨季处理方案")
+                        .diseaseTag("炭疽病")
+                        .stageTag("雨季高湿")
+                        .summary("先清园，再轮换用药。")
+                        .products(List.of("吡唑醚菌酯"))
+                        .usageTips(List.of("3 天内复查"))
+                        .riskNotes(List.of("遵循标签用量"))
+                        .inventoryStatus("有现货")
+                        .active(true)
+                        .build());
+
+        mockMvc.perform(post("/shop/plans")
+                        .header("Authorization", "Bearer shopkeeper-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "炭疽病雨季处理方案",
+                                  "diseaseTag": "炭疽病",
+                                  "stageTag": "雨季高湿",
+                                  "summary": "先清园，再轮换用药。",
+                                  "products": ["吡唑醚菌酯"],
+                                  "usageTips": ["3 天内复查"],
+                                  "riskNotes": ["遵循标签用量"],
+                                  "inventoryStatus": "有现货",
+                                  "active": true
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value("plan-1"))
+                .andExpect(jsonPath("$.shopName").value("荔园农资服务站"));
+    }
+
+    @Test
+    void recommendationsAllowFarmerRole() throws Exception {
+        when(collaborationService.getRecommendations(nullable(String.class), nullable(String.class), nullable(String.class), any()))
+                .thenReturn(List.of(
+                        RecommendedPlanDto.builder()
+                                .planId("plan-1")
+                                .shopId("shop-demo-main")
+                                .shopName("荔园农资服务站")
+                                .title("炭疽病雨季处理方案")
+                                .diseaseTag("炭疽病")
+                                .stageTag("雨季高湿")
+                                .summary("先清园，再轮换用药，并注意安全边界。")
+                                .inventoryStatus("有现货")
+                                .score(88.5)
+                                .reasonTags(List.of("病症高度匹配"))
+                                .build()
+                ));
+
+        mockMvc.perform(get("/plans/recommendations")
+                        .param("diseaseTag", "炭疽病")
+                        .header("Authorization", "Bearer farmer-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].shopName").value("荔园农资服务站"))
+                .andExpect(jsonPath("$[0].reasonTags[0]").value("病症高度匹配"));
+    }
+
+    @Test
+    void consultationCreationAllowsFarmerRole() throws Exception {
+        when(collaborationService.createConsultation(any(), any()))
+                .thenReturn(ConsultationRecordDto.builder()
+                        .id("consult-1")
+                        .farmerUserId("farmer-1")
+                        .farmerUsername("farmer")
+                        .diseaseTag("炭疽病")
+                        .stageTag("雨季高湿")
+                        .question("果面褐斑持续扩大怎么办？")
+                        .planId("plan-1")
+                        .planTitle("炭疽病雨季处理方案")
+                        .shopId("shop-demo-main")
+                        .shopName("荔园农资服务站")
+                        .contactName("门店店主")
+                        .phone("13800001234")
+                        .status("pending")
+                        .reasonTags(List.of("病症高度匹配"))
+                        .createdAt("2026-03-16T00:00:00Z")
+                        .updatedAt("2026-03-16T00:00:00Z")
+                        .build());
+
+        mockMvc.perform(post("/consultations")
+                        .header("Authorization", "Bearer farmer-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "planId": "plan-1",
+                                  "diseaseTag": "炭疽病",
+                                  "stageTag": "雨季高湿",
+                                  "question": "果面褐斑持续扩大怎么办？",
+                                  "reasonTags": ["病症高度匹配"]
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value("consult-1"))
+                .andExpect(jsonPath("$.status").value("pending"));
+    }
+
+    @Test
+    void consultationInboxAllowsShopkeeperRole() throws Exception {
+        when(collaborationService.listInbox(eq(shopkeeperUser), anyInt(), anyInt()))
+                .thenReturn(PageResponse.<ConsultationRecordDto>builder()
+                        .total(1)
+                        .page(1)
+                        .size(10)
+                        .items(List.of(
+                                ConsultationRecordDto.builder()
+                                        .id("consult-1")
+                                        .farmerUsername("farmer")
+                                        .diseaseTag("炭疽病")
+                                        .planTitle("炭疽病雨季处理方案")
+                                        .shopName("荔园农资服务站")
+                                        .status("pending")
+                                        .build()
+                        ))
+                        .build());
+
+        mockMvc.perform(get("/consultations/inbox")
+                        .header("Authorization", "Bearer shopkeeper-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value("consult-1"))
+                .andExpect(jsonPath("$.items[0].status").value("pending"));
+    }
+
+    @Test
+    void consultationStatusUpdateAllowsShopkeeperRole() throws Exception {
+        when(collaborationService.updateConsultationStatus(any(), any(), any()))
+                .thenReturn(ConsultationRecordDto.builder()
+                        .id("consult-1")
+                        .status("contacted")
+                        .shopName("荔园农资服务站")
+                        .build());
+
+        mockMvc.perform(post("/consultations/consult-1/status")
+                        .header("Authorization", "Bearer shopkeeper-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "contacted"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("consult-1"))
+                .andExpect(jsonPath("$.status").value("contacted"));
+    }
+
+    @Test
+    void consultationInboxRejectsFarmerRole() throws Exception {
+        mockMvc.perform(get("/consultations/inbox")
+                        .header("Authorization", "Bearer farmer-token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.role").value("farmer"));
     }
 
     @Test
@@ -235,7 +475,7 @@ class PlatformApiSmokeTest {
                         .createdAt("2026-03-16T00:00:00Z")
                         .build());
 
-        mockMvc.perform(post("/feedback")
+        mockMvc.perform(post("/feedbacks")
                         .header("Authorization", "Bearer farmer-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -255,7 +495,7 @@ class PlatformApiSmokeTest {
 
     @Test
     void feedbackStatsRequireTechnicianRole() throws Exception {
-        mockMvc.perform(get("/feedback/stats")
+        mockMvc.perform(get("/feedbacks/stats")
                         .header("Authorization", "Bearer farmer-token"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.role").value("farmer"));
@@ -280,7 +520,7 @@ class PlatformApiSmokeTest {
                         .recent(List.of())
                         .build());
 
-        mockMvc.perform(get("/feedback/stats")
+        mockMvc.perform(get("/feedbacks/stats")
                         .header("Authorization", "Bearer technician-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))

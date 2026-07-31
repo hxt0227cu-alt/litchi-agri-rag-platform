@@ -9,5 +9,5 @@
     "esModuleInterop": true,
     "types": ["node"]
   },
-  "include": ["src/auth/access.ts", "tests/**/*.ts"]
+  "include": ["src/auth/access.ts", "src/config/platform.ts", "src/types/platform.ts", "tests/**/*.ts"]
 }

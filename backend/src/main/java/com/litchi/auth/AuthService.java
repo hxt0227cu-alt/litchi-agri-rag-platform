@@ -34,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -41,11 +42,11 @@ import java.util.UUID;
 public class AuthService {
     private static final int HASH_ITERATIONS = 65_536;
     private static final int HASH_BYTES = 32;
-    private static final String SNAPSHOT_KEY = "auth";
 
     private final ObjectMapper objectMapper;
     private final MysqlStateStoreService mysqlStateStoreService;
     private final SecureRandom secureRandom = new SecureRandom();
+    private final Map<String, Long> loginAttempts = new ConcurrentHashMap<>();
 
     @Value("${app.auth.state-file:data/auth-state.json}")
     private String stateFile;
@@ -93,6 +94,14 @@ public class AuthService {
 
     public synchronized AuthResponse login(LoginRequest request) {
         String username = normalizeUsername(request.getUsername());
+
+        long now = System.currentTimeMillis();
+        Long lastAttempt = loginAttempts.get(username);
+        if (lastAttempt != null && now - lastAttempt < 5000L) {
+            throw new IllegalStateException("操作过于频繁，请稍后再试");
+        }
+        loginAttempts.put(username, now);
+
         String password = request.getPassword() == null ? "" : request.getPassword().trim();
 
         UserRecord user = usersById.values().stream()
@@ -214,7 +223,7 @@ public class AuthService {
         String normalized = role == null ? "farmer" : role.trim().toLowerCase(Locale.ROOT);
         return switch (normalized) {
             case "farmer", "technician", "shopkeeper" -> normalized;
-            default -> throw new IllegalArgumentException("角色必须是 farmer、technician 或 shopkeeper。");
+            default -> throw new IllegalArgumentException("角色必须是 farmer（农户）、technician（管理员）或 shopkeeper（门店）。");
         };
     }
 

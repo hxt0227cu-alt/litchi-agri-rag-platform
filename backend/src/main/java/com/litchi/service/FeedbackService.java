@@ -32,6 +32,7 @@ import java.util.UUID;
 public class FeedbackService {
 
     private final ObjectMapper objectMapper;
+    private final MysqlStateStoreService mysqlStateStoreService;
 
     @Value("${app.feedback.state-file:data/feedback-state.json}")
     private String stateFile;
@@ -82,6 +83,7 @@ public class FeedbackService {
 
         records.add(record);
         persistState();
+        log.info("Feedback submitted id={} by user={}", record.getId(), user.username());
         return toDto(record);
     }
 
@@ -167,32 +169,100 @@ public class FeedbackService {
     }
 
     private void loadState() {
-        if (statePath == null || !Files.exists(statePath)) {
+        if (statePath != null && Files.exists(statePath)) {
+            try {
+                applyState(objectMapper.readValue(statePath.toFile(), StateSnapshot.class));
+            } catch (IOException e) {
+                log.warn("Failed to load feedback state from {}", statePath, e);
+            }
+        }
+
+        if (!mysqlStateStoreService.isActive()) {
             return;
         }
 
-        try {
-            StateSnapshot snapshot = objectMapper.readValue(statePath.toFile(), StateSnapshot.class);
-            records.clear();
-            if (snapshot != null && snapshot.getRecords() != null) {
-                records.addAll(snapshot.getRecords());
-            }
-        } catch (IOException e) {
-            log.warn("Failed to load feedback state from {}", statePath, e);
+        java.util.Optional<MysqlStateStoreService.FeedbackStateData> mysqlState = mysqlStateStoreService.loadFeedbackState();
+        if (mysqlState.isPresent()) {
+            applyState(fromMysqlState(mysqlState.get()));
+            persistLocalState();
+            return;
+        }
+
+        if (!records.isEmpty()) {
+            mysqlStateStoreService.saveFeedbackState(toMysqlState(new StateSnapshot(new ArrayList<>(records))));
         }
     }
 
     private void persistState() {
+        StateSnapshot snapshot = new StateSnapshot(new ArrayList<>(records));
+        persistLocalState(snapshot);
+        mysqlStateStoreService.saveFeedbackState(toMysqlState(snapshot));
+    }
+
+    private void persistLocalState() {
+        persistLocalState(new StateSnapshot(new ArrayList<>(records)));
+    }
+
+    private void persistLocalState(StateSnapshot snapshot) {
         if (statePath == null) {
             return;
         }
 
         try {
             objectMapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(statePath.toFile(), new StateSnapshot(new ArrayList<>(records)));
+                    .writeValue(statePath.toFile(), snapshot);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to persist feedback state", e);
         }
+    }
+
+    private void applyState(StateSnapshot snapshot) {
+        records.clear();
+        if (snapshot != null && snapshot.getRecords() != null) {
+            records.addAll(snapshot.getRecords());
+        }
+    }
+
+    private StateSnapshot fromMysqlState(MysqlStateStoreService.FeedbackStateData state) {
+        List<FeedbackRecord> mysqlRecords = state.getRecords() == null
+                ? List.of()
+                : state.getRecords().stream()
+                .map(record -> FeedbackRecord.builder()
+                        .id(record.getId())
+                        .userId(record.getUserId())
+                        .username(record.getUsername())
+                        .role(record.getRole())
+                        .module(record.getModule())
+                        .overallScore(record.getOverallScore())
+                        .accuracyScore(record.getAccuracyScore())
+                        .practicalityScore(record.getPracticalityScore())
+                        .fluencyScore(record.getFluencyScore())
+                        .comment(record.getComment())
+                        .createdAt(record.getCreatedAt())
+                        .build())
+                .toList();
+        return new StateSnapshot(mysqlRecords);
+    }
+
+    private MysqlStateStoreService.FeedbackStateData toMysqlState(StateSnapshot snapshot) {
+        List<MysqlStateStoreService.FeedbackRecordData> mysqlRecords = snapshot.getRecords() == null
+                ? List.of()
+                : snapshot.getRecords().stream()
+                .map(record -> new MysqlStateStoreService.FeedbackRecordData(
+                        record.getId(),
+                        record.getUserId(),
+                        record.getUsername(),
+                        record.getRole(),
+                        record.getModule(),
+                        record.getOverallScore(),
+                        record.getAccuracyScore(),
+                        record.getPracticalityScore(),
+                        record.getFluencyScore(),
+                        record.getComment(),
+                        record.getCreatedAt()
+                ))
+                .toList();
+        return new MysqlStateStoreService.FeedbackStateData(mysqlRecords);
     }
 
     private Path resolvePath(String configuredPath) {
@@ -209,6 +279,7 @@ public class FeedbackService {
     @NoArgsConstructor
     @AllArgsConstructor
     private static class StateSnapshot {
+        @Builder.Default
         private List<FeedbackRecord> records = new ArrayList<>();
     }
 

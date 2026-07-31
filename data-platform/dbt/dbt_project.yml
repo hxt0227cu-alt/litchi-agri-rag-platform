@@ -1,0 +1,11 @@
+name: litchi_analytics
+version: '1.0.0'
+config-version: 2
+profile: litchi_clickhouse
+model-paths: [models]
+models:
+  litchi_analytics:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

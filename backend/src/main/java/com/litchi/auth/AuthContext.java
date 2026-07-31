@@ -1,5 +1,6 @@
 package com.litchi.auth;
 
+import com.litchi.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 
 public final class AuthContext {
@@ -17,7 +18,7 @@ public final class AuthContext {
     public static AuthenticatedUser requireCurrentUser(HttpServletRequest request) {
         AuthenticatedUser user = getCurrentUser(request);
         if (user == null) {
-            throw new IllegalStateException("当前请求未登录。");
+            throw new UnauthorizedException("当前请求未登录。");
         }
         return user;
     }

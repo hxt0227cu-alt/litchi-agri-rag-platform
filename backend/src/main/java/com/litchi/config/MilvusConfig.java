@@ -15,7 +15,7 @@ public class MilvusConfig {
     @Value("${milvus.port}")
     private int milvusPort;
 
-    @Bean
+    @Bean(destroyMethod = "")
     public MilvusClientV2 milvusClient() {
         ConnectConfig connectConfig = ConnectConfig.builder()
                 .uri("http://" + milvusHost + ":" + milvusPort)

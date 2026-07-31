@@ -67,9 +67,39 @@ runs/
 # Build
 build/
 frontend/.test-dist/
+tmp-*.log
+tmp_*.ps1
+backend/tmp-*.log
 
 # Automation reports
 reports/auto-dev/
 reports/runtime/
 tasks/*.local.task.json
 .cache/
+
+# Portfolio publishing exclusions
+dabian/
+sleep202603-an/
+video/
+docs/*.doc
+docs/*.docx
+docs/*论文*
+docs/*答辩*
+docs/*毕设*
+docs/*汇报稿*
+docs/*常见提问*
+docs/*收尾*
+docs/*验收摘要*
+docs/*移动端验收*
+docs/*能力补强实施进度*
+docs/*剂量规则模块设计*
+docs/e-r图.md
+datasets/authority-rag/
+reports/rehearsal/
+reports/validation/*
+!reports/validation/20260326-150312/
+!reports/validation/20260326-150312/**
+!reports/validation/20260731-160911/
+!reports/validation/20260731-160911/**
+!reports/validation/20260731-162446/
+!reports/validation/20260731-162446/**

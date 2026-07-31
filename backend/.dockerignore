@@ -3,3 +3,10 @@ target
 .idea
 *.iml
 data
+*.log
+tmp-*
+.git
+.gitignore
+*.md
+!src/main/resources/demo-documents/*.md
+src/test

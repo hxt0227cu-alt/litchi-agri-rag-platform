@@ -1,5 +1,7 @@
 package com.litchi.controller;
 
+import com.litchi.auth.AuthRequired;
+import com.litchi.auth.RoleAllowed;
 import com.litchi.service.KnowledgeGraphService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/kg")
 @RequiredArgsConstructor
+@AuthRequired
+@RoleAllowed({"technician", "farmer"})
 public class KnowledgeGraphController {
 
     private final KnowledgeGraphService knowledgeGraphService;
@@ -28,7 +32,7 @@ public class KnowledgeGraphController {
         return ResponseEntity.ok(knowledgeGraphService.searchEntities(keyword, type));
     }
 
-    @GetMapping("/entity/{id}")
+    @GetMapping("/entities/{id}")
     public ResponseEntity<Map<String, Object>> detail(@PathVariable String id) {
         return ResponseEntity.ok(knowledgeGraphService.getEntityDetail(id));
     }
