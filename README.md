@@ -1,6 +1,6 @@
 # Litchi Copilot - 荔枝智能农技协同平台
 
-[![CI](https://github.com/hxt0227cu-alt/RAG-graduation/actions/workflows/ci.yml/badge.svg)](https://github.com/hxt0227cu-alt/RAG-graduation/actions/workflows/ci.yml)
+[![CI](https://github.com/hxt0227cu-alt/litchi-agri-rag-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/hxt0227cu-alt/litchi-agri-rag-platform/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-17-007396)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-6DB33F)
 ![Vue](https://img.shields.io/badge/Vue-3-42B883)
