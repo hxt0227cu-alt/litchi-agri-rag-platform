@@ -106,11 +106,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { consultationAPI, systemAPI } from '@/api'
-import LitchiHero3D from '@/components/LitchiHero3D.vue'
+const LitchiHero3D = defineAsyncComponent(() => import('@/components/LitchiHero3D.vue'))
 
 const router = useRouter()
 const consultations = ref<Array<{ status: string }>>([])

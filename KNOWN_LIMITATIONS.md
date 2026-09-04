@@ -8,7 +8,7 @@
 - Agent 运行持久化已完成全量拆分：主表 `platform_agent_runs` 结构化列 + 步骤表 `platform_agent_steps` + 审批表 `platform_agent_approvals`，并实现跨实例恢复（60s 周期扫描，超过 120s 未推进的非终态运行标记 `interrupted`；等待审批运行跨实例保留可继续决策）。写工具幂等已实现：Agent 审批写工具以运行 ID 为 `idempotencyKey`，`createPlan` 同键重复提交返回既有方案（synchronized 查重 + 幂等键持久化），并有单元测试覆盖重复审批/重复恢复场景。剩余限制：恢复采用"安全落地"语义——不自动续跑，超时阈值 120s 为启发式常量（可用 `app.agent.recover-stale-seconds` 调整）；MySQL 投影采用全量同步，未叠唯一索引，若未来改为 MySQL 主存储可加唯一索引形成双层防线。
 - 数据平台和可观测目录属于可部署骨架，不等同于已验证的生产高可用平台。
 - 模型不可用时 Planner 和 Synthesizer 会明确降级；降级输出不能作为真实模型质量结果。Policy Guard 为确定性规则拦截，可在降级模式下完整执行安全评测，但真实模型下的提示注入防御仍需额外验证。
-- 前端生产构建仍有 Element Plus 全量引入导致的超 600kB chunk 警告；Three.js 已单独分包（`vendor-three`）。后续可引入 `unplugin-vue-components` 做组件按需加载（依赖离线环境可用的 npm 网络）。
+- 前端生产构建已优化：Element Plus 改为按需引入（`unplugin-vue-components` + `ElementPlusResolver`，移除全量 `app.use(ElementPlus)`），原先 859kB 的 `vendor-element-plus` 全量 chunk 已消除（组件随页面/共享 chunk 拆分，模板实际使用 24 种 el- 组件 + ElMessage/ElMessageBox）；Three.js（`LitchiHero3D`）改为 `defineAsyncComponent` 异步加载，725kB 库本体仅在登录页/农户工作台需要时拉取，不再阻塞首屏；`vendor-vue` 557kB（gzip 187kB）为 vue 运行时 + vue-router + pinia 共享依赖。`npm run build`（vue-tsc 全量类型检查 + vite build）通过，`vite preview` 实测登录、路由守卫与 `/api` 代理均正常。剩余说明：rollup 仍对 725kB 的 `vendor-three` 报 chunk 体积提示，这是 three.js 库本体特性且已按需加载，非业务代码膨胀。
 - 当前演示账号密码只适合本机，生产部署必须更换并使用 Secret 管理。
 - 尚未开展真实用户研究；任何任务完成率、SUS、满意度和闭环率只能在完成研究后引用。
 - 真实模型检索评测（BGE-M3+reranker）已完成，Recall@5 提升至 100%（30/30）但 MRR 从本地基线 0.850 降至 0.778——语义检索找回全部正确证据，但 reranker 将部分正确证据排在 rank 3-5，排序需调优；该评测基于 SiliconFlow 免费 API，latency avg 739ms 含 API 往返，不代表本地部署性能。端到端引用准确率与问答质量仍未评测。

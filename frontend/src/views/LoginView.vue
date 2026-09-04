@@ -69,12 +69,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { defineAsyncComponent, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import { defaultRouteForRole } from '@/auth/access'
-import LitchiHero3D from '@/components/LitchiHero3D.vue'
+const LitchiHero3D = defineAsyncComponent(() => import('@/components/LitchiHero3D.vue'))
 import { useAuthStore } from '@/stores/auth'
 
 type Mode = 'login' | 'register'
