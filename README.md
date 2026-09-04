@@ -147,6 +147,25 @@ npm run dev
 > `POST /api/system/demo/seed-collaboration` 即可写入 1 条求助流转（farmer 提交、门店推进为已联系）和 1 条满意度反馈，
 > 使农户「我的求助」、门店「待处理求助 / 高频病症」和管理员「协同概况 / 反馈统计」都有内容可讲。重复调用会跳过已存在的求助。
 
+### 接入大模型（本地 Ollama / 云端 DeepSeek）
+
+平台默认通过 **Ollama** 提供本地模型（模型名用 `OLLAMA_CHAT_MODEL` 指定，默认 `qwen2.5:0.5b`）。本机没有 GPU 时，可直接切换到任意 **OpenAI 兼容**的云端大模型（如 DeepSeek），只改启动前的环境变量即可，无需改代码：
+
+```powershell
+$env:APP_LLM_PROVIDER = "openai-compatible"   # ollama | openai-compatible | vllm
+$env:APP_LLM_BASE_URL  = "https://api.deepseek.com"
+$env:APP_LLM_API_KEY   = "<你的 API Key>"
+$env:OLLAMA_CHAT_MODEL = "deepseek-v4-flash"  # 或 deepseek-v4-pro
+```
+
+几点说明：
+
+- `APP_LLM_PROVIDER=openai-compatible` 时，系统按 OpenAI `chat/completions` 协议调用 `APP_LLM_BASE_URL`；`/v1/models` 健康探测与请求均携带 `Bearer` 认证头。
+- 若模型为**推理模型**（如 DeepSeek v4，答案可能写在 `reasoning_content` 而非 `content`），系统会自动回退读取，保证综合结论不因思维链截断而丢失。
+- 请求体强制 UTF-8（`application/json; charset=UTF-8`），避免中文乱码。
+- 最大生成长度可用 `num-predict`（`application-dev.yml` 中默认 2048）调整；推理模型需预留足够 token 供思维链后输出正式结论。
+- **密钥安全**：`APP_LLM_API_KEY` 等环境变量仅供本地运行，请勿写入会提交到仓库的配置文件；本地启动脚本 `benchmarks/start-mysql-backend.bat` 已在 `.gitignore` 中，可将密钥保存在该文件里而不会泄漏到公开仓库。
+
 ### 完整 Compose
 
 ```powershell
