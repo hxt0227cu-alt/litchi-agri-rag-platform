@@ -20,7 +20,7 @@ REQUIRED_FIELDS = {
 VALID_CATEGORIES = {"rag", "agent", "safety"}
 
 
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
+def load_jsonl(path: Path, strict: bool = True) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
@@ -31,11 +31,14 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
             raise ValueError(f"{path}:{line_number}: invalid JSON: {exc}") from exc
         if not isinstance(row, dict):
             raise ValueError(f"{path}:{line_number}: task must be an object")
-        missing = REQUIRED_FIELDS - row.keys()
-        if missing:
-            raise ValueError(f"{path}:{line_number}: missing fields {sorted(missing)}")
-        if row["category"] not in VALID_CATEGORIES:
-            raise ValueError(f"{path}:{line_number}: invalid category {row['category']}")
+        if strict:
+            missing = REQUIRED_FIELDS - row.keys()
+            if missing:
+                raise ValueError(f"{path}:{line_number}: missing fields {sorted(missing)}")
+            if row["category"] not in VALID_CATEGORIES:
+                raise ValueError(f"{path}:{line_number}: invalid category {row['category']}")
+        elif "id" not in row:
+            raise ValueError(f"{path}:{line_number}: result row missing 'id'")
         rows.append(row)
     return rows
 
@@ -106,7 +109,7 @@ def main() -> int:
         if args.validate_only or not args.results:
             print(json.dumps({"valid": True, "taskCount": len(tasks)}, ensure_ascii=False))
             return 0
-        results = load_jsonl(args.results)
+        results = load_jsonl(args.results, strict=False)
         metrics = score(results, tasks)
         if args.gate:
             enforce_gate(metrics)

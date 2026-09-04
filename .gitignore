@@ -77,6 +77,22 @@ reports/runtime/
 tasks/*.local.task.json
 .cache/
 
+# Local-only helper scripts & caches (must never be published)
+.workbuddy/
+benchmarks/start-mysql-backend.bat
+benchmarks/.k6-token
+benchmarks/.real_model_cache.json
+benchmarks/_scan_secrets.py
+tools/
+docs/qa_resume_tables_*/
+docs/build_resume_stack_tables.py
+datasets/evaluation/*.bak
+benchmarks/dbg_sources.py
+benchmarks/fix_evidence_ids.py
+benchmarks/patch_document_service.py
+benchmarks/patch_llm_service.py
+benchmarks/probe_chat.py
+
 # Portfolio publishing exclusions
 dabian/
 sleep202603-an/
@@ -101,5 +117,11 @@ reports/validation/*
 !reports/validation/20260326-150312/**
 !reports/validation/20260731-160911/
 !reports/validation/20260731-160911/**
+!reports/validation/20260731-162446/
+!reports/validation/20260731-162446/**
+!reports/validation/20260904-concurrency-fix/
+!reports/validation/20260904-concurrency-fix/**
+!reports/validation/20260904-real-model/
+!reports/validation/20260904-real-model/**
 !reports/validation/20260731-162446/
 !reports/validation/20260731-162446/**

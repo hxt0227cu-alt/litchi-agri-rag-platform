@@ -1,0 +1,4 @@
+CREATE DATABASE IF NOT EXISTS litchi_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'litchi'@'%' IDENTIFIED BY 'litchi123456';
+GRANT ALL PRIVILEGES ON litchi_platform.* TO 'litchi'@'%';
+FLUSH PRIVILEGES;

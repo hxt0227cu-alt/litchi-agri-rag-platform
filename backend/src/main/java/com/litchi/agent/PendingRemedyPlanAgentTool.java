@@ -48,6 +48,11 @@ public class PendingRemedyPlanAgentTool implements AgentTool {
 
     @Override
     public Map<String, Object> execute(String query, AuthenticatedUser user) {
+        return execute(query, user, null);
+    }
+
+    @Override
+    public Map<String, Object> execute(String query, AuthenticatedUser user, String runId) {
         SaveRemedyPlanRequest request = new SaveRemedyPlanRequest();
         request.setTitle("Agent 待审核处置方案");
         request.setDiseaseTag("Agent 研判问题");
@@ -58,6 +63,8 @@ public class PendingRemedyPlanAgentTool implements AgentTool {
         request.setRiskNotes(List.of("该方案由 Agent 生成，必须人工复核，不构成精确处方"));
         request.setInventoryStatus("待确认");
         request.setActive(false);
+        // 以运行 ID 作为幂等键：同一运行被重复审批/重复恢复时只落一条方案
+        request.setIdempotencyKey(runId == null || runId.isBlank() ? null : runId);
         var saved = collaborationService.createPlan(user, request);
         return Map.of("saved", true, "planId", saved.getId(), "title", saved.getTitle());
     }

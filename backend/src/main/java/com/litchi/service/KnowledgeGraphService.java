@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 
+import jakarta.annotation.PostConstruct;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,16 @@ public class KnowledgeGraphService {
 
     @Value("${app.resilience.dependency-retry-delay-ms:300000}")
     private long dependencyRetryDelayMs;
+
+    @PostConstruct
+    public void warmUp() {
+        try {
+            boolean available = isNeo4jAvailable();
+            log.info("Neo4j availability at startup: available={}", available);
+        } catch (Exception e) {
+            log.warn("Neo4j startup availability check failed, circuit will open on first call", e);
+        }
+    }
 
     public Map<String, Object> getVisualizationData(String keyword) {
         if (!isNeo4jAvailable()) {

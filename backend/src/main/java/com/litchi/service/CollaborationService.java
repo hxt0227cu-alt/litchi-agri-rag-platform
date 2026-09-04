@@ -108,6 +108,19 @@ public class CollaborationService {
     }
 
     public synchronized RemedyPlanDto createPlan(AuthenticatedUser user, SaveRemedyPlanRequest request) {
+        String idempotencyKey = request == null ? null : trim(request.getIdempotencyKey());
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            RemedyPlanRecord existing = plans.stream()
+                    .filter(plan -> idempotencyKey.equals(plan.getIdempotencyKey()))
+                    .filter(plan -> isOwnedBy(user, plan.getOwnerId(), plan.getOwnerUsername()))
+                    .findFirst()
+                    .orElse(null);
+            if (existing != null) {
+                log.info("Remedy plan idempotency hit key={} planId={} for user={}",
+                        idempotencyKey, existing.getId(), user.username());
+                return toPlanDto(existing);
+            }
+        }
         StoreProfileRecord profile = ensureShopProfile(user);
         RemedyPlanRecord record = buildPlanRecord(null, profile, user, request);
         plans.add(record);
@@ -403,6 +416,7 @@ public class CollaborationService {
         record.setRiskNotes(normalizeList(request.getRiskNotes(), 8));
         record.setInventoryStatus(fallbackText(request.getInventoryStatus(), "有现货"));
         record.setActive(request.getActive() == null || request.getActive());
+        record.setIdempotencyKey(trim(request.getIdempotencyKey()));
         record.setUpdatedAt(now());
         if (record.getCreatedAt() == null) {
             record.setCreatedAt(record.getUpdatedAt());
@@ -592,6 +606,7 @@ public class CollaborationService {
                 .active(record.isActive())
                 .createdAt(record.getCreatedAt())
                 .updatedAt(record.getUpdatedAt())
+                .idempotencyKey(record.getIdempotencyKey())
                 .build();
     }
 
@@ -707,6 +722,7 @@ public class CollaborationService {
                         .active(plan.isActive())
                         .createdAt(plan.getCreatedAt())
                         .updatedAt(plan.getUpdatedAt())
+                        .idempotencyKey(plan.getIdempotencyKey())
                         .build())
                 .toList();
 
@@ -774,7 +790,8 @@ public class CollaborationService {
                         plan.getInventoryStatus(),
                         plan.isActive(),
                         plan.getCreatedAt(),
-                        plan.getUpdatedAt()
+                        plan.getUpdatedAt(),
+                        plan.getIdempotencyKey()
                 ))
                 .toList();
 
@@ -1126,6 +1143,7 @@ public class CollaborationService {
         private boolean active;
         private String createdAt;
         private String updatedAt;
+        private String idempotencyKey;
     }
 
     @Data

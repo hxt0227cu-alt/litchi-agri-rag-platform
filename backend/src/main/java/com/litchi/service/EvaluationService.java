@@ -42,6 +42,8 @@ public class EvaluationService {
     private static final int MAX_ACTIVE_FEEDBACK_RULES = 4;
     private static final int MANUAL_FEEDBACK_WEIGHT = 5;
     private static final int AUTO_FEEDBACK_WEIGHT = 1;
+    /** 自动反馈规则 TTL：chat 热路径避免每次全量重算全部历史聊天记录。 */
+    private static final long FEEDBACK_RULES_TTL_MS = 30_000L;
     private static final String RULE_SAFETY = "safety";
     private static final String RULE_KNOWLEDGE = "knowledge";
     private static final String RULE_ACCURACY = "accuracy";
@@ -69,6 +71,9 @@ public class EvaluationService {
     );
     private static final List<String> NOTE_SAFETY_TRIGGERS = List.of("安全", "药", "倍", "风险", "间隔期");
     private static final List<String> NOTE_KNOWLEDGE_TRIGGERS = List.of("知识库", "资料", "证据", "来源", "文档", "补充");
+
+    private volatile List<EvaluationStatsResponse.ActiveFeedbackRule> cachedActiveFeedbackRules = List.of();
+    private volatile long feedbackRulesCacheEpochMs;
     private static final List<String> NOTE_ACCURACY_TRIGGERS = List.of("检索", "提示词", "核心", "反问", "跑题", "不准");
     private static final List<String> NOTE_STRUCTURE_TRIGGERS = List.of("结构", "完整", "可执行", "下一步", "三段", "四段");
 
@@ -92,6 +97,35 @@ public class EvaluationService {
             throw new IllegalStateException("Failed to prepare evaluation state directory", e);
         }
         loadState();
+        // 后台周期预热反馈规则缓存：chat 热路径永远读缓存，不再在请求线程里做全量评分重算。
+        // TTL 期内由调度线程每 TTL/2 刷新一次，避免并发下 TTL 过期瞬间所有请求同时触发全量重建。
+        java.util.concurrent.ScheduledExecutorService refresher =
+                java.util.concurrent.Executors.newSingleThreadScheduledExecutor(runnable -> {
+                    Thread thread = new Thread(runnable, "eval-feedback-refresher");
+                    thread.setDaemon(true);
+                    return thread;
+                });
+        refresher.scheduleAtFixedRate(
+                this::refreshFeedbackRulesCache,
+                FEEDBACK_RULES_TTL_MS / 2,
+                FEEDBACK_RULES_TTL_MS / 2,
+                java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 后台线程专用：全量重算反馈规则并写回缓存。失败时保留旧缓存（不中断线上请求）。
+     */
+    private synchronized void refreshFeedbackRulesCache() {
+        try {
+            List<EvaluationStatsResponse.ActiveFeedbackRule> computed =
+                    buildActiveFeedbackRules(buildEvaluationRecords());
+            cachedActiveFeedbackRules = computed;
+            feedbackRulesCacheEpochMs = System.currentTimeMillis();
+            log.debug("Evaluation feedback rules cache refreshed: {} rules, {} records",
+                    computed.size(), chatHistoryService.getAllHistoryForEvaluation().size());
+        } catch (Exception e) {
+            log.warn("Failed to refresh evaluation feedback rules cache, keeping previous cache", e);
+        }
     }
 
     public synchronized PageResponse<EvaluationRecordDto> listQuestions(String type, Boolean evaluated, int page, int size) {
@@ -224,8 +258,24 @@ public class EvaluationService {
                 .build();
     }
 
-    public synchronized List<EvaluationStatsResponse.ActiveFeedbackRule> getActiveFeedbackRules() {
-        return buildActiveFeedbackRules(buildEvaluationRecords());
+    public List<EvaluationStatsResponse.ActiveFeedbackRule> getActiveFeedbackRules() {
+        // 热路径纯缓存读：正常情况缓存由后台刷新线程维护。
+        List<EvaluationStatsResponse.ActiveFeedbackRule> cached = cachedActiveFeedbackRules;
+        if (cached != null && System.currentTimeMillis() - feedbackRulesCacheEpochMs < FEEDBACK_RULES_TTL_MS * 3) {
+            return cached;
+        }
+        // 兜底：调度线程尚未首刷（或长期失败）时，由单个请求在锁内补齐，避免并发重算风暴。
+        synchronized (this) {
+            cached = cachedActiveFeedbackRules;
+            if (cached != null && System.currentTimeMillis() - feedbackRulesCacheEpochMs < FEEDBACK_RULES_TTL_MS * 3) {
+                return cached;
+            }
+            List<EvaluationStatsResponse.ActiveFeedbackRule> computed =
+                    buildActiveFeedbackRules(buildEvaluationRecords());
+            cachedActiveFeedbackRules = computed;
+            feedbackRulesCacheEpochMs = System.currentTimeMillis();
+            return computed;
+        }
     }
 
     private List<EvaluationRecordDto> buildEvaluationRecords() {

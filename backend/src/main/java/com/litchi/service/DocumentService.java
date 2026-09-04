@@ -51,6 +51,10 @@ public class DocumentService {
     private final SimpleEmbeddingService simpleEmbeddingService;
     private final VectorSearchService vectorSearchService;
     private final DemoContentService demoContentService;
+    private final BM25Scorer bm25Scorer;
+
+    @Value("${app.retrieval.strategy:hybrid}")
+    private String retrievalStrategy;
 
     @Value("${app.document.storage-dir:data/documents}")
     private String storageDir;
@@ -609,6 +613,69 @@ public class DocumentService {
     }
 
     private List<ChunkMatch> searchFromLocalChunks(String question, float[] queryVector, int topK) {
+        String strategy = normalizeStrategy();
+        if ("lexical".equals(strategy)) {
+            return lexicalLocalSearch(question, queryVector, topK);
+        }
+
+        List<String> searchableDocs = chunks.stream().map(this::searchableText).toList();
+        BM25Scorer.CorpusStats bm25Stats = bm25Scorer.buildStats(searchableDocs);
+        int size = chunks.size();
+        double[] bm25Scores = new double[size];
+        float[] vectorScores = new float[size];
+        for (int i = 0; i < size; i++) {
+            bm25Scores[i] = bm25Scorer.score(question, searchableDocs.get(i), bm25Stats);
+            vectorScores[i] = similarity(queryVector, chunks.get(i).getVector());
+        }
+
+        List<ChunkMatch> matches = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            StoredChunk chunk = chunks.get(i);
+            float score = fusedScore(strategy, question, chunk, vectorScores[i], bm25Scores[i]);
+            matches.add(ChunkMatch.builder()
+                    .documentId(chunk.getDocumentId())
+                    .title(chunk.getTitle())
+                    .content(chunk.getContent())
+                    .source(chunk.getSource())
+                    .page(chunk.getPage())
+                    .score(score)
+                    .build());
+        }
+        return matches.stream()
+                .filter(match -> !isUnusableMatch(match))
+                .filter(match -> match.getScore() > 0)
+                .sorted(Comparator.comparing(ChunkMatch::getScore).reversed())
+                .limit(topK)
+                .toList();
+    }
+
+    private String normalizeStrategy() {
+        return retrievalStrategy == null ? "hybrid" : retrievalStrategy.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Searchable text for BM25. The source name and title are repeated so that
+     * a query term hitting the filename or title contributes more term
+     * frequency than a plain body occurrence.
+     */
+    private String searchableText(StoredChunk chunk) {
+        String source = chunk.getSource() == null ? "" : chunk.getSource();
+        String title = chunk.getTitle() == null ? "" : chunk.getTitle();
+        return source + " " + title + " " + source + " " + title + " " + chunk.getContent();
+    }
+
+    /** Combines the configured retrieval signals into a comparable score. */
+    private float fusedScore(String strategy, String question, StoredChunk chunk, float vectorScore, double bm25Score) {
+        float lexical = lexicalBoost(question, chunk);
+        return switch (strategy) {
+            case "bm25" -> (float) BM25Scorer.normalize(bm25Score);
+            case "vector" -> vectorScore;
+            default -> vectorScore + lexical + (float) BM25Scorer.normalize(bm25Score);
+        };
+    }
+
+    /** Legacy lexical retrieval: cosine similarity plus domain-term boost, no BM25. */
+    private List<ChunkMatch> lexicalLocalSearch(String question, float[] queryVector, int topK) {
         return chunks.stream()
                 .map(chunk -> ChunkMatch.builder()
                         .documentId(chunk.getDocumentId())
@@ -624,6 +691,7 @@ public class DocumentService {
                 .limit(topK)
                 .toList();
     }
+
 
     private List<ChunkMatch> rerankMatches(String question, List<ChunkMatch> matches, int topK) {
         List<ChunkMatch> ranked = matches.stream()
@@ -705,7 +773,7 @@ public class DocumentService {
         String normalized = question.trim();
         String[] domainTerms = {
                 "炭疽病", "炭疽", "霜疫霉病", "霜疫病", "霜疫", "桂味", "妃子笑", "花果期", "花穗期",
-                "幼果期", "雨季", "阴雨", "蒂蛀虫", "荔枝蝽", "冬季清园", "清园", "保果", "巡园"
+                "幼果期", "雨季", "阴雨", "蒂蛀虫", "荔枝蝽", "冬季清园", "清园", "保果", "巡园", "绿色", "监测"
         };
         for (String domainTerm : domainTerms) {
             if (normalized.contains(domainTerm)) {

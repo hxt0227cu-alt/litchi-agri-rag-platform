@@ -26,6 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -165,9 +168,11 @@ public class MysqlStateStoreService {
                 is_active BOOLEAN NOT NULL,
                 created_at VARCHAR(64) NOT NULL,
                 updated_at VARCHAR(64) NOT NULL,
+                idempotency_key VARCHAR(64) NULL,
                 INDEX idx_platform_remedy_plans_shop_id (shop_id),
                 INDEX idx_platform_remedy_plans_disease_tag (disease_tag),
-                INDEX idx_platform_remedy_plans_owner_username (owner_username)
+                INDEX idx_platform_remedy_plans_owner_username (owner_username),
+                INDEX idx_platform_remedy_plans_idempotency_key (idempotency_key)
             ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
             """;
 
@@ -218,12 +223,70 @@ public class MysqlStateStoreService {
                 status_name VARCHAR(32) NOT NULL,
                 goal LONGTEXT NOT NULL,
                 payload_json LONGTEXT NOT NULL,
+                started_at VARCHAR(64) NULL,
+                duration_ms BIGINT NOT NULL DEFAULT 0,
+                degraded BOOLEAN NOT NULL DEFAULT FALSE,
+                risk_level VARCHAR(16) NULL,
+                review_required BOOLEAN NOT NULL DEFAULT FALSE,
                 created_at VARCHAR(64) NOT NULL,
                 updated_at VARCHAR(64) NOT NULL,
                 INDEX idx_platform_agent_runs_owner_updated (owner_id, updated_at),
+                INDEX idx_platform_agent_runs_status_updated (status_name, updated_at),
                 INDEX idx_platform_agent_runs_tenant_updated (tenant_id, updated_at)
             ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
             """;
+
+    /**
+     * 步骤表：每次 Agent 运行执行的结构化步骤轨迹，与主表 1:N。
+     * 热路径（chat/agent 高频保存）不写本表，仅在运行进入终态或等待审批时整体替换一次。
+     */
+    private static final String CREATE_AGENT_STEPS_SQL = """
+            CREATE TABLE IF NOT EXISTS platform_agent_steps (
+                step_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                run_id VARCHAR(64) NOT NULL,
+                owner_id VARCHAR(64) NOT NULL,
+                sequence_no INT NOT NULL,
+                tool_name VARCHAR(64) NOT NULL,
+                reason_text VARCHAR(512) NULL,
+                status_name VARCHAR(32) NOT NULL,
+                duration_ms BIGINT NOT NULL DEFAULT 0,
+                output_json LONGTEXT NULL,
+                error_message VARCHAR(512) NULL,
+                created_at VARCHAR(64) NOT NULL,
+                UNIQUE KEY uk_agent_steps_run_seq (run_id, sequence_no),
+                INDEX idx_agent_steps_run (run_id)
+            ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+            """;
+
+    /**
+     * 审批表：等待人工审批的运行，每 run 一行（pending/approved/rejected），跨实例可见、可继续决策。
+     */
+    private static final String CREATE_AGENT_APPROVALS_SQL = """
+            CREATE TABLE IF NOT EXISTS platform_agent_approvals (
+                approval_id VARCHAR(64) NOT NULL PRIMARY KEY,
+                run_id VARCHAR(64) NOT NULL,
+                owner_id VARCHAR(64) NOT NULL,
+                tenant_id VARCHAR(64) NOT NULL DEFAULT 'tenant-default',
+                pending_tool VARCHAR(64) NOT NULL,
+                action_json LONGTEXT NOT NULL,
+                decision_name VARCHAR(16) NOT NULL DEFAULT 'pending',
+                decided_by VARCHAR(64) NULL,
+                decided_at VARCHAR(64) NULL,
+                created_at VARCHAR(64) NOT NULL,
+                updated_at VARCHAR(64) NOT NULL,
+                UNIQUE KEY uk_agent_approvals_run (run_id),
+                INDEX idx_agent_approvals_pending (decision_name, updated_at)
+            ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+            """;
+
+    /** 存量 platform_agent_runs 表补充结构化列（幂等，重复列自动跳过）。 */
+    private static final String[] AGENT_COLUMN_MIGRATIONS = {
+            "ALTER TABLE platform_agent_runs ADD COLUMN started_at VARCHAR(64) NULL",
+            "ALTER TABLE platform_agent_runs ADD COLUMN duration_ms BIGINT NOT NULL DEFAULT 0",
+            "ALTER TABLE platform_agent_runs ADD COLUMN degraded BOOLEAN NOT NULL DEFAULT FALSE",
+            "ALTER TABLE platform_agent_runs ADD COLUMN risk_level VARCHAR(16) NULL",
+            "ALTER TABLE platform_agent_runs ADD COLUMN review_required BOOLEAN NOT NULL DEFAULT FALSE"
+    };
 
     private static final String CREATE_TENANTS_SQL = """
             CREATE TABLE IF NOT EXISTS platform_tenants (
@@ -277,6 +340,11 @@ public class MysqlStateStoreService {
             "ALTER TABLE platform_feedback_records ADD COLUMN tenant_id VARCHAR(64) NOT NULL DEFAULT 'tenant-default'"
     };
 
+    private static final String[] IDEMPOTENCY_COLUMN_MIGRATIONS = {
+            "ALTER TABLE platform_remedy_plans ADD COLUMN idempotency_key VARCHAR(64) NULL",
+            "ALTER TABLE platform_remedy_plans ADD INDEX idx_platform_remedy_plans_idempotency_key (idempotency_key)"
+    };
+
     private static final String SELECT_USERS_SQL = """
             SELECT user_id, username, password_hash, password_salt, role_name, created_at
             FROM platform_users
@@ -324,7 +392,8 @@ public class MysqlStateStoreService {
 
     private static final String SELECT_REMEDY_PLANS_SQL = """
             SELECT plan_id, shop_id, owner_id, owner_username, shop_name, title, disease_tag, stage_tag, summary,
-                   products_json, usage_tips_json, risk_notes_json, inventory_status, is_active, created_at, updated_at
+                   products_json, usage_tips_json, risk_notes_json, inventory_status, is_active, created_at, updated_at,
+                   idempotency_key
             FROM platform_remedy_plans
             ORDER BY updated_at ASC, plan_id ASC
             """;
@@ -350,6 +419,8 @@ public class MysqlStateStoreService {
     private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {
     };
 
+    private static final long RECONNECT_INTERVAL_MS = 15_000L;
+
     private final ObjectMapper objectMapper;
 
     @Value("${app.mysql.enabled:false}")
@@ -365,6 +436,8 @@ public class MysqlStateStoreService {
     private String password;
 
     private volatile boolean active;
+
+    private volatile ScheduledExecutorService reconnectScheduler;
 
     @PostConstruct
     public void init() {
@@ -382,6 +455,45 @@ public class MysqlStateStoreService {
         } catch (Exception e) {
             active = false;
             log.warn("Failed to initialize MySQL structured storage, local state files will stay active", e);
+            scheduleReconnect();
+        }
+    }
+
+    /**
+     * WSL localhost forwarding is flaky in the dev environment, so a one-shot
+     * init() that permanently degrades on a transient failure is not acceptable.
+     * A daemon periodically retries schema readiness and flips active back on.
+     */
+    private void scheduleReconnect() {
+        if (reconnectScheduler != null) {
+            return;
+        }
+        synchronized (this) {
+            if (reconnectScheduler != null) {
+                return;
+            }
+            reconnectScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "mysql-reconnector");
+                thread.setDaemon(true);
+                return thread;
+            });
+            reconnectScheduler.scheduleWithFixedDelay(
+                    this::tryReconnect, RECONNECT_INTERVAL_MS, RECONNECT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+            log.info("MySQL reconnect scheduler started (every {} ms)", RECONNECT_INTERVAL_MS);
+        }
+    }
+
+    private void tryReconnect() {
+        if (active || !enabled || url == null || url.isBlank()) {
+            return;
+        }
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            ensureSchema();
+            active = true;
+            log.info("MySQL structured storage reconnected: {}", sanitizeUrl(url));
+        } catch (Exception e) {
+            log.debug("MySQL reconnect attempt failed, will retry later", e);
         }
     }
 
@@ -395,9 +507,12 @@ public class MysqlStateStoreService {
         }
         String now = response.getStartedAt() == null ? java.time.Instant.now().toString() : response.getStartedAt();
         String sql = """
-                INSERT INTO platform_agent_runs (run_id, owner_id, tenant_id, status_name, goal, payload_json, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE status_name = VALUES(status_name), payload_json = VALUES(payload_json), updated_at = VALUES(updated_at)
+                INSERT INTO platform_agent_runs (run_id, owner_id, tenant_id, status_name, goal, payload_json,
+                    started_at, duration_ms, degraded, risk_level, review_required, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE status_name = VALUES(status_name), payload_json = VALUES(payload_json),
+                    started_at = VALUES(started_at), duration_ms = VALUES(duration_ms), degraded = VALUES(degraded),
+                    risk_level = VALUES(risk_level), review_required = VALUES(review_required), updated_at = VALUES(updated_at)
                 """;
         try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, response.getRunId());
@@ -407,11 +522,162 @@ public class MysqlStateStoreService {
             statement.setString(5, response.getGoal());
             statement.setString(6, payloadJson);
             statement.setString(7, now);
-            statement.setString(8, java.time.Instant.now().toString());
+            statement.setLong(8, response.getDurationMs());
+            statement.setBoolean(9, response.isDegraded());
+            statement.setString(10, response.getRiskLevel());
+            statement.setBoolean(11, response.isReviewRequired());
+            statement.setString(12, now);
+            statement.setString(13, java.time.Instant.now().toString());
             statement.executeUpdate();
         } catch (Exception exception) {
             deactivate(exception, "save agent run");
         }
+    }
+
+    /**
+     * 整体替换某运行的步骤轨迹（终态/等待审批时调用，步骤数 ≤ 4，低频）。
+     * 不做逐条增量更新，避免热路径多一次往返；正确性由"整体替换"保证。
+     */
+    public synchronized void syncAgentRunSteps(String ownerId, String runId, java.util.List<AgentRunResponse.Step> steps, String updatedAt) {
+        if (!active) {
+            return;
+        }
+        try (Connection connection = openConnection()) {
+            try (PreparedStatement delete = connection.prepareStatement("DELETE FROM platform_agent_steps WHERE run_id = ?")) {
+                delete.setString(1, runId);
+                delete.executeUpdate();
+            }
+            String insertSql = """
+                    INSERT INTO platform_agent_steps (run_id, owner_id, sequence_no, tool_name, reason_text,
+                        status_name, duration_ms, output_json, error_message, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """;
+            for (AgentRunResponse.Step step : steps) {
+                try (PreparedStatement insert = connection.prepareStatement(insertSql)) {
+                    insert.setString(1, runId);
+                    insert.setString(2, ownerId);
+                    insert.setInt(3, step.getSequence());
+                    insert.setString(4, step.getTool());
+                    insert.setString(5, step.getReason());
+                    insert.setString(6, step.getStatus());
+                    insert.setLong(7, step.getDurationMs());
+                    insert.setString(8, step.getOutput() == null ? null : objectMapper.writeValueAsString(step.getOutput()));
+                    insert.setString(9, step.getError());
+                    insert.setString(10, updatedAt);
+                    insert.executeUpdate();
+                }
+            }
+        } catch (Exception exception) {
+            deactivate(exception, "sync agent steps");
+        }
+    }
+
+    /** 登记等待审批动作（幂等，按 run 一行 upsert，保持 pending）。 */
+    public synchronized void saveAgentRunApproval(String runId, String ownerId, String pendingTool, String actionJson) {
+        if (!active) {
+            return;
+        }
+        String now = java.time.Instant.now().toString();
+        String sql = """
+                INSERT INTO platform_agent_approvals (approval_id, run_id, owner_id, tenant_id, pending_tool, action_json,
+                    decision_name, decided_by, decided_at, created_at, updated_at)
+                VALUES (?, ?, ?, 'tenant-default', ?, ?, 'pending', NULL, NULL, ?, ?)
+                ON DUPLICATE KEY UPDATE pending_tool = VALUES(pending_tool), action_json = VALUES(action_json),
+                    decision_name = 'pending', decided_by = NULL, decided_at = NULL, updated_at = VALUES(updated_at)
+                """;
+        try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, "apr_" + runId);
+            statement.setString(2, runId);
+            statement.setString(3, ownerId);
+            statement.setString(4, pendingTool);
+            statement.setString(5, actionJson);
+            statement.setString(6, now);
+            statement.setString(7, now);
+            statement.executeUpdate();
+        } catch (Exception exception) {
+            deactivate(exception, "save agent approval");
+        }
+    }
+
+    /** 记录审批决策（approve/reject），供审计与跨实例决策追踪。 */
+    public synchronized void decideAgentRunApproval(String runId, String decision, String decidedBy) {
+        if (!active) {
+            return;
+        }
+        String now = java.time.Instant.now().toString();
+        String sql = "UPDATE platform_agent_approvals SET decision_name = ?, decided_by = ?, decided_at = ?, updated_at = ? WHERE run_id = ?";
+        try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, decision);
+            statement.setString(2, decidedBy);
+            statement.setString(3, now);
+            statement.setString(4, now);
+            statement.setString(5, runId);
+            statement.executeUpdate();
+        } catch (Exception exception) {
+            deactivate(exception, "decide agent approval");
+        }
+    }
+
+    /** 按所有者列出运行（按更新时间倒序），供重启/跨实例后的可见性与恢复使用。 */
+    public synchronized java.util.List<AgentRunResponse> listAgentRuns(String ownerId, Integer limit, String statusName) {
+        if (!active) {
+            return List.of();
+        }
+        String sql = "SELECT run_id, payload_json FROM platform_agent_runs WHERE owner_id = ?"
+                + (statusName != null && !statusName.isBlank() ? " AND status_name = ?" : "")
+                + " ORDER BY updated_at DESC LIMIT ?";
+        java.util.List<AgentRunResponse> result = new ArrayList<>();
+        try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            int index = 1;
+            statement.setString(index++, ownerId);
+            if (statusName != null && !statusName.isBlank()) {
+                statement.setString(index++, statusName);
+            }
+            statement.setInt(index, limit == null ? 50 : Math.max(1, Math.min(limit, 200)));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    try {
+                        AgentRunResponse response = objectMapper.readValue(resultSet.getString("payload_json"), AgentRunResponse.class);
+                        if (response != null) {
+                            result.add(response);
+                        }
+                    } catch (Exception ignored) {
+                        // 单行反序列化失败只跳过该行，不影响列表整体。
+                    }
+                }
+            }
+        } catch (Exception exception) {
+            deactivate(exception, "list agent runs");
+        }
+        return result;
+    }
+
+    /** 扫描非终态且可能已失去推进者的运行（created/planning/running），用于跨实例恢复标记。 */
+    public synchronized java.util.List<AgentRunRow> scanRecoverableAgentRuns() {
+        if (!active) {
+            return List.of();
+        }
+        String sql = "SELECT run_id, owner_id, status_name, updated_at FROM platform_agent_runs "
+                + "WHERE status_name IN ('created', 'planning', 'running')";
+        java.util.List<AgentRunRow> result = new ArrayList<>();
+        try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                result.add(new AgentRunRow(
+                        resultSet.getString("run_id"),
+                        resultSet.getString("owner_id"),
+                        resultSet.getString("status_name"),
+                        resultSet.getString("updated_at")
+                ));
+            }
+        } catch (Exception exception) {
+            deactivate(exception, "scan recoverable agent runs");
+        }
+        return result;
+    }
+
+    /** 运行行快照（恢复扫描用）。 */
+    public record AgentRunRow(String runId, String ownerId, String statusName, String updatedAt) {
     }
 
     public synchronized Optional<String> loadAgentRun(String ownerId, String runId) {
@@ -632,6 +898,38 @@ public class MysqlStateStoreService {
         } catch (Exception e) {
             deactivate(e, "load chat history state");
             return Optional.empty();
+        }
+    }
+
+    /**
+     * 增量追加聊天记录（异步批量落盘使用）：不做全表删除，INSERT IGNORE 幂等。
+     * 高并发下避免 saveChatHistoryState 的"DELETE + 全量重插"写放大。
+     */
+    public synchronized void appendChatMessages(List<ChatMessageData> messages) {
+        if (!active || messages == null || messages.isEmpty()) {
+            return;
+        }
+        String sql = """
+                INSERT IGNORE INTO platform_chat_messages
+                (message_id, user_id, session_id, question, answer, sources_json, knowledge_graph_json, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+        try (Connection connection = openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (ChatMessageData record : messages) {
+                statement.setString(1, record.getId());
+                statement.setString(2, record.getUserId());
+                statement.setString(3, record.getSessionId());
+                statement.setString(4, record.getQuestion());
+                statement.setString(5, record.getAnswer());
+                statement.setString(6, writeJson(record.getSources()));
+                statement.setString(7, writeJson(record.getKnowledgeGraph()));
+                statement.setString(8, record.getCreatedAt());
+                statement.addBatch();
+            }
+            statement.executeBatch();
+        } catch (Exception exception) {
+            deactivate(exception, "append chat messages");
         }
     }
 
@@ -922,7 +1220,8 @@ public class MysqlStateStoreService {
                             resultSet.getString("inventory_status"),
                             resultSet.getBoolean("is_active"),
                             resultSet.getString("created_at"),
-                            resultSet.getString("updated_at")
+                            resultSet.getString("updated_at"),
+                            resultSet.getString("idempotency_key")
                     ));
                 }
             }
@@ -1000,8 +1299,9 @@ public class MysqlStateStoreService {
                 try (PreparedStatement statement = connection.prepareStatement("""
                         INSERT INTO platform_remedy_plans
                         (plan_id, shop_id, owner_id, owner_username, shop_name, title, disease_tag, stage_tag, summary,
-                         products_json, usage_tips_json, risk_notes_json, inventory_status, is_active, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         products_json, usage_tips_json, risk_notes_json, inventory_status, is_active, created_at, updated_at,
+                         idempotency_key)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """)) {
                     for (RemedyPlanData plan : safeList(state.getPlans())) {
                         statement.setString(1, plan.getId());
@@ -1020,6 +1320,7 @@ public class MysqlStateStoreService {
                         statement.setBoolean(14, plan.isActive());
                         statement.setString(15, plan.getCreatedAt());
                         statement.setString(16, plan.getUpdatedAt());
+                        statement.setString(17, plan.getIdempotencyKey());
                         statement.addBatch();
                     }
                     statement.executeBatch();
@@ -1155,11 +1456,19 @@ public class MysqlStateStoreService {
             statement.execute(CREATE_CONSULTATIONS_SQL);
             statement.execute(CREATE_FEEDBACK_RECORDS_SQL);
             statement.execute(CREATE_AGENT_RUNS_SQL);
+            statement.execute(CREATE_AGENT_STEPS_SQL);
+            statement.execute(CREATE_AGENT_APPROVALS_SQL);
             statement.execute(CREATE_TENANTS_SQL);
             statement.execute("INSERT IGNORE INTO platform_tenants (tenant_id, tenant_name, tenant_type, status_name, created_at, updated_at) VALUES ('tenant-default', '默认演示租户', 'cooperative', 'active', NOW(), NOW())");
             statement.execute(CREATE_ORCHARDS_SQL);
             statement.execute(CREATE_OUTBOX_EVENTS_SQL);
             for (String migration : TENANT_COLUMN_MIGRATIONS) {
+                executeAlterAddColumn(statement, migration);
+            }
+            for (String migration : AGENT_COLUMN_MIGRATIONS) {
+                executeAlterAddColumn(statement, migration);
+            }
+            for (String migration : IDEMPOTENCY_COLUMN_MIGRATIONS) {
                 executeAlterAddColumn(statement, migration);
             }
         }
@@ -1459,6 +1768,7 @@ public class MysqlStateStoreService {
         private boolean active;
         private String createdAt;
         private String updatedAt;
+        private String idempotencyKey;
     }
 
     @Data

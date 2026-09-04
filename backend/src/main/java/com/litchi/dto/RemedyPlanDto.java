@@ -28,4 +28,5 @@ public class RemedyPlanDto {
     private boolean active;
     private String createdAt;
     private String updatedAt;
+    private String idempotencyKey;
 }

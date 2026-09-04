@@ -89,7 +89,7 @@ export interface AgentRunResponse {
   runId: string
   sessionId?: string
   goal: string
-  status: 'created' | 'planning' | 'running' | 'waiting_approval' | 'completed' | 'degraded' | 'failed' | 'canceled'
+  status: 'created' | 'planning' | 'running' | 'waiting_approval' | 'completed' | 'degraded' | 'failed' | 'canceled' | 'refused'
   answer: string
   degraded: boolean
   riskLevel?: 'low' | 'medium' | 'high'
@@ -101,7 +101,7 @@ export interface AgentRunResponse {
     plannedSteps: number
     executedSteps: number
     maxSteps: number
-    plannerMode: 'model' | 'fallback'
+    plannerMode: 'model' | 'fallback' | 'guard'
     writeToolsEnabled: boolean
   }
   checkpoint?: {

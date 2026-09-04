@@ -1,6 +1,7 @@
 package com.litchi.config;
 
 import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Config;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,10 @@ public class Neo4jConfig {
 
     @Bean(destroyMethod = "close")
     public Driver neo4jDriver() {
-        return GraphDatabase.driver(uri, AuthTokens.basic(username, password));
+        Config config = Config.builder()
+                .withConnectionTimeout(3, java.util.concurrent.TimeUnit.SECONDS)
+                .withMaxConnectionPoolSize(10)
+                .build();
+        return GraphDatabase.driver(uri, AuthTokens.basic(username, password), config);
     }
 }

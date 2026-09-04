@@ -226,6 +226,66 @@ class CollaborationServiceTest {
     }
 
     @Test
+    void createPlanIsIdempotentByKey() {
+        collaborationService.upsertProfile(shopkeeperUser, new UpsertStoreProfileRequest() {{
+            setShopName("幂等演示门店");
+            setContactName("店长");
+            setPhone("13800008888");
+        }});
+
+        SaveRemedyPlanRequest first = new SaveRemedyPlanRequest();
+        first.setTitle("幂等测试方案");
+        first.setDiseaseTag("炭疽病");
+        first.setStageTag("雨季高湿");
+        first.setSummary("同一幂等键重复提交只落一条。");
+        first.setActive(false);
+        first.setIdempotencyKey("run-demo-idem-001");
+
+        RemedyPlanDto created = collaborationService.createPlan(shopkeeperUser, first);
+        RemedyPlanDto repeated = collaborationService.createPlan(shopkeeperUser, first);
+
+        assertEquals(created.getId(), repeated.getId(), "同一幂等键重复创建必须返回既有方案");
+        assertEquals("run-demo-idem-001", repeated.getIdempotencyKey());
+
+        var all = collaborationService.listPlans(shopkeeperUser, 1, 50).getItems();
+        long matched = all.stream()
+                .filter(plan -> "run-demo-idem-001".equals(plan.getIdempotencyKey()))
+                .count();
+        assertEquals(1, matched, "幂等键相同的方案在列表中只能出现一次");
+
+        // 不同幂等键不受影响，可正常创建新方案
+        SaveRemedyPlanRequest other = new SaveRemedyPlanRequest();
+        other.setTitle("另一个方案");
+        other.setDiseaseTag("霜霉病");
+        other.setStageTag("发病初期");
+        other.setSummary("不同键应新建。");
+        other.setActive(false);
+        other.setIdempotencyKey("run-demo-idem-002");
+        RemedyPlanDto second = collaborationService.createPlan(shopkeeperUser, other);
+        assertFalse(second.getId().equals(created.getId()), "不同幂等键必须新建方案");
+    }
+
+    @Test
+    void createPlanWithoutKeyAlwaysCreatesNew() {
+        collaborationService.upsertProfile(shopkeeperUser, new UpsertStoreProfileRequest() {{
+            setShopName("无键门店");
+            setContactName("店长");
+            setPhone("13800007777");
+        }});
+
+        SaveRemedyPlanRequest request = new SaveRemedyPlanRequest();
+        request.setTitle("无幂等键方案");
+        request.setDiseaseTag("炭疽病");
+        request.setStageTag("雨季高湿");
+        request.setSummary("未设置幂等键时不查重，保持原行为。");
+        request.setActive(false);
+
+        RemedyPlanDto a = collaborationService.createPlan(shopkeeperUser, request);
+        RemedyPlanDto b = collaborationService.createPlan(shopkeeperUser, request);
+        assertFalse(a.getId().equals(b.getId()), "无幂等键时重复提交应各自新建（兼容非 Agent 调用）");
+    }
+
+    @Test
     void localStateIsMigratedToMysqlWhenStructuredStorageIsActive() throws Exception {
         when(mysqlStateStoreService.isActive()).thenReturn(true);
         when(mysqlStateStoreService.loadCollaborationState()).thenReturn(java.util.Optional.empty());

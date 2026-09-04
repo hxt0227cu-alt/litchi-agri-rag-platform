@@ -25,6 +25,8 @@ logging:
     org.springframework.ai: DEBUG
 
 app:
+  retrieval:
+    strategy: ${APP_RETRIEVAL_STRATEGY:hybrid}
   agent:
     max-steps: ${APP_AGENT_MAX_STEPS:4}
   resilience:

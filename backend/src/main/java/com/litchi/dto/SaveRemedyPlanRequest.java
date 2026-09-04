@@ -20,4 +20,6 @@ public class SaveRemedyPlanRequest {
     private List<String> riskNotes;
     private String inventoryStatus;
     private Boolean active;
+    /** 幂等键：同一键重复提交时返回既有方案，不重复落库（用于 Agent 审批写工具） */
+    private String idempotencyKey;
 }

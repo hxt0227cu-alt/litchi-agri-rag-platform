@@ -2,6 +2,7 @@ package com.litchi.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,7 @@ public class LLMService {
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
+            .connectTimeout(Duration.ofSeconds(3))
             .build();
     private volatile long retryAfterEpochMs;
 
@@ -57,7 +58,17 @@ public class LLMService {
     @Value("${app.resilience.dependency-retry-delay-ms:300000}")
     private long dependencyRetryDelayMs;
 
-    public synchronized boolean isAvailable() {
+        @PostConstruct
+    public void warmUp() {
+        try {
+            boolean available = isAvailable();
+            log.info("LLM availability check at startup: provider={} available={}", provider, available);
+        } catch (Exception e) {
+            log.warn("LLM startup availability check failed, circuit will open on first call", e);
+        }
+    }
+
+public synchronized boolean isAvailable() {
         if (isCircuitOpen()) {
             return false;
         }

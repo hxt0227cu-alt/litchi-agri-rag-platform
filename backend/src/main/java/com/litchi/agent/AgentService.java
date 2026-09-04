@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.Locale;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -35,6 +37,7 @@ public class AgentService {
     private final AgentEventBus eventBus;
     private final AgentMetrics metrics;
     private final AgentRiskPolicy riskPolicy;
+    private final PolicyGuard policyGuard;
 
     @Value("${app.agent.max-steps:4}")
     private int configuredMaxSteps;
@@ -78,6 +81,12 @@ public class AgentService {
     private AgentRunResponse runWithId(AgentRunRequest request, AuthenticatedUser user, String runId) {
         long startedNanos = System.nanoTime();
         String startedAt = Instant.now().toString();
+
+        Optional<PolicyGuard.Refusal> refusal = policyGuard.evaluate(request.getGoal());
+        if (refusal.isPresent()) {
+            return refuse(user, runId, request.getSessionId(), request.getGoal(), startedAt, startedNanos, refusal.get());
+        }
+
         updateStatus(user, runId, "planning", "正在生成任务计划");
         int maxSteps = Math.min(request.getMaxSteps() == null ? configuredMaxSteps : request.getMaxSteps(), configuredMaxSteps);
         maxSteps = Math.max(1, Math.min(maxSteps, 4));
@@ -190,6 +199,32 @@ public class AgentService {
                 .orElseThrow(() -> new IllegalArgumentException("Agent 运行记录不存在"));
     }
 
+    /**
+     * 列出当前用户可见的运行：内存存储 + MySQL 持久化运行合并去重。
+     * 重启/跨实例后，持久化中的历史运行（含等待审批的）仍可被列出并继续处理。
+     */
+    public List<AgentRunResponse> list(AuthenticatedUser user, Integer limit, String status) {
+        Map<String, AgentRunResponse> merged = new LinkedHashMap<>();
+        for (AgentRunStore.StoredRun storedRun : runStore.snapshot()) {
+            if (!storedRun.ownerId().equals(user.id())) {
+                continue;
+            }
+            AgentRunResponse response = storedRun.response();
+            if (status != null && !status.isBlank() && !status.equals(response.getStatus())) {
+                continue;
+            }
+            merged.putIfAbsent(response.getRunId(), response);
+        }
+        for (AgentRunResponse response : persistence.list(user.id(), limit, status)) {
+            merged.putIfAbsent(response.getRunId(), response);
+        }
+        List<AgentRunResponse> result = new ArrayList<>(merged.values());
+        result.sort(Comparator.comparing(AgentRunResponse::getStartedAt,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+        int max = limit == null ? 50 : Math.max(1, Math.min(limit, 200));
+        return result.stream().limit(max).toList();
+    }
+
     public AgentRunResponse cancel(String runId, AuthenticatedUser user) {
         AgentRunResponse response = updateStatus(user, runId, "canceled", "任务已取消");
         return response;
@@ -208,6 +243,7 @@ public class AgentService {
         if (!"waiting_approval".equals(current.getStatus())) {
             throw new IllegalStateException("当前任务没有待审批动作");
         }
+        persistence.decideApproval(runId, normalizedDecision, user.id());
         String nextStatus = "approve".equals(normalizedDecision) ? "running" : "canceled";
         if ("reject".equals(normalizedDecision)) {
             return updateStatus(user, runId, nextStatus, "审批决定：reject");
@@ -229,7 +265,7 @@ public class AgentService {
             }
             long startedNanos = System.nanoTime();
             try {
-                Map<String, Object> output = tool.execute(current.getGoal(), user);
+                Map<String, Object> output = tool.execute(current.getGoal(), user, current.getRunId());
                 steps.set(index, step.toBuilder().status("succeeded").durationMs(elapsedMs(startedNanos))
                         .output(output == null ? Map.of() : output).build());
             } catch (Exception exception) {
@@ -259,6 +295,38 @@ public class AgentService {
 
     private boolean isCanceled(AuthenticatedUser user, String runId) {
         return "canceled".equals(get(runId, user).getStatus());
+    }
+
+    private AgentRunResponse refuse(AuthenticatedUser user, String runId, String sessionId, String goal,
+                                    String startedAt, long startedNanos, PolicyGuard.Refusal refusal) {
+        AgentRunResponse response = AgentRunResponse.builder()
+                .runId(runId)
+                .sessionId(sessionId)
+                .goal(goal)
+                .status("refused")
+                .answer(refusal.message())
+                .degraded(false)
+                .riskLevel("high")
+                .reviewRequired(true)
+                .startedAt(startedAt)
+                .durationMs(elapsedMs(startedNanos))
+                .steps(List.of())
+                .usage(Map.of("plannedSteps", 0, "executedSteps", 0, "maxSteps", 0,
+                        "plannerMode", "guard", "writeToolsEnabled", false))
+                .checkpoint(new LinkedHashMap<>(Map.of(
+                        "workflowVersion", "java-agent-v2",
+                        "checkpointVersion", 1,
+                        "currentStep", 0,
+                        "nextStep", "refused",
+                        "refusalCategory", refusal.category(),
+                        "refusalMessage", refusal.message()
+                )))
+                .build();
+        saveState(user, response);
+        log.info("agent_run_refused runId={} userId={} role={} category={}",
+                runId, user.id(), user.role(), refusal.category());
+        metrics.recordRun("refused", "guard", false, response.getDurationMs());
+        return response;
     }
 
     private AgentRunResponse updateStatus(AuthenticatedUser user, String runId, String status, String message) {
@@ -298,7 +366,7 @@ public class AgentService {
         runStore.save(user.id(), response);
         persistence.save(user.id(), response);
         if ("completed".equals(response.getStatus()) || "failed".equals(response.getStatus())
-                || "canceled".equals(response.getStatus())) {
+                || "canceled".equals(response.getStatus()) || "refused".equals(response.getStatus())) {
             persistence.publishTerminalEvent(response);
         }
         eventBus.publish(response.getRunId(), response);

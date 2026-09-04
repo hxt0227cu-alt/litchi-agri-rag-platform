@@ -30,6 +30,10 @@ export default defineConfig({
             return 'vendor-vue'
           }
 
+          if (id.includes('three') || id.includes('@tweenjs') || id.includes('three/examples')) {
+            return 'vendor-three'
+          }
+
           if (id.includes('axios')) {
             return 'vendor-axios'
           }

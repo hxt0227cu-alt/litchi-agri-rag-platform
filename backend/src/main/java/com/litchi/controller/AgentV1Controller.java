@@ -17,8 +17,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/agent-runs")
@@ -34,6 +37,16 @@ public class AgentV1Controller {
     ) {
         AuthenticatedUser user = AuthContext.requireCurrentUser(servletRequest);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(agentService.start(request, user));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AgentRunResponse>> list(
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) String status,
+            HttpServletRequest servletRequest
+    ) {
+        AuthenticatedUser user = AuthContext.requireCurrentUser(servletRequest);
+        return ResponseEntity.ok(agentService.list(user, limit, status));
     }
 
     @GetMapping("/{runId}")

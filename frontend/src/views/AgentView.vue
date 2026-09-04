@@ -159,7 +159,8 @@ const statusLabel = (status: AgentRunResponse['status']) => {
     completed: '已完成',
     degraded: '降级完成',
     failed: '执行失败',
-    canceled: '已取消'
+    canceled: '已取消',
+    refused: '已拒绝'
   }
   return labels[status]
 }
@@ -187,7 +188,7 @@ const runAgent = async () => {
     for (let attempt = 0; attempt < 240; attempt += 1) {
       await new Promise(resolve => window.setTimeout(resolve, 500))
       latest = (await agentAPI.getV1(latest.runId)).data
-      if (['waiting_approval', 'completed', 'degraded', 'failed', 'canceled'].includes(latest.status)) {
+      if (['waiting_approval', 'completed', 'degraded', 'failed', 'canceled', 'refused'].includes(latest.status)) {
         break
       }
     }

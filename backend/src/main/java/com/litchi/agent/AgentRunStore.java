@@ -3,7 +3,9 @@ package com.litchi.agent;
 import com.litchi.dto.AgentRunResponse;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -19,6 +21,11 @@ public class AgentRunStore {
             String oldest = runs.keySet().iterator().next();
             runs.remove(oldest);
         }
+    }
+
+    /** 返回全部运行的内存快照，用于 MySQL 恢复后的对账回填。 */
+    public synchronized List<StoredRun> snapshot() {
+        return new ArrayList<>(runs.values());
     }
 
     public synchronized Optional<AgentRunResponse> update(String runId, String ownerId, UnaryOperator<AgentRunResponse> updater) {
@@ -39,6 +46,6 @@ public class AgentRunStore {
         return Optional.of(storedRun.response());
     }
 
-    private record StoredRun(String ownerId, AgentRunResponse response) {
+    public record StoredRun(String ownerId, AgentRunResponse response) {
     }
 }
