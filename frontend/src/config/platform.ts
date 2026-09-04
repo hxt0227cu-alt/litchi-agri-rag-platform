@@ -94,11 +94,11 @@ export const PAGE_META: Record<string, PageMeta> = {
   },
   '/agent': {
     title: '任务智能体',
-    subtitle: '将复杂农技问题拆分为受控工具步骤，汇总知识库、图谱与业务方案证据。'
+    subtitle: '把复杂农技问题拆成几步分析，再汇总知识库、图谱与门店方案作为依据。'
   },
   '/orchards': {
     title: '果园档案',
-    subtitle: '维护品种、生育期和位置上下文，让诊断与任务智能体使用真实业务信息。'
+    subtitle: '维护品种、生育期和位置信息，让诊断与智能分析更贴合自家果园。'
   },
   '/solutions': {
     title: '解决方案',

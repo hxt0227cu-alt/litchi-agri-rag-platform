@@ -143,6 +143,10 @@ npm run dev
 
 访问 `http://localhost:5173`。演示账号为 `farmer`、`shopkeeper`、`technician`，本地演示密码均为 `demo123`。
 
+> **演示协同数据一键初始化**：为了让「农户求助 → 门店跟进 → 满意度反馈」闭环在空数据库上也能现场演示，以 `technician` 登录后调用
+> `POST /api/system/demo/seed-collaboration` 即可写入 1 条求助流转（farmer 提交、门店推进为已联系）和 1 条满意度反馈，
+> 使农户「我的求助」、门店「待处理求助 / 高频病症」和管理员「协同概况 / 反馈统计」都有内容可讲。重复调用会跳过已存在的求助。
+
 ### 完整 Compose
 
 ```powershell

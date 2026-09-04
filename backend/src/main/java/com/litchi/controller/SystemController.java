@@ -11,6 +11,7 @@ import com.litchi.service.KnowledgeGraphService;
 import com.litchi.service.LLMService;
 import com.litchi.service.VectorSearchService;
 import com.litchi.service.CollaborationService;
+import com.litchi.service.DemoCollaborationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -76,6 +77,7 @@ public class SystemController {
     private final DocumentService documentService;
     private final DemoContentService demoContentService;
     private final CollaborationService collaborationService;
+    private final DemoCollaborationService demoCollaborationService;
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
@@ -93,6 +95,13 @@ public class SystemController {
                 "vectorInitialized", result.isVectorStoreInitialized(),
                 "message", result.getMessage()
         ));
+    }
+
+    @PostMapping("/system/demo/seed-collaboration")
+    @AuthRequired
+    @RoleAllowed("technician")
+    public ResponseEntity<Map<String, Object>> seedCollaboration() {
+        return ResponseEntity.ok(demoCollaborationService.seedDemoCollaboration());
     }
 
     @GetMapping("/system/overview")

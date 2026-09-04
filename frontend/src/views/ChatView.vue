@@ -313,10 +313,15 @@ const toggleVoiceInput = () => {
 
   speechRecognition = speechRecognition || createSpeechRecognition()
   if (!speechRecognition) {
-    ElMessage.warning('当前浏览器不支持语音识别。')
+    ElMessage.warning('当前浏览器不支持语音识别，建议使用 Chrome 或 Edge 浏览器。')
     return
   }
-  speechRecognition.start()
+  try {
+    speechRecognition.start()
+    ElMessage.info('已开启语音识别，请在浏览器弹出的权限提示中允许使用麦克风。')
+  } catch {
+    ElMessage.warning('无法启动语音识别，请在浏览器设置中允许麦克风权限后重试。')
+  }
 }
 
 const speakMessage = (content: string) => {

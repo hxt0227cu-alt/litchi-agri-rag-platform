@@ -138,7 +138,17 @@ const submit = async () => {
         : defaultRouteForRole(authStore.user?.role)
     router.replace(redirect)
   } catch (error: any) {
-    ElMessage.error(error?.response?.data?.message ?? '登录失败，请检查账号信息。')
+    const status = error?.response?.status
+    const serverMessage = error?.response?.data?.message
+    if (!error?.response) {
+      ElMessage.error('无法连接服务器，请确认后端服务已启动（8080 端口）。')
+    } else if (status === 401) {
+      ElMessage.error(serverMessage ?? '用户名或密码错误，请检查后重试。')
+    } else if (status === 403) {
+      ElMessage.error(serverMessage ?? '当前浏览器来源不在服务端允许范围内，请使用本地端口访问。')
+    } else {
+      ElMessage.error(serverMessage ?? `登录失败（HTTP ${status ?? '未知'}），请稍后重试。`)
+    }
   } finally {
     submitting.value = false
   }

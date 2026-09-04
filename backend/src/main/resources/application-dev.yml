@@ -25,7 +25,7 @@ app:
     username: ${APP_MYSQL_USERNAME:}
     password: ${APP_MYSQL_PASSWORD:}
   cors:
-    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost,http://127.0.0.1,http://localhost:5173,http://127.0.0.1:5173}
+    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost,http://127.0.0.1,http://localhost:*,http://127.0.0.1:*,https://localhost:*,https://127.0.0.1:*}
   startup:
     auto-bootstrap: ${APP_STARTUP_AUTO_BOOTSTRAP:false}
     max-attempts: ${APP_STARTUP_MAX_ATTEMPTS:8}

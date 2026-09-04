@@ -11,14 +11,14 @@
 
       <div class="session-list" style="max-height: 60vh; overflow-y: auto; contain: layout paint;">
         <button
-          v-for="session in sessions"
+          v-for="session in displaySessions"
           :key="session.sessionId"
           type="button"
           :class="['session-card', { active: session.sessionId === activeSessionId }]"
           @click="selectSession(session.sessionId)"
         >
           <strong>{{ session.title }}</strong>
-          <span>{{ session.lastMessage }}</span>
+          <span v-if="session.lastMessage && session.lastMessage !== session.title">{{ session.lastMessage }}</span>
           <small>{{ formatDate(session.updatedAt) }} · {{ session.messageCount }} 条消息</small>
         </button>
       </div>
@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
@@ -101,6 +101,11 @@ const sessions = ref<ChatSessionItem[]>([])
 const historyItems = ref<ChatHistoryItem[]>([])
 const activeSessionId = ref('')
 const loadingHistory = ref(false)
+
+// 过滤明显异常的并发/压测残留会话（异常大的消息数），避免测试数据污染真实列表
+const displaySessions = computed(() =>
+  sessions.value.filter((session) => (session.messageCount ?? 0) <= 500)
+)
 
 const loadSessions = async () => {
   try {

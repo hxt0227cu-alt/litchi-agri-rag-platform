@@ -36,14 +36,19 @@
 
     <section class="orchard-list">
       <div v-if="loading" class="empty-state soft-card">正在加载果园档案...</div>
-      <div v-else-if="!orchards.length" class="empty-state soft-card">还没有果园档案</div>
+      <div v-else-if="!orchards.length" class="empty-state soft-card">
+        <div class="empty-copy">
+          <strong>还没有果园档案</strong>
+          <span>建档后，病害识别与智能分析会自动参考果园的品种和生育期信息，让结果更贴合实际。</span>
+        </div>
+      </div>
       <article v-for="orchard in orchards" :key="orchard.id" class="orchard-card soft-card">
         <div class="card-heading">
           <div>
-            <span class="eyebrow">{{ orchard.id }}</span>
+            <span class="eyebrow">{{ orchard.variety || '未填品种' }}</span>
             <h3>{{ orchard.name }}</h3>
           </div>
-          <el-tag type="success" effect="plain">已纳入 Agent 上下文</el-tag>
+          <el-tag type="success" effect="plain">诊断时自动参考</el-tag>
         </div>
         <div class="orchard-facts">
           <span>{{ orchard.location || '位置未填写' }}</span>
@@ -51,6 +56,7 @@
           <span>{{ orchard.growthStage || '生育期未填写' }}</span>
           <span>{{ orchard.areaMu ? `${orchard.areaMu} 亩` : '面积未填写' }}</span>
         </div>
+        <p class="orchard-hint">后续在病害识别、智能问答与任务分析中，系统会自动带入此档案的品种和生育期信息。</p>
       </article>
     </section>
   </div>
@@ -174,10 +180,36 @@ h3 {
   font-size: 13px;
 }
 
+.orchard-hint {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(34, 53, 47, 0.1);
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
 .empty-state {
   min-height: 180px;
   display: grid;
   place-items: center;
+  color: var(--ink-soft);
+}
+
+.empty-copy {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+}
+
+.empty-copy strong {
+  color: var(--ink-strong);
+  font-size: 18px;
+}
+
+.empty-copy span {
+  max-width: 320px;
+  line-height: 1.7;
   color: var(--ink-soft);
 }
 

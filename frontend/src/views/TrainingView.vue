@@ -15,8 +15,8 @@
             <strong>{{ modules.length }}</strong>
           </article>
           <article class="hero-signal-card">
-            <span>巡园清单</span>
-            <strong>{{ fieldChecklist.length }}</strong>
+            <span>已学进度</span>
+            <strong>{{ doneCount }} / {{ modules.length }}</strong>
           </article>
           <article class="hero-signal-card">
             <span>课堂出口</span>
@@ -56,13 +56,26 @@
     </section>
 
     <section class="module-grid">
-      <article v-for="module in modules" :key="module.title" class="soft-card module-card">
+      <article
+        v-for="module in modules"
+        :key="module.title"
+        :class="['soft-card', 'module-card', { done: isDone(module.title) }]"
+      >
         <span class="module-kicker">{{ module.kicker }}</span>
         <h3>{{ module.title }}</h3>
         <p class="module-copy">{{ module.copy }}</p>
         <ul class="bullet-list">
           <li v-for="point in module.points" :key="point">{{ point }}</li>
         </ul>
+        <el-button
+          :type="isDone(module.title) ? 'success' : 'default'"
+          plain
+          size="small"
+          class="done-button"
+          @click="toggleDone(module.title)"
+        >
+          {{ isDone(module.title) ? '已学完 ✓' : '标记为已学' }}
+        </el-button>
       </article>
     </section>
 
@@ -100,9 +113,34 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+const STORAGE_KEY = 'litchi_training_done'
+const doneTitles = ref<string[]>([])
+
+const isDone = (title: string) => doneTitles.value.includes(title)
+const doneCount = computed(() => doneTitles.value.length)
+
+const toggleDone = (title: string) => {
+  doneTitles.value = isDone(title)
+    ? doneTitles.value.filter((item) => item !== title)
+    : [...doneTitles.value, title]
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(doneTitles.value))
+}
+
+onMounted(() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
+    if (Array.isArray(saved)) {
+      doneTitles.value = saved
+    }
+  } catch {
+    doneTitles.value = []
+  }
+})
 
 const modules = [
   {
@@ -295,6 +333,15 @@ const goTo = (path: string) => {
   padding-left: 18px;
   color: var(--ink-strong);
   line-height: 1.8;
+}
+
+.module-card.done {
+  border-color: rgba(47, 106, 89, 0.28);
+  background: rgba(47, 106, 89, 0.04);
+}
+
+.done-button {
+  margin-top: 16px;
 }
 
 .panel-header {

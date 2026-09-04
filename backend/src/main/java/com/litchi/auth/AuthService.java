@@ -150,6 +150,14 @@ public class AuthService {
         return toAuthenticatedUser(user);
     }
 
+    public synchronized Optional<AuthenticatedUser> findByUsername(String username) {
+        String normalized = normalizeUsername(username);
+        return usersById.values().stream()
+                .filter(user -> normalized.equals(user.getUsername()))
+                .findFirst()
+                .map(this::toAuthenticatedUser);
+    }
+
     public synchronized AuthUserView me(String token) {
         AuthenticatedUser user = resolveUser(token);
         if (user == null) {

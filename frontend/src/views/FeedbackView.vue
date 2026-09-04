@@ -24,12 +24,12 @@
       </article>
       <article class="metric-card">
         <div class="metric-label">整体满意度</div>
-        <div class="metric-value">{{ form.overallScore }}</div>
+        <div class="metric-value">{{ form.overallScore || '—' }}</div>
         <div class="metric-note">1 到 5 分，5 分表示当前体验非常满意。</div>
       </article>
       <article class="metric-card">
         <div class="metric-label">准确性</div>
-        <div class="metric-value">{{ form.accuracyScore }}</div>
+        <div class="metric-value">{{ form.accuracyScore || '—' }}</div>
         <div class="metric-note">用于辅助判断识别、问答和推荐结果是否足够可信。</div>
       </article>
       <article v-if="canViewStats" class="metric-card">
@@ -166,11 +166,11 @@ const moduleOptions = [
 ]
 
 const createDefaultForm = () => ({
-  module: '整体验收',
-  overallScore: 5,
-  accuracyScore: 5,
-  practicalityScore: 5,
-  fluencyScore: 5,
+  module: '',
+  overallScore: 0,
+  accuracyScore: 0,
+  practicalityScore: 0,
+  fluencyScore: 0,
   comment: ''
 })
 
@@ -194,6 +194,15 @@ const loadStats = async () => {
 }
 
 const submitFeedback = async () => {
+  if (!form.module) {
+    ElMessage.warning('请先选择本次反馈的模块。')
+    return
+  }
+  const scores = [form.overallScore, form.accuracyScore, form.practicalityScore, form.fluencyScore]
+  if (scores.some((score) => !score || score <= 0)) {
+    ElMessage.warning('请为每个维度完成评分（1 到 5 分）。')
+    return
+  }
   submitting.value = true
   try {
     await feedbackAPI.submit({

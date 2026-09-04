@@ -5,7 +5,7 @@
         <span class="hero-kicker">Diagnosis Flow</span>
         <h3 class="section-title">病害识别</h3>
         <p class="section-copy">
-          当前识别服务优先走 YOLO 推理，模型不可用时自动回退到数据集特征匹配或规则模式。
+          上传病斑图片后，系统会先尝试用智能模型直接识别；模型不可用时，会自动改用内置病虫害知识库来匹配判断。
           识别结果会直接生成病症标签，并作为进入解决方案页的第一跳依据。
         </p>
       </div>
@@ -201,8 +201,8 @@ const router = useRouter()
 const diagnosisEngine = computed(() => health.value?.diagnosisDetails.engine ?? 'loading...')
 const diagnosisModeText = computed(() =>
   health.value?.diagnosisDetails.modelLoaded
-    ? '当前已加载 YOLO 模型，展示真实推理链路。'
-    : '当前未加载 YOLO 权重，系统会自动回退到数据集特征匹配或规则模式。'
+    ? '当前已启用模型推理，可展示真实识别链路。'
+    : '当前未启用模型推理服务，系统会自动使用内置病虫害知识库来匹配判断。'
 )
 
 const updatePreview = (rawFile: File) => {

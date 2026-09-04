@@ -18,6 +18,7 @@ import com.litchi.dto.RemedyPlanDto;
 import com.litchi.dto.StoreProfileDto;
 import com.litchi.service.CollaborationService;
 import com.litchi.service.DataInitializer;
+import com.litchi.service.DemoCollaborationService;
 import com.litchi.service.DemoContentService;
 import com.litchi.service.DiagnosisService;
 import com.litchi.service.DocumentService;
@@ -97,6 +98,9 @@ class PlatformApiSmokeTest {
 
     @MockBean
     private DemoContentService demoContentService;
+
+    @MockBean
+    private DemoCollaborationService demoCollaborationService;
 
     private AuthenticatedUser technicianUser;
     private AuthenticatedUser farmerUser;

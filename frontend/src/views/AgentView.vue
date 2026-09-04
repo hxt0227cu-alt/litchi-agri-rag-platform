@@ -6,7 +6,7 @@
           <span class="eyebrow">Agent Run</span>
           <h3>新建任务</h3>
         </div>
-        <el-tag effect="plain" type="info">受控工具</el-tag>
+        <el-tag v-if="!isFarmer" effect="plain" type="info">受控工具</el-tag>
       </div>
 
       <el-input
@@ -19,7 +19,7 @@
         placeholder="例如：连续降雨后荔枝叶片出现褐色病斑，请综合研判原因、处理顺序和可选方案。"
       />
 
-      <div class="run-settings">
+      <div v-if="!isFarmer" class="run-settings">
         <span>步骤上限</span>
         <el-radio-group v-model="maxSteps" size="small">
           <el-radio-button :value="2">2</el-radio-button>
@@ -57,16 +57,16 @@
       <template v-if="run">
         <header class="run-summary soft-card">
           <div>
-            <span class="eyebrow">{{ run.runId }}</span>
+            <span class="eyebrow">{{ isFarmer ? '任务结果' : run.runId }}</span>
             <h3>{{ run.goal }}</h3>
           </div>
           <div class="summary-metrics">
             <span>{{ run.steps.length }} 步</span>
-            <span>{{ run.durationMs }} ms</span>
+            <span v-if="!isFarmer">{{ run.durationMs }} ms</span>
             <el-tag :type="run.degraded ? 'warning' : run.status === 'failed' ? 'danger' : 'success'" effect="dark">
               {{ statusLabel(run.status) }}
             </el-tag>
-            <el-tag v-if="run.reviewRequired" type="danger" effect="plain">需人工复核</el-tag>
+            <el-tag v-if="run.reviewRequired && !isFarmer" type="danger" effect="plain">需人工复核</el-tag>
           </div>
         </header>
 
@@ -76,7 +76,7 @@
             <div class="step-content">
               <div class="step-heading">
                 <strong>{{ toolLabel(step.tool) }}</strong>
-                <span>{{ step.durationMs }} ms</span>
+                <span v-if="!isFarmer">{{ step.durationMs }} ms</span>
               </div>
               <p>{{ step.reason }}</p>
               <div class="step-footer">
@@ -114,11 +114,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { DocumentChecked, Loading, MagicStick, VideoPlay } from '@element-plus/icons-vue'
 
 import { agentAPI, type AgentRunResponse } from '@/api'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const isFarmer = computed(() => authStore.user?.role === 'farmer')
 
 const goal = ref('')
 const maxSteps = ref(3)

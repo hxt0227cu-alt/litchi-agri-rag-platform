@@ -1478,7 +1478,10 @@ public class MysqlStateStoreService {
         try {
             statement.execute(sql);
         } catch (SQLException e) {
-            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("duplicate column name")) {
+            String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
+            if (msg.contains("duplicate column name")
+                    || msg.contains("duplicate key name")
+                    || msg.contains("already exists")) {
                 return;
             }
             throw e;
