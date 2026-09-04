@@ -78,10 +78,13 @@
         <div class="trace-list">
           <article v-for="step in run.steps" :key="step.sequence" class="trace-row soft-card">
             <div class="step-index">{{ step.sequence }}</div>
-            <div class="step-content">
+            <div class="step-content" :class="{ clickable: hasEvidence(step) }" @click="toggleStep(step.sequence)">
               <div class="step-heading">
                 <strong>{{ toolLabel(step.tool) }}</strong>
-                <span v-if="!isFarmer">{{ step.durationMs }} ms</span>
+                <span class="step-meta">
+                  <span v-if="!isFarmer">{{ step.durationMs }} ms</span>
+                  <span v-if="hasEvidence(step)" class="step-toggle">{{ expandedSteps.has(step.sequence) ? '收起证据' : '查看证据' }}</span>
+                </span>
               </div>
               <p>{{ step.reason }}</p>
               <div class="step-footer">
@@ -89,6 +92,17 @@
                   {{ stepStatusLabel(step.status) }}
                 </el-tag>
                 <span>{{ outputCount(step.output) }}</span>
+              </div>
+              <div v-if="expandedSteps.has(step.sequence) && evidenceItems(step)" class="step-evidence">
+                <div class="evidence-heading">{{ evidenceItems(step)?.heading }}</div>
+                <div v-if="evidenceItems(step)?.items.length" class="evidence-list">
+                  <div v-for="(item, idx) in evidenceItems(step)?.items ?? []" :key="idx" class="evidence-item">
+                    <div class="evidence-title">{{ item.title }}</div>
+                    <div v-if="item.meta" class="evidence-meta">{{ item.meta }}</div>
+                    <div v-if="item.snippet" class="evidence-snippet">{{ item.snippet }}</div>
+                  </div>
+                </div>
+                <div v-else class="evidence-empty">该步骤未返回具体内容</div>
               </div>
             </div>
           </article>
@@ -111,7 +125,7 @@
             <el-icon><DocumentChecked /></el-icon>
             <strong>综合结论</strong>
           </div>
-          <p>{{ run.answer }}</p>
+          <div class="md-body" v-html="renderMarkdown(run.answer)"></div>
         </article>
       </template>
     </section>
@@ -122,6 +136,7 @@
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { DocumentChecked, Loading, MagicStick, VideoPlay } from '@element-plus/icons-vue'
+import { marked } from 'marked'
 
 import { agentAPI, type AgentRunResponse } from '@/api'
 import { useAuthStore } from '@/stores/auth'
@@ -159,6 +174,83 @@ const outputCount = (output: Record<string, unknown>) => {
   if (Array.isArray(entities)) return `${entities.length} 个实体`
   return '已记录证据'
 }
+
+const expandedSteps = ref<Set<number>>(new Set())
+
+const toggleStep = (seq: number) => {
+  const next = new Set(expandedSteps.value)
+  if (next.has(seq)) next.delete(seq)
+  else next.add(seq)
+  expandedSteps.value = next
+}
+
+const renderMarkdown = (text?: string) => {
+  if (!text) return ''
+  try {
+    return marked.parse(text) as string
+  } catch {
+    return text
+  }
+}
+
+interface EvidenceItem { title: string; meta?: string; snippet?: string }
+interface EvidenceBlock { heading: string; items: EvidenceItem[] }
+
+const stripMd = (s: string, max = 140) => {
+  const plain = (s || '').replace(/[#*>`_\-]/g, '').replace(/\s+/g, ' ').trim()
+  return plain.length > max ? plain.slice(0, max) + '…' : plain
+}
+
+const evidenceItems = (step: AgentRunResponse['steps'][number]): EvidenceBlock | null => {
+  const out = step.output as Record<string, unknown>
+  if (!out) return null
+  if (step.tool === 'knowledge_search') {
+    const matches = (out.matches as Array<Record<string, unknown>>) || []
+    return {
+      heading: '命中的知识库资料',
+      items: matches.map((m) => ({
+        title: String(m.title || m.source || '资料').replace(/\.md$/i, ''),
+        meta: `相似度 ${Number(m.score || 0).toFixed(2)}`,
+        snippet: stripMd(String(m.content || ''))
+      }))
+    }
+  }
+  if (step.tool === 'plan_recommendation') {
+    const plans = (out.plans as Array<Record<string, unknown>>) || []
+    return {
+      heading: '推荐的门店方案',
+      items: plans.map((p) => ({
+        title: String(p.title || '方案'),
+        meta: `${p.shopName || ''} · 匹配度 ${Number(p.score || 0).toFixed(0)}`,
+        snippet: String(p.summary || '')
+      }))
+    }
+  }
+  if (step.tool === 'orchard_context') {
+    const orchards = (out.orchards as Array<Record<string, unknown>>) || []
+    return {
+      heading: '读取的果园档案',
+      items: orchards.map((o) => ({
+        title: String(o.name || o.variety || '果园'),
+        meta: [o.location, o.stage].filter(Boolean).join(' · '),
+        snippet: ''
+      }))
+    }
+  }
+  if (step.tool === 'knowledge_graph') {
+    const entities = (out.entities as Array<Record<string, unknown> | string>) || []
+    return {
+      heading: '图谱关联实体',
+      items: entities.map((e) => {
+        if (typeof e === 'string') return { title: e }
+        return { title: String(e.name || e.label || '实体'), meta: String(e.type || '') }
+      })
+    }
+  }
+  return null
+}
+
+const hasEvidence = (step: AgentRunResponse['steps'][number]) => !!evidenceItems(step)
 
 const statusLabel = (status: AgentRunResponse['status']) => {
   const labels: Record<AgentRunResponse['status'], string> = {
@@ -434,6 +526,127 @@ h3 {
 .answer-heading {
   justify-content: flex-start;
   color: var(--primary-deep);
+}
+
+.step-content.clickable {
+  cursor: pointer;
+}
+
+.step-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.step-toggle {
+  color: var(--primary-deep);
+  font-weight: 600;
+}
+
+.step-evidence {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(47, 106, 89, 0.2);
+}
+
+.evidence-heading {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--primary-deep);
+  margin-bottom: 8px;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 6px;
+}
+
+.evidence-item {
+  padding: 8px 12px;
+  background: rgba(47, 106, 89, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary-deep);
+}
+
+.evidence-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.evidence-meta {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.evidence-snippet {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+  line-height: 1.6;
+}
+
+.evidence-empty {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.md-body {
+  line-height: 1.85;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.md-body h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 18px 0 8px;
+  color: var(--primary-deep);
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(47, 106, 89, 0.15);
+}
+
+.md-body h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  color: var(--primary-deep);
+}
+
+.md-body p {
+  margin: 8px 0;
+}
+
+.md-body ul,
+.md-body ol {
+  padding-left: 22px;
+  margin: 8px 0;
+}
+
+.md-body li {
+  margin: 4px 0;
+}
+
+.md-body strong {
+  color: var(--primary-deep);
+  font-weight: 700;
+}
+
+.md-body code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.md-body hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 14px 0;
 }
 
 @media (max-width: 900px) {
