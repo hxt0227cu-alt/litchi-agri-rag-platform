@@ -9,6 +9,11 @@
         <el-tag v-if="!isFarmer" effect="plain" type="info">受控工具</el-tag>
       </div>
 
+      <div class="agent-howto">
+        <strong>它能做什么？</strong>
+        <span>输入一个复杂的农技问题，系统会<em>自动分步调查</em>：读取你的果园档案 → 检索知识库 → 核对图谱 → 结合门店方案，最后汇总成带依据的结论。每一步用了什么证据都清晰可见。</span>
+      </div>
+
       <el-input
         v-model="goal"
         type="textarea"
@@ -138,6 +143,7 @@ const examples = [
 ]
 
 const labels: Record<string, string> = {
+  orchard_context: '果园档案',
   knowledge_search: '知识库检索',
   knowledge_graph: '知识图谱研判',
   plan_recommendation: '业务方案推荐',
@@ -304,6 +310,32 @@ h3 {
   margin: 6px 0 0;
   color: var(--ink-strong);
   font-size: 20px;
+}
+
+.agent-howto {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(47, 106, 89, 0.08);
+  border: 1px solid rgba(47, 106, 89, 0.18);
+  line-height: 1.7;
+}
+
+.agent-howto strong {
+  color: var(--primary-deep);
+  font-size: 13px;
+}
+
+.agent-howto span {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.agent-howto em {
+  color: var(--primary-deep);
+  font-style: normal;
+  font-weight: 700;
 }
 
 .run-settings {

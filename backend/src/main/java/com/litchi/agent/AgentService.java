@@ -499,7 +499,7 @@ public class AgentService {
             log.warn("Agent synthesis failed: {}", exception.getMessage());
         }
         long succeeded = steps.stream().filter(step -> "succeeded".equals(step.getStatus())).count();
-        return new SynthesisResult("已完成 " + succeeded + " 个证据查询步骤，但模型综合服务当前不可用。请查看执行轨迹中的检索结果。", true);
+        return new SynthesisResult("系统已自动完成 " + succeeded + " 个调查步骤（读取果园档案、检索知识库、核对图谱等），但本机模型服务暂未连接，暂时无法自动汇总成一段结论。上方各步骤的证据结果均可查看，连接模型服务后即可生成完整综合结论。", true);
     }
 
     private String extractJson(String raw) {
