@@ -36,5 +36,5 @@ app:
   llm:
     timeout-ms: 60000
     temperature: 0.2
-    num-predict: 220
+    num-predict: 2048
     keep-alive: 30m

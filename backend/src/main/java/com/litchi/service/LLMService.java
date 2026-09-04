@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -75,11 +76,13 @@ public synchronized boolean isAvailable() {
         try {
             String baseUrl = effectiveBaseUrl();
             String availabilityPath = isOpenAiCompatible() ? "/v1/models" : "/api/tags";
-            HttpRequest request = HttpRequest.newBuilder()
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + availabilityPath))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                    .GET();
+            if (isOpenAiCompatible() && apiKey != null && !apiKey.isBlank()) {
+                builder.header("Authorization", "Bearer " + apiKey);
+            }
+            HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
             boolean available = response.statusCode() >= 200
                     && response.statusCode() < 300
                     && (ollamaModel == null || ollamaModel.isBlank() || response.body().contains(ollamaModel));
@@ -152,8 +155,8 @@ public synchronized boolean isAvailable() {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(effectiveBaseUrl() + (openAiCompatible ? "/v1/chat/completions" : "/api/chat")))
                 .timeout(Duration.ofMillis(llmTimeoutMs))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestPayload)));
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestPayload), StandardCharsets.UTF_8));
         if (openAiCompatible && apiKey != null && !apiKey.isBlank()) {
             requestBuilder.header("Authorization", "Bearer " + apiKey);
         }
@@ -167,6 +170,11 @@ public synchronized boolean isAvailable() {
         String content = openAiCompatible
                 ? root.path("choices").path(0).path("message").path("content").asText("")
                 : root.path("message").path("content").asText("");
+        if (content.isBlank() && openAiCompatible) {
+            // Reasoning models (e.g. DeepSeek) may leave content empty when the answer
+            // lives in reasoning_content (often when max_tokens is fully consumed by reasoning).
+            content = root.path("choices").path(0).path("message").path("reasoning_content").asText("");
+        }
         if (content.isBlank()) {
             throw new IllegalStateException("LLM chat response is empty");
         }
