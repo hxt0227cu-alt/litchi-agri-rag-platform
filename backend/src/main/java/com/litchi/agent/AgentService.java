@@ -105,6 +105,15 @@ public class AgentService {
             stepsWithApproval.add(new PlannedStep("pending_remedy_plan", "生成需要技术员审批的处置方案"));
             planResult = new PlanResult(stepsWithApproval, planResult.degraded());
         }
+        if (requiresConsultation(request.getGoal()) && availableTools.containsKey("create_consultation")
+                && planResult.steps().stream().noneMatch(step -> "create_consultation".equals(step.tool()))) {
+            List<PlannedStep> stepsWithConsultation = new ArrayList<>(planResult.steps());
+            if (stepsWithConsultation.size() >= maxSteps) {
+                stepsWithConsultation.remove(stepsWithConsultation.size() - 1);
+            }
+            stepsWithConsultation.add(new PlannedStep("create_consultation", "问题复杂或用户要求联系门店，自动创建求助工单"));
+            planResult = new PlanResult(stepsWithConsultation, planResult.degraded());
+        }
         updateCheckpoint(user, runId, checkpoint("running", 0, planResult.steps().stream()
                 .map(PlannedStep::tool)
                 .toList(), List.of()));
@@ -377,7 +386,7 @@ public class AgentService {
                 .map(tool -> tool.name() + ": " + tool.description())
                 .collect(Collectors.joining("\n"));
         String systemPrompt = """
-                你是荔枝智能诊疗平台的任务规划器。只选择给定的只读工具，不得发明工具。
+                你是荔枝智能诊疗平台的任务规划器。优先使用只读工具收集证据；当证据不足以回答问题、或用户明确要求联系门店/发起求助时，可选择 create_consultation 工具自动创建求助工单（会真实生成一条门店可见的求助记录）。不得发明工具。
                 返回严格 JSON，不要 Markdown：{"steps":[{"tool":"工具名","reason":"调用原因"}]}。
                 每个工具最多调用一次，步骤不得超过限制。问题简单时也应检索证据后回答。
                 """;
@@ -416,6 +425,14 @@ public class AgentService {
     private boolean requiresPendingPlan(String goal) {
         String normalized = goal == null ? "" : goal.toLowerCase(Locale.ROOT);
         return normalized.contains("待审核") || normalized.contains("待审批") || normalized.contains("审批后落库");
+    }
+
+    private boolean requiresConsultation(String goal) {
+        String normalized = goal == null ? "" : goal.toLowerCase(Locale.ROOT);
+        return normalized.contains("求助") || normalized.contains("联系门店")
+                || normalized.contains("发给门店") || normalized.contains("帮我联系")
+                || normalized.contains("拿不准") || normalized.contains("搞不定")
+                || normalized.contains("不确定") || normalized.contains("不会处理");
     }
 
     private void addIfAvailable(List<PlannedStep> planned, Map<String, AgentTool> toolsByName, String name, String reason, int maxSteps) {

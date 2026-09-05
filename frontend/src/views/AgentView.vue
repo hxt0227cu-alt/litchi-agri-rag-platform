@@ -154,6 +154,7 @@ const approvalLoading = ref(false)
 const examples = [
   '连续降雨后荔枝叶片出现褐色病斑，请给出研判和处理顺序。',
   '桂味荔枝花果期落果增多，请结合资料和图谱分析管理重点。',
+  '这个病害我拿不准，帮我联系门店处理。',
   '蒂蛀虫进入高发期，整理监测依据并推荐可执行方案。'
 ]
 
@@ -162,7 +163,8 @@ const labels: Record<string, string> = {
   knowledge_search: '知识库检索',
   knowledge_graph: '知识图谱研判',
   plan_recommendation: '业务方案推荐',
-  pending_remedy_plan: '待审核处置方案'
+  pending_remedy_plan: '待审核处置方案',
+  create_consultation: '发起求助'
 }
 
 const toolLabel = (tool: string) => labels[tool] ?? tool
@@ -245,6 +247,17 @@ const evidenceItems = (step: AgentRunResponse['steps'][number]): EvidenceBlock |
         if (typeof e === 'string') return { title: e }
         return { title: String(e.name || e.label || '实体'), meta: String(e.type || '') }
       })
+    }
+  }
+  if (step.tool === 'create_consultation') {
+    const created = out.created === true
+    return {
+      heading: created ? '已创建的求助工单' : '求助创建结果',
+      items: [{
+        title: created ? '求助已提交，门店将收到通知' : '求助未创建',
+        meta: created ? `${out.shopName || ''} · ${out.diseaseTag || ''}` : String(out.reason || ''),
+        snippet: created ? `工单编号 ${out.consultationId}，状态 ${out.status}，可在「我的求助」查看进度` : ''
+      }]
     }
   }
   return null
