@@ -57,7 +57,7 @@
         <el-button text type="primary" size="small" :loading="historyLoading" @click="loadHistory">刷新</el-button>
       </div>
       <div v-if="historyRuns.length" class="history-list">
-        <button v-for="item in historyRuns" :key="item.runId" type="button" class="history-row soft-card" @click="viewHistory(item)">
+        <button v-for="item in readableHistory" :key="item.runId" type="button" class="history-row soft-card" @click="viewHistory(item)">
           <span class="history-goal">{{ item.goal }}</span>
           <span class="history-meta">
             <el-tag :type="item.degraded ? 'warning' : item.status === 'failed' ? 'danger' : 'success'" size="small" effect="plain">
@@ -80,6 +80,7 @@
       <div v-if="loading" class="loading-run soft-card">
         <el-icon class="is-loading"><Loading /></el-icon>
         <strong>正在规划并执行工具</strong>
+        <span v-if="progressHint" class="progress-hint">{{ progressHint }}</span>
       </div>
 
       <template v-if="run">
@@ -167,6 +168,15 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 const isFarmer = computed(() => authStore.user?.role === 'farmer')
 
+const isReadableGoal = (goal?: string) => {
+  const g = (goal || '').trim()
+  if (!g) return false
+  const questionMarks = (g.match(/\?/g) || []).length
+  return questionMarks < g.length * 0.3
+}
+
+const readableHistory = computed(() => historyRuns.value.filter((r) => isReadableGoal(r.goal)))
+
 const goal = ref('')
 const maxSteps = ref(3)
 const loading = ref(false)
@@ -175,6 +185,7 @@ const activeRunId = ref('')
 const approvalLoading = ref(false)
 const historyRuns = ref<AgentRunResponse[]>([])
 const historyLoading = ref(false)
+const progressHint = ref('')
 
 const examples = [
   '连续降雨后荔枝叶片出现褐色病斑，请给出研判和处理顺序。',
@@ -311,6 +322,19 @@ const stepStatusLabel = (status: AgentRunResponse['steps'][number]['status']) =>
   return '执行失败'
 }
 
+const progressOf = (r: AgentRunResponse): string => {
+  if (r.status === 'planning') return '正在生成任务计划…'
+  if (r.status === 'created') return '任务已受理，正在规划…'
+  if (r.status === 'running') {
+    const done = (r.steps || []).filter((s) => s.status === 'succeeded').map((s) => toolLabel(s.tool))
+    const total = r.checkpoint?.plannedTools?.length || r.steps?.length || 0
+    if (!done.length) return '正在执行第一步…'
+    const doneNames = done.join(' → ')
+    return `已执行 ${done.length}/${total} 步：${doneNames}`
+  }
+  return ''
+}
+
 const loadHistory = async () => {
   historyLoading.value = true
   try {
@@ -360,11 +384,13 @@ const runAgent = async () => {
     for (let attempt = 0; attempt < 240; attempt += 1) {
       await new Promise(resolve => window.setTimeout(resolve, 500))
       latest = (await agentAPI.getV1(latest.runId)).data
+      progressHint.value = progressOf(latest)
       if (['waiting_approval', 'completed', 'degraded', 'failed', 'canceled', 'refused'].includes(latest.status)) {
         break
       }
     }
     run.value = latest
+    progressHint.value = ''
   } catch (error) {
     ElMessage.error((error as any)?.response?.data?.message ?? 'Agent 任务执行失败。')
   } finally {
@@ -748,4 +774,6 @@ h3 {
 .history-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; color: var(--el-text-color-secondary); font-size: 12px; }
 .history-empty { padding: 14px 18px; color: var(--el-text-color-secondary); font-size: 13px; }
 @media (max-width: 640px) { .history-row { flex-direction: column; align-items: flex-start; gap: 6px; } }
+
+.progress-hint { display: block; margin-top: 8px; font-size: 13px; color: var(--el-text-color-secondary); }
 </style>
