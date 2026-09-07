@@ -48,6 +48,29 @@
       </el-button>
     </section>
 
+    <section class="history-panel">
+      <div class="history-heading soft-card">
+        <div>
+          <span class="eyebrow">History</span>
+          <h3>历史任务</h3>
+        </div>
+        <el-button text type="primary" size="small" :loading="historyLoading" @click="loadHistory">刷新</el-button>
+      </div>
+      <div v-if="historyRuns.length" class="history-list">
+        <button v-for="item in historyRuns" :key="item.runId" type="button" class="history-row soft-card" @click="viewHistory(item)">
+          <span class="history-goal">{{ item.goal }}</span>
+          <span class="history-meta">
+            <el-tag :type="item.degraded ? 'warning' : item.status === 'failed' ? 'danger' : 'success'" size="small" effect="plain">
+              {{ statusLabel(item.status) }}
+            </el-tag>
+            <span>{{ item.steps?.length || 0 }} 步</span>
+            <span>{{ formatTime(item.startedAt) }}</span>
+          </span>
+        </button>
+      </div>
+      <div v-else-if="!historyLoading" class="history-empty soft-card">还没有历史任务，先跑一个试试。</div>
+    </section>
+
     <section class="run-panel">
       <div v-if="!run && !loading" class="empty-run soft-card">
         <el-icon><MagicStick /></el-icon>
@@ -133,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { DocumentChecked, Loading, MagicStick, VideoPlay } from '@element-plus/icons-vue'
 import { marked } from 'marked'
@@ -150,6 +173,8 @@ const loading = ref(false)
 const run = ref<AgentRunResponse | null>(null)
 const activeRunId = ref('')
 const approvalLoading = ref(false)
+const historyRuns = ref<AgentRunResponse[]>([])
+const historyLoading = ref(false)
 
 const examples = [
   '连续降雨后荔枝叶片出现褐色病斑，请给出研判和处理顺序。',
@@ -286,6 +311,38 @@ const stepStatusLabel = (status: AgentRunResponse['steps'][number]['status']) =>
   return '执行失败'
 }
 
+const loadHistory = async () => {
+  historyLoading.value = true
+  try {
+    const { data } = await agentAPI.list({ limit: 8 })
+    historyRuns.value = data || []
+  } catch {
+    historyRuns.value = []
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+const viewHistory = async (item: AgentRunResponse) => {
+  try {
+    run.value = (await agentAPI.getV1(item.runId)).data
+    activeRunId.value = ''
+    document.querySelector('.run-panel')?.scrollIntoView({ behavior: 'smooth' })
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message ?? '读取历史任务失败。')
+  }
+}
+
+const formatTime = (iso?: string) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getMonth() + 1}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+onMounted(loadHistory)
+
 const runAgent = async () => {
   const currentGoal = goal.value.trim()
   if (!currentGoal || loading.value) return
@@ -313,6 +370,7 @@ const runAgent = async () => {
   } finally {
     loading.value = false
     activeRunId.value = ''
+    loadHistory()
   }
 }
 
@@ -679,4 +737,15 @@ h3 {
     justify-content: flex-start;
   }
 }
+
+.history-panel { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.history-heading { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; }
+.history-heading h3 { margin: 0; font-size: 16px; }
+.history-list { display: flex; flex-direction: column; gap: 8px; }
+.history-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; padding: 12px 18px; cursor: pointer; border: none; transition: border-color 0.2s, transform 0.2s; }
+.history-row:hover { border-color: var(--el-color-primary); transform: translateX(2px); }
+.history-goal { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.history-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; color: var(--el-text-color-secondary); font-size: 12px; }
+.history-empty { padding: 14px 18px; color: var(--el-text-color-secondary); font-size: 13px; }
+@media (max-width: 640px) { .history-row { flex-direction: column; align-items: flex-start; gap: 6px; } }
 </style>

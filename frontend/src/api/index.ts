@@ -519,7 +519,9 @@ export const agentAPI = {
   getV1: (runId: string) => api.get<AgentRunResponse>(`/v1/agent-runs/${runId}`),
   confirm: (runId: string, decision: 'approve' | 'reject') =>
     api.post<AgentRunResponse>(`/v1/agent-runs/${runId}/confirm`, { decision }),
-  cancel: (runId: string) => api.post<AgentRunResponse>(`/v1/agent-runs/${runId}/cancel`)
+  cancel: (runId: string) => api.post<AgentRunResponse>(`/v1/agent-runs/${runId}/cancel`),
+  list: (params?: { limit?: number; status?: string }) =>
+    api.get<AgentRunResponse[]>('/v1/agent-runs', { params })
 }
 
 export const orchardAPI = {
