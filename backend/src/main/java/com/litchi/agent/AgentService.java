@@ -371,6 +371,19 @@ public class AgentService {
                 });
     }
 
+    private void publishSteps(AuthenticatedUser user, String runId, List<AgentRunResponse.Step> steps,
+                            List<String> plannedTools) {
+        runStore.update(runId, user.id(), response -> response.toBuilder()
+                .steps(steps)
+                .checkpoint(checkpoint("running", steps.size(), plannedTools,
+                        steps.stream().map(AgentRunResponse.Step::getTool).toList()))
+                .build())
+                .ifPresent(updated -> {
+                    persistence.save(user.id(), updated);
+                    eventBus.publish(runId, updated);
+                });
+    }
+
     private void saveState(AuthenticatedUser user, AgentRunResponse response) {
         runStore.save(user.id(), response);
         persistence.save(user.id(), response);
@@ -479,9 +492,7 @@ public class AgentService {
                         .output(output == null ? Map.of() : output)
                         .build());
                 metrics.recordTool(plannedStep.tool(), "succeeded", elapsedMs(startedNanos));
-                updateCheckpoint(user, runId, checkpoint("running", index + 1,
-                        plan.stream().map(PlannedStep::tool).toList(),
-                        steps.stream().map(AgentRunResponse.Step::getTool).toList()));
+                publishSteps(user, runId, steps, plan.stream().map(PlannedStep::tool).toList());
             } catch (Exception exception) {
                 log.warn("Agent tool failed tool={} reason={}", plannedStep.tool(), exception.getMessage());
                 steps.add(AgentRunResponse.Step.builder()

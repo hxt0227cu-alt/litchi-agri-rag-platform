@@ -20,7 +20,8 @@ export default defineConfig({
     }
   },
   build: {
-    chunkSizeWarningLimit: 600,
+    // three 由 LitchiHero3D 动态 import（空闲加载），约 700KB 属正常，阈值提到 800
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks(id) {

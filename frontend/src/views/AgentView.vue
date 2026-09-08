@@ -367,6 +367,57 @@ const formatTime = (iso?: string) => {
 
 onMounted(loadHistory)
 
+const isTerminalStatus = (r: AgentRunResponse) =>
+  ['waiting_approval', 'completed', 'degraded', 'failed', 'canceled', 'refused'].includes(r.status)
+
+const connectSSE = (
+  runId: string,
+  onEvent: (r: AgentRunResponse) => void,
+  onDone: () => void
+): AbortController => {
+  const ctrl = new AbortController()
+  const token = localStorage.getItem('litchi.auth.token')
+  const run = async () => {
+    try {
+      const resp = await fetch(`/api/v1/agent-runs/${runId}/events`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        signal: ctrl.signal
+      })
+      if (!resp.ok || !resp.body) {
+        onDone()
+        return
+      }
+      const reader = resp.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        let sep = buf.indexOf('\n\n')
+        while (sep >= 0) {
+          const block = buf.slice(0, sep)
+          buf = buf.slice(sep + 2)
+          const dataLine = block.split('\n').find((l) => l.startsWith('data:'))
+          if (dataLine) {
+            try {
+              onEvent(JSON.parse(dataLine.slice(5).trim()) as AgentRunResponse)
+            } catch {
+              /* 忽略无法解析的事件 */
+            }
+          }
+          sep = buf.indexOf('\n\n')
+        }
+      }
+    } catch {
+      /* 连接中断或已中止 */
+    }
+    onDone()
+  }
+  run()
+  return ctrl
+}
+
 const runAgent = async () => {
   const currentGoal = goal.value.trim()
   if (!currentGoal || loading.value) return
@@ -381,15 +432,31 @@ const runAgent = async () => {
     })
     activeRunId.value = accepted.data.runId
     let latest = accepted.data
-    for (let attempt = 0; attempt < 240; attempt += 1) {
-      await new Promise(resolve => window.setTimeout(resolve, 500))
-      latest = (await agentAPI.getV1(latest.runId)).data
-      progressHint.value = progressOf(latest)
-      if (['waiting_approval', 'completed', 'degraded', 'failed', 'canceled', 'refused'].includes(latest.status)) {
-        break
+    let sseLatest: AgentRunResponse | null = null
+    let sseDone = false
+    const sseCtrl = connectSSE(
+      accepted.data.runId,
+      (r) => {
+        sseLatest = r
+        progressHint.value = progressOf(r)
+        if (isTerminalStatus(r)) sseDone = true
+      },
+      () => {
+        sseDone = true
       }
+    )
+    try {
+      for (let attempt = 0; attempt < 240; attempt += 1) {
+        if (sseDone && sseLatest) break
+        await new Promise(resolve => window.setTimeout(resolve, 500))
+        latest = (await agentAPI.getV1(latest.runId)).data
+        progressHint.value = progressOf(latest)
+        if (isTerminalStatus(latest)) break
+      }
+      run.value = sseLatest ?? latest
+    } finally {
+      sseCtrl.abort()
     }
-    run.value = latest
     progressHint.value = ''
   } catch (error) {
     ElMessage.error((error as any)?.response?.data?.message ?? 'Agent 任务执行失败。')

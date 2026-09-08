@@ -333,11 +333,19 @@ const selectHotspot = (hotspot: Hotspot) => {
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
   webglAvailable.value = canUseWebGL()
   if (webglAvailable.value) {
-    THREE = await import('three')
-    startScene()
+    const start = async () => {
+      THREE = await import('three')
+      startScene()
+    }
+    // 延迟到浏览器空闲时段再加载 three（约 700KB），登录页/工作台首屏先渲染 DOM
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(() => void start(), { timeout: 800 })
+    } else {
+      window.setTimeout(() => void start(), 300)
+    }
   }
 })
 
